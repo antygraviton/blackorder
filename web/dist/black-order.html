@@ -168,6 +168,7 @@ input[type=text]{background:var(--ink);border:1px solid var(--steel2);color:var(
   <div id="st-gamet" class="stab" style="display:none">
     <div class="setrow"><label>Field of view (FOV)</label><input type="range" id="setFov" min="60" max="110"></div>
     <div class="setrow"><label>Quality (shadows and detail)</label><select id="setQ" style="background:var(--steel);color:var(--bone);border:1px solid var(--steel2);padding:6px"><option value="1">Low</option><option value="2">Medium</option><option value="3">High</option></select></div>
+    <div class="setrow"><label>Difficulty</label><select id="setDiff" style="background:var(--steel);color:var(--bone);border:1px solid var(--steel2);padding:6px"><option value="0">Easy</option><option value="1">Normal</option><option value="2">Hard</option><option value="3">Realistic</option></select></div>
     <div class="setrow"><button class="btn small danger" id="resetSave">Delete progress</button></div>
   </div>
 </section>
@@ -176,7 +177,7 @@ input[type=text]{background:var(--ink);border:1px solid var(--steel2);color:var(
 <section id="store" class="screen">
   <div class="bar"><button class="btn small" data-go="menu">Back</button><h2>Store</h2><span class="wallet" data-wallet></span></div>
   <div class="tabs">
-    <button class="tab on" data-cat="primary">Primary</button><button class="tab" data-cat="secondary">Secondary</button><button class="tab" data-cat="melee">Melee</button><button class="tab" data-cat="grenade">Grenade</button>
+    <button class="tab on" data-cat="primary">Primary</button><button class="tab" data-cat="secondary">Secondary</button><button class="tab" data-cat="melee">Melee</button><button class="tab" data-cat="grenade">Grenade</button><button class="tab" data-cat="perks">Perks</button><button class="tab" data-cat="att">Attachments</button>
   </div>
   <p class="tag" id="storeMsg" style="min-height:20px"></p>
   <div id="storeList" style="max-width:640px"></div>
@@ -208,7 +209,7 @@ input[type=text]{background:var(--ink);border:1px solid var(--steel2);color:var(
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 /* ============ SAVE DATA ============ */
-const DEF={name:'PLAYER',xp:0,wp:0,medals:0,kills:0,missions:0,deaths:0,maxLevel:0,maxLevel2:0,bestWave:0,owned:{hk416:1,ak:1,glock:1,knife:1,m67:1},primary:'hk416',secondary:'glock',melee:'knife',grenade:'m67',vol:60,sens:50,fov:80,q:2};
+const DEF={name:'PLAYER',xp:0,wp:0,medals:0,kills:0,missions:0,deaths:0,maxLevel:0,maxLevel2:0,bestWave:0,owned:{hk416:1,ak:1,glock:1,knife:1,m67:1},primary:'hk416',secondary:'glock',melee:'knife',grenade:'m67',vol:60,sens:50,fov:80,q:2,diff:1,perks:[],att:{primary:'',secondary:''},attOwned:{}};
 let S=JSON.parse(JSON.stringify(DEF));
 try{const r=localStorage.getItem('blackorder_save')||localStorage.getItem('cernyrad03');if(r)S=Object.assign(S,JSON.parse(r));}catch(e){}
 function save(){try{localStorage.setItem('blackorder_save',JSON.stringify(S));}catch(e){}}
@@ -266,6 +267,24 @@ const nextInCamp=g=>globalIdx(LEVELS[g].camp,idxIn(g)+1);
 const unlocked=g=>idxIn(g)<=getMax(LEVELS[g].camp);
 let playCamp=0;
 
+/* ============ DIFFICULTY, PERKS, ATTACHMENTS ============ */
+const DIFFS=[{n:'Easy',dmg:.6,acc:.8,hp:.8},{n:'Normal',dmg:1,acc:1,hp:1},{n:'Hard',dmg:1.4,acc:1.15,hp:1.25},{n:'Realistic',dmg:3,acc:1.2,hp:1.4}];
+const DIFF=()=>DIFFS[S.diff===undefined?1:S.diff]||DIFFS[1];
+const PERKS=[
+ {id:'fast',n:'Quick hands',lvl:2,desc:'Reloading is 25% faster'},
+ {id:'armor',n:'Body armor',lvl:3,desc:'Damage taken −15%'},
+ {id:'ghost',n:'Ghost',lvl:4,desc:'Enemies see you only from 80% of the distance'},
+ {id:'nades',n:'Grenadier',lvl:5,desc:'+2 grenades every mission'},
+ {id:'dmg',n:'Piercing rounds',lvl:6,desc:'Weapons deal 10% more damage'},
+ {id:'run',n:'Sprinter',lvl:7,desc:'Sprinting is 15% faster'}
+];
+const hasPerk=id=>(S.perks||[]).indexOf(id)>=0;
+const ATT={supp:{n:'Suppressor',price:90,desc:'Silent shots (they do not alert enemies), −15% damage'},mag:{n:'Extended magazine',price:80,desc:'+50% magazine size'},laser:{n:'Laser sight',price:70,desc:'−35% bullet spread'}};
+const attOf=k=>{const w=WEAPONS[k];return(w&&(w.cat==='primary'||w.cat==='secondary')&&!w.kind&&!w.bayonet)?((S.att&&S.att[w.cat])||''):'';};
+const magOf=k=>Math.round((WEAPONS[k].mag||0)*(attOf(k)==='mag'?1.5:1));
+const spreadMul=k=>attOf(k)==='laser'?.65:1;
+const dmgMul=k=>(attOf(k)==='supp'?.85:1)*(hasPerk('dmg')?1.1:1);
+const silent=k=>attOf(k)==='supp';
 /* ============ MENU ============ */
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));if(['menu','play','store'].includes(id))refresh();}
 function refresh(){
@@ -322,10 +341,41 @@ $('setVol').oninput=e=>{S.vol=+e.target.value;save();};
 $('setSens').oninput=e=>{S.sens=+e.target.value;save();};
 $('setFov').oninput=e=>{S.fov=+e.target.value;save();};
 $('setQ').onchange=e=>{S.q=+e.target.value;save();};
-$('resetSave').onclick=()=>{S=JSON.parse(JSON.stringify(DEF));save();$('setVol').value=S.vol;$('setSens').value=S.sens;$('setFov').value=S.fov;$('setQ').value=S.q;refresh();};
+$('resetSave').onclick=()=>{S=JSON.parse(JSON.stringify(DEF));save();$('setVol').value=S.vol;$('setSens').value=S.sens;$('setFov').value=S.fov;$('setQ').value=S.q;$('setDiff').value=S.diff;refresh();};
 let cat='primary';
 document.querySelectorAll('[data-cat]').forEach(t=>t.onclick=()=>{cat=t.dataset.cat;document.querySelectorAll('[data-cat]').forEach(x=>x.classList.toggle('on',x===t));renderStore();});
+function renderPerks(){
+  const box=$('storeList');box.innerHTML='';
+  const info=document.createElement('p');info.className='tag';info.textContent='You can have up to 2 perks selected. They unlock by level (your level: '+lvl()+').';box.appendChild(info);
+  PERKS.forEach(p=>{
+    const open=lvl()>=p.lvl,on=hasPerk(p.id);
+    const d=document.createElement('div');d.className='item';if(!open)d.style.opacity=.55;
+    d.innerHTML='<div class="n">'+p.n+'<small>'+p.desc+'</small></div><span class="tag">'+(open?(on?'Selected':'Unlocked'):'Level '+p.lvl)+'</span>';
+    const b=document.createElement('button');b.className='btn small';b.textContent=on?'Remove':'Select';b.disabled=!open;
+    b.onclick=()=>{S.perks=S.perks||[];const i=S.perks.indexOf(p.id);if(i>=0)S.perks.splice(i,1);else{if(S.perks.length>=2){$('storeMsg').textContent='You already have 2 perks. Remove one first.';return;}S.perks.push(p.id);}save();renderStore();};
+    d.appendChild(b);box.appendChild(d);
+  });
+}
+function renderAtt(){
+  const box=$('storeList');box.innerHTML='';
+  const info=document.createElement('p');info.className='tag';info.textContent='Attachments are applied to the weapon in the slot (only firearms without a special mode). One attachment per slot.';box.appendChild(info);
+  [['primary','Primary'],['secondary','Secondary']].forEach(([slot,sn])=>{
+    const h=document.createElement('h4');h.className='sec';h.style.gridColumn='auto';h.textContent=sn+': '+WEAPONS[S[slot]].name;box.appendChild(h);
+    Object.entries(ATT).forEach(([id,a])=>{
+      S.attOwned=S.attOwned||{};S.att=S.att||{};
+      const own=S.attOwned[id],on=S.att[slot]===id;
+      const d=document.createElement('div');d.className='item';
+      d.innerHTML='<div class="n">'+a.n+'<small>'+a.desc+'</small></div><span class="tag">'+(own?(on?'Equipped':'Owned'):a.price+' Weapoints')+'</span>';
+      const b=document.createElement('button');b.className='btn small';
+      if(!own){b.textContent='Buy';b.onclick=()=>{if(S.wp>=a.price){S.wp-=a.price;S.attOwned[id]=1;save();refresh();}else $('storeMsg').textContent='Not enough Weapoints ('+S.wp+' / '+a.price+').';};}
+      else{b.textContent=on?'Remove':'Equip';b.onclick=()=>{S.att[slot]=on?'':id;save();renderStore();};}
+      d.appendChild(b);box.appendChild(d);
+    });
+  });
+}
 function renderStore(){
+  if(cat==='perks')return renderPerks();
+  if(cat==='att')return renderAtt();
   const box=$('storeList');box.innerHTML='';
   Object.entries(WEAPONS).filter(([k,w])=>w.cat===cat).forEach(([k,w])=>{
     const d=document.createElement('div');d.className='item';
@@ -340,7 +390,7 @@ function renderStore(){
     d.appendChild(b);box.appendChild(d);
   });
 }
-
+$('setDiff').value=S.diff;$('setDiff').onchange=e=>{S.diff=+e.target.value;save();};
 /* ============ HELPER FUNCTIONS ============ */
 let SEED=1;
 function rng(seed){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
@@ -683,7 +733,7 @@ function mkEnemy(x,z){
   const mw=toW(ud.muzzle);
   const mf=new THREE.Mesh(new THREE.SphereGeometry(.1,6,6),new THREE.MeshBasicMaterial({color:0xffd070}));mf.position.copy(mw);mf.visible=false;g.add(mf);
   g.position.set(x,H(x,z),z);scene.add(g);
-  return {g,hp:L.hp,cd:1+Math.random()*2,x,z,alive:true,strafe:Math.random()<.5?1:-1,st:0,parts:pts,legs,mf,mfT:0,dt:0,flinch:0,walk:Math.random()*6,idle:Math.random()*6,alerted:false,stun:0,head};
+  return {g,hp:Math.round(L.hp*DIFF().hp),cd:1+Math.random()*2,x,z,alive:true,strafe:Math.random()<.5?1:-1,st:0,parts:pts,legs,mf,mfT:0,dt:0,flinch:0,walk:Math.random()*6,idle:Math.random()*6,alerted:false,stun:0,head};
 }
 
 /* ============ WORLD ============ */
@@ -1008,7 +1058,7 @@ function doStart(){
   slots=[S.primary,S.secondary,S.melee||'knife',S.grenade||'m67'];
   if(L.camp===1&&S.primary!=='rpg'&&!curMode)slots.push('rpg');
   wp={};
-  slots.forEach(id=>{const w=WEAPONS[id];if(w.mag)wp[id]={mag:w.mag,res:(id==='rpg'&&S.primary!=='rpg')?3:w.res};else if(w.cat==='grenade')wp[id]={n:3};else wp[id]={};});
+  slots.forEach(id=>{const w=WEAPONS[id];if(w.mag)wp[id]={mag:magOf(id),res:(id==='rpg'&&S.primary!=='rpg')?3:w.res};else if(w.cat==='grenade')wp[id]={n:3+(hasPerk('nades')?2:0)};else wp[id]={};});
   cur=0;buildView();reloadT=0;aim=false;
   $('again').style.display=NET.role==='solo'?'':'none';
   say(L.txt+(NET.role!=='solo'?' (Multiplayer: '+NET.roster.length+' player'+(NET.roster.length>1?'i':'')+')':(allies.length?' Allies Alpha and Bravo are following you.':'')+(pheli?' Mi-24 helicopter is parked nearby: E.':'')),5);
@@ -1047,7 +1097,7 @@ addEventListener('contextmenu',e=>{if(run)e.preventDefault();});
 addEventListener('mousemove',e=>{if(!canAct())return;const s=.0004+S.sens/100*.0032;const z=aim?.5:1;P.yaw-=e.movementX*s*z;P.pitch=Math.max(-1.4,Math.min(1.4,P.pitch-e.movementY*s*z));swayX=Math.max(-.04,Math.min(.04,swayX-e.movementX*.0004));swayY=Math.max(-.03,Math.min(.03,swayY-e.movementY*.0004));});
 addEventListener('resize',()=>{if(ren&&cam){ren.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();}});
 function sw(i){if(mounted||i===cur||!wp[slots[i]])return;cur=i;reloadT=0;buildView();}
-function reload(){if(mounted)return;const k=slots[cur],w=WEAPONS[k],s=wp[k];if(!w.mag||reloadT>0||s.mag===w.mag||s.res<=0)return;reloadMax=w.rel||1.6;reloadT=reloadMax;beep(200,.15);hud();}
+function reload(){if(mounted)return;const k=slots[cur],w=WEAPONS[k],s=wp[k];if(!w.mag||reloadT>0||s.mag===magOf(k)||s.res<=0)return;reloadMax=(w.rel||1.6)*(hasPerk('fast')?.75:1);reloadT=reloadMax;beep(200,.15);hud();}
 
 /* ============ SHOOTING ============ */
 /* ============ SHOOTING, EXPLOSIONS, VEHICLES ============ */
@@ -1085,8 +1135,8 @@ function fire(first){
   flashT=.05;flash.intensity=3;
   if(mflash){mflash.visible=true;mflT=.045;mflash.rotation.z=Math.random()*6;const sc=.7+Math.random()*.7;mflash.scale.set(sc,sc,sc);}
   beep(w.dmg>60?90:180,.12,'square',w.dmg>60?.35:.2);
-  alertNear(50);
-  const n=w.pellets||1,sp=w.spread*(aim?.35:1);
+  if(!silent(k))alertNear(50);
+  const n=w.pellets||1,sp=w.spread*(aim?.35:1)*spreadMul(k);
   const targets=obstMesh.concat(...enemies.filter(e=>e.alive).map(e=>e.parts),...vehicles.filter(v=>v.alive&&v.g.visible).map(v=>v.parts));
   for(let i=0;i<n;i++){
     const d=new THREE.Vector3();cam.getWorldDirection(d);
@@ -1096,8 +1146,8 @@ function fire(first){
     const gh=groundHit(cam.position,d);
     if(hit&&(!gh||hit.distance<gh.distanceTo(cam.position))){
       if(hit.object.userData.enemy){const e=enemies.find(x=>x.g===hit.object.userData.enemy);
-        if(e){const head=hit.object.userData.tag==='head';bloodBurst(hit.point,head?10:6);dmg(e,w.dmg*(head?2.5:1),head);}}
-      else if(hit.object.userData.vehicle){vdmg(hit.object.userData.vehicle,w.dmg,false);if(i<2)dustBurst(hit.point,0xc0c0b0);}
+        if(e){const head=hit.object.userData.tag==='head';bloodBurst(hit.point,head?10:6);dmg(e,w.dmg*dmgMul(k)*(head?2.5:1),head);}}
+      else if(hit.object.userData.vehicle){vdmg(hit.object.userData.vehicle,w.dmg*dmgMul(k),false);if(i<2)dustBurst(hit.point,0xc0c0b0);}
       else if(i<3)dustBurst(hit.point,0x9a9186);
     } else if(gh&&i<3)dustBurst(gh,0x7a6a4c);
   }
@@ -1173,6 +1223,7 @@ function hurt(v,from){
     const dx=from.x-P.x,dz=from.z-P.z,dl=Math.hypot(dx,dz)||1,fx=-Math.sin(P.yaw),fz=-Math.cos(P.yaw);
     if((dx*fx+dz*fz)/dl>.3)v*=.15;
   }
+  v*=DIFF().dmg*(hasPerk('armor')?.85:1);
   if(mounted&&pheli&&pheli.alive){pheli.hp-=v*.7;shake=Math.max(shake,.03);beep(110,.1,'sawtooth',.12);if(pheli.hp<=0)crashHeli();hud();return;}
   P.hp-=v;splat(1+Math.floor(v/7));beep(110,.15,'sawtooth');shake=Math.max(shake,.03);
   if(P.hp<=0&&!over&&!pDead){if(canRespawn())playerDown();else failMission();}
@@ -1548,10 +1599,10 @@ function spawnTraining(){
 function trainCycle(){
   const k=slots[cur],cat=WEAPONS[k].cat,ids=Object.keys(WEAPONS).filter(i=>WEAPONS[i].cat===cat);
   const nk=ids[(ids.indexOf(k)+1)%ids.length];slots[cur]=nk;const w=WEAPONS[nk];
-  wp[nk]=w.mag?{mag:w.mag,res:w.res}:(w.cat==='grenade'?{n:3}:{});reloadT=0;buildView();say(w.name,1.3);hud();
+  wp[nk]=w.mag?{mag:magOf(nk),res:w.res}:(w.cat==='grenade'?{n:3}:{});reloadT=0;buildView();say(w.name,1.3);hud();
 }
 function trainRefill(){
-  for(const k of slots){const w=WEAPONS[k];if(!wp[k])continue;if(w.mag){wp[k].mag=w.mag;wp[k].res=w.res;}else if(w.cat==='grenade')wp[k].n=3;}
+  for(const k of slots){const w=WEAPONS[k];if(!wp[k])continue;if(w.mag){wp[k].mag=magOf(k);wp[k].res=w.res;}else if(w.cat==='grenade')wp[k].n=3;}
 }
 function initSurvival(){wave=0;survPaid=false;surv={timer:4,alive:false};}
 function survLeft(){return enemies.filter(e=>e.alive).length+vehicles.filter(v=>v.alive&&v.type!=='jet').length;}
@@ -2246,7 +2297,7 @@ function loop(){
   if(!run)return;raf=requestAnimationFrame(loop);
   const now=performance.now();const dt=Math.min(.05,(now-lastT)/1000);lastT=now;tAll+=dt;frame++;
   /* player */
-  const sp=((keys.ShiftLeft||keys.ShiftRight)?7.5:4.6)*(aim?.6:1)*(pDead?0:1);
+  const sp=((keys.ShiftLeft||keys.ShiftRight)?7.5*(hasPerk('run')?1.15:1):4.6)*(aim?.6:1)*(pDead?0:1);
   let fx=0,fz=0;
   if(keys.KeyW)fz-=1;if(keys.KeyS)fz+=1;if(keys.KeyA)fx-=1;if(keys.KeyD)fx+=1;
   const moving=!!(fx||fz);const l=Math.hypot(fx,fz)||1;fx/=l;fz/=l;
@@ -2287,7 +2338,7 @@ function loop(){
   if(flashT>0){flashT-=dt;if(flashT<=0)flash.intensity=0;}
   if(mflT>0){mflT-=dt;if(mflT<=0&&mflash)mflash.visible=false;}
   if(mounted){if((mouseDown||keys.Space)&&heliWeapon===0)heliFire(false);}else if(mouseDown&&wdef.auto)fire(false);
-  if(reloadT>0){reloadT-=dt;if(reloadT<=0){const k=slots[cur],w=WEAPONS[k],s=wp[k];const take=Math.min(w.mag-s.mag,s.res);s.mag+=take;s.res-=take;hud();}}
+  if(reloadT>0){reloadT-=dt;if(reloadT<=0){const k=slots[cur],w=WEAPONS[k],s=wp[k];const take=Math.min(magOf(k)-s.mag,s.res);s.mag+=take;s.res-=take;hud();}}
   if(hitT>0){hitT-=dt;if(hitT<=0)$('cross').classList.remove('hit');}
   if(msgT>0){msgT-=dt;if(msgT<=0)$('msg').textContent='';}
   /* particles */
@@ -2331,7 +2382,7 @@ function loop(){
     let dx=P.x-e.x,dz=P.z-e.z,dist=Math.hypot(dx,dz);
     const gH=H(e.x,e.z);
     const hd=new THREE.Vector3(e.x,gH+1.7,e.z);
-    let see=!pDead&&dist<60&&los(hd,eye)&&!smokeBlocks(hd,eye);
+    let see=!pDead&&dist<60*(hasPerk('ghost')?.8:1)&&los(hd,eye)&&!smokeBlocks(hd,eye);
     let tAlly=null;
     for(const a of allies){if(!a.alive)continue;const da=Math.hypot(a.x-e.x,a.z-e.z);
       if(da<(see?dist:55)&&da<50){const ta=new THREE.Vector3(a.x,H(a.x,a.z)+1.5,a.z);if(los(hd,ta)&&!smokeBlocks(hd,ta)){tAlly=a;dx=a.x-e.x;dz=a.z-e.z;dist=da;see=true;}}}
@@ -2348,7 +2399,7 @@ function loop(){
       e.x+=mx*2.6*dt;e.z+=mz*2.6*dt;collide(e,.5);e.g.position.set(e.x,H(e.x,e.z),e.z);
       e.cd-=dt;
       if(see&&e.cd<=0){e.cd=.9+Math.random()*1.1;e.mf.visible=true;e.mfT=.07;beep(140,.08,'square',.08);
-        const chance=Math.max(.12,L.acc-dist/70);
+        const chance=Math.max(.12,L.acc*DIFF().acc-dist/70);
         if(Math.random()<chance){if(tAlly)allyHit(tAlly,7+Math.random()*5);else hurt(7+Math.random()*5,e.g.position);}}
     } else {
       e.idle+=dt*.4;e.g.rotation.y+=Math.sin(e.idle)*dt*.5;

@@ -43,7 +43,7 @@ function doStart(){
   slots=[S.primary,S.secondary,S.melee||'knife',S.grenade||'m67'];
   if(L.camp===1&&S.primary!=='rpg'&&!curMode)slots.push('rpg');
   wp={};
-  slots.forEach(id=>{const w=WEAPONS[id];if(w.mag)wp[id]={mag:w.mag,res:(id==='rpg'&&S.primary!=='rpg')?3:w.res};else if(w.cat==='grenade')wp[id]={n:3};else wp[id]={};});
+  slots.forEach(id=>{const w=WEAPONS[id];if(w.mag)wp[id]={mag:magOf(id),res:(id==='rpg'&&S.primary!=='rpg')?3:w.res};else if(w.cat==='grenade')wp[id]={n:3+(hasPerk('nades')?2:0)};else wp[id]={};});
   cur=0;buildView();reloadT=0;aim=false;
   $('again').style.display=NET.role==='solo'?'':'none';
   say(L.txt+(NET.role!=='solo'?' (Multiplayer: '+NET.roster.length+' player'+(NET.roster.length>1?'i':'')+')':(allies.length?' Allies Alpha and Bravo are following you.':'')+(pheli?' Mi-24 helicopter is parked nearby: E.':'')),5);
@@ -82,5 +82,5 @@ addEventListener('contextmenu',e=>{if(run)e.preventDefault();});
 addEventListener('mousemove',e=>{if(!canAct())return;const s=.0004+S.sens/100*.0032;const z=aim?.5:1;P.yaw-=e.movementX*s*z;P.pitch=Math.max(-1.4,Math.min(1.4,P.pitch-e.movementY*s*z));swayX=Math.max(-.04,Math.min(.04,swayX-e.movementX*.0004));swayY=Math.max(-.03,Math.min(.03,swayY-e.movementY*.0004));});
 addEventListener('resize',()=>{if(ren&&cam){ren.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();}});
 function sw(i){if(mounted||i===cur||!wp[slots[i]])return;cur=i;reloadT=0;buildView();}
-function reload(){if(mounted)return;const k=slots[cur],w=WEAPONS[k],s=wp[k];if(!w.mag||reloadT>0||s.mag===w.mag||s.res<=0)return;reloadMax=w.rel||1.6;reloadT=reloadMax;beep(200,.15);hud();}
+function reload(){if(mounted)return;const k=slots[cur],w=WEAPONS[k],s=wp[k];if(!w.mag||reloadT>0||s.mag===magOf(k)||s.res<=0)return;reloadMax=(w.rel||1.6)*(hasPerk('fast')?.75:1);reloadT=reloadMax;beep(200,.15);hud();}
 

@@ -2,8 +2,10 @@
 
 Format: newest first. Versions describe the browser game unless stated otherwise.
 
-## [Unreleased] – v1.1 extension (written, not integrated)
-See `drafts/v1.1/INTEGRATION.md`. Includes: briefings and radio messages, mission objectives (rescue, defend, silent infiltration, destroy depots), boss missions,
+## [Unreleased] – v1.1 extension (being integrated, see `docs/DEVLOG.md`)
+**Integrated so far:** difficulty levels (Settings > Game), perks and weapon attachments (Store tabs), `failMission(msg)`; tests in `tests/extensions.test.js`.
+
+**Still in drafts** (see `drafts/v1.1/INTEGRATION.md`): briefings and radio messages, mission objectives (rescue, defend, silent infiltration, destroy depots), boss missions,
 Zombie Arena, killstreaks (UAV, ammo drop, air strike), perks, weapon attachments, difficulty levels, weather and night, player jeep, ally commands, explosive barrels,
 collectible documents, achievements and records.
 

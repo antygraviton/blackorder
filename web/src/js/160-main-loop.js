@@ -12,7 +12,7 @@ function loop(){
   if(!run)return;raf=requestAnimationFrame(loop);
   const now=performance.now();const dt=Math.min(.05,(now-lastT)/1000);lastT=now;tAll+=dt;frame++;
   /* player */
-  const sp=((keys.ShiftLeft||keys.ShiftRight)?7.5:4.6)*(aim?.6:1)*(pDead?0:1);
+  const sp=((keys.ShiftLeft||keys.ShiftRight)?7.5*(hasPerk('run')?1.15:1):4.6)*(aim?.6:1)*(pDead?0:1);
   let fx=0,fz=0;
   if(keys.KeyW)fz-=1;if(keys.KeyS)fz+=1;if(keys.KeyA)fx-=1;if(keys.KeyD)fx+=1;
   const moving=!!(fx||fz);const l=Math.hypot(fx,fz)||1;fx/=l;fz/=l;
@@ -53,7 +53,7 @@ function loop(){
   if(flashT>0){flashT-=dt;if(flashT<=0)flash.intensity=0;}
   if(mflT>0){mflT-=dt;if(mflT<=0&&mflash)mflash.visible=false;}
   if(mounted){if((mouseDown||keys.Space)&&heliWeapon===0)heliFire(false);}else if(mouseDown&&wdef.auto)fire(false);
-  if(reloadT>0){reloadT-=dt;if(reloadT<=0){const k=slots[cur],w=WEAPONS[k],s=wp[k];const take=Math.min(w.mag-s.mag,s.res);s.mag+=take;s.res-=take;hud();}}
+  if(reloadT>0){reloadT-=dt;if(reloadT<=0){const k=slots[cur],w=WEAPONS[k],s=wp[k];const take=Math.min(magOf(k)-s.mag,s.res);s.mag+=take;s.res-=take;hud();}}
   if(hitT>0){hitT-=dt;if(hitT<=0)$('cross').classList.remove('hit');}
   if(msgT>0){msgT-=dt;if(msgT<=0)$('msg').textContent='';}
   /* particles */
@@ -97,7 +97,7 @@ function loop(){
     let dx=P.x-e.x,dz=P.z-e.z,dist=Math.hypot(dx,dz);
     const gH=H(e.x,e.z);
     const hd=new THREE.Vector3(e.x,gH+1.7,e.z);
-    let see=!pDead&&dist<60&&los(hd,eye)&&!smokeBlocks(hd,eye);
+    let see=!pDead&&dist<60*(hasPerk('ghost')?.8:1)&&los(hd,eye)&&!smokeBlocks(hd,eye);
     let tAlly=null;
     for(const a of allies){if(!a.alive)continue;const da=Math.hypot(a.x-e.x,a.z-e.z);
       if(da<(see?dist:55)&&da<50){const ta=new THREE.Vector3(a.x,H(a.x,a.z)+1.5,a.z);if(los(hd,ta)&&!smokeBlocks(hd,ta)){tAlly=a;dx=a.x-e.x;dz=a.z-e.z;dist=da;see=true;}}}
@@ -114,7 +114,7 @@ function loop(){
       e.x+=mx*2.6*dt;e.z+=mz*2.6*dt;collide(e,.5);e.g.position.set(e.x,H(e.x,e.z),e.z);
       e.cd-=dt;
       if(see&&e.cd<=0){e.cd=.9+Math.random()*1.1;e.mf.visible=true;e.mfT=.07;beep(140,.08,'square',.08);
-        const chance=Math.max(.12,L.acc-dist/70);
+        const chance=Math.max(.12,L.acc*DIFF().acc-dist/70);
         if(Math.random()<chance){if(tAlly)allyHit(tAlly,7+Math.random()*5);else hurt(7+Math.random()*5,e.g.position);}}
     } else {
       e.idle+=dt*.4;e.g.rotation.y+=Math.sin(e.idle)*dt*.5;

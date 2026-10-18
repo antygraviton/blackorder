@@ -80,6 +80,7 @@
   <div id="st-gamet" class="stab" style="display:none">
     <div class="setrow"><label>Field of view (FOV)</label><input type="range" id="setFov" min="60" max="110"></div>
     <div class="setrow"><label>Quality (shadows and detail)</label><select id="setQ" style="background:var(--steel);color:var(--bone);border:1px solid var(--steel2);padding:6px"><option value="1">Low</option><option value="2">Medium</option><option value="3">High</option></select></div>
+    <div class="setrow"><label>Difficulty</label><select id="setDiff" style="background:var(--steel);color:var(--bone);border:1px solid var(--steel2);padding:6px"><option value="0">Easy</option><option value="1">Normal</option><option value="2">Hard</option><option value="3">Realistic</option></select></div>
     <div class="setrow"><button class="btn small danger" id="resetSave">Delete progress</button></div>
   </div>
 </section>
@@ -88,7 +89,7 @@
 <section id="store" class="screen">
   <div class="bar"><button class="btn small" data-go="menu">Back</button><h2>Store</h2><span class="wallet" data-wallet></span></div>
   <div class="tabs">
-    <button class="tab on" data-cat="primary">Primary</button><button class="tab" data-cat="secondary">Secondary</button><button class="tab" data-cat="melee">Melee</button><button class="tab" data-cat="grenade">Grenade</button>
+    <button class="tab on" data-cat="primary">Primary</button><button class="tab" data-cat="secondary">Secondary</button><button class="tab" data-cat="melee">Melee</button><button class="tab" data-cat="grenade">Grenade</button><button class="tab" data-cat="perks">Perks</button><button class="tab" data-cat="att">Attachments</button>
   </div>
   <p class="tag" id="storeMsg" style="min-height:20px"></p>
   <div id="storeList" style="max-width:640px"></div>

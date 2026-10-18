@@ -49,3 +49,21 @@ const nextInCamp=g=>globalIdx(LEVELS[g].camp,idxIn(g)+1);
 const unlocked=g=>idxIn(g)<=getMax(LEVELS[g].camp);
 let playCamp=0;
 
+/* ============ DIFFICULTY, PERKS, ATTACHMENTS ============ */
+const DIFFS=[{n:'Easy',dmg:.6,acc:.8,hp:.8},{n:'Normal',dmg:1,acc:1,hp:1},{n:'Hard',dmg:1.4,acc:1.15,hp:1.25},{n:'Realistic',dmg:3,acc:1.2,hp:1.4}];
+const DIFF=()=>DIFFS[S.diff===undefined?1:S.diff]||DIFFS[1];
+const PERKS=[
+ {id:'fast',n:'Quick hands',lvl:2,desc:'Reloading is 25% faster'},
+ {id:'armor',n:'Body armor',lvl:3,desc:'Damage taken −15%'},
+ {id:'ghost',n:'Ghost',lvl:4,desc:'Enemies see you only from 80% of the distance'},
+ {id:'nades',n:'Grenadier',lvl:5,desc:'+2 grenades every mission'},
+ {id:'dmg',n:'Piercing rounds',lvl:6,desc:'Weapons deal 10% more damage'},
+ {id:'run',n:'Sprinter',lvl:7,desc:'Sprinting is 15% faster'}
+];
+const hasPerk=id=>(S.perks||[]).indexOf(id)>=0;
+const ATT={supp:{n:'Suppressor',price:90,desc:'Silent shots (they do not alert enemies), −15% damage'},mag:{n:'Extended magazine',price:80,desc:'+50% magazine size'},laser:{n:'Laser sight',price:70,desc:'−35% bullet spread'}};
+const attOf=k=>{const w=WEAPONS[k];return(w&&(w.cat==='primary'||w.cat==='secondary')&&!w.kind&&!w.bayonet)?((S.att&&S.att[w.cat])||''):'';};
+const magOf=k=>Math.round((WEAPONS[k].mag||0)*(attOf(k)==='mag'?1.5:1));
+const spreadMul=k=>attOf(k)==='laser'?.65:1;
+const dmgMul=k=>(attOf(k)==='supp'?.85:1)*(hasPerk('dmg')?1.1:1);
+const silent=k=>attOf(k)==='supp';

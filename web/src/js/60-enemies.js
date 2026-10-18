@@ -63,6 +63,6 @@ function mkEnemy(x,z){
   const mw=toW(ud.muzzle);
   const mf=new THREE.Mesh(new THREE.SphereGeometry(.1,6,6),new THREE.MeshBasicMaterial({color:0xffd070}));mf.position.copy(mw);mf.visible=false;g.add(mf);
   g.position.set(x,H(x,z),z);scene.add(g);
-  return {g,hp:L.hp,cd:1+Math.random()*2,x,z,alive:true,strafe:Math.random()<.5?1:-1,st:0,parts:pts,legs,mf,mfT:0,dt:0,flinch:0,walk:Math.random()*6,idle:Math.random()*6,alerted:false,stun:0,head};
+  return {g,hp:Math.round(L.hp*DIFF().hp),cd:1+Math.random()*2,x,z,alive:true,strafe:Math.random()<.5?1:-1,st:0,parts:pts,legs,mf,mfT:0,dt:0,flinch:0,walk:Math.random()*6,idle:Math.random()*6,alerted:false,stun:0,head};
 }
 

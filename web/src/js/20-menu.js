@@ -54,10 +54,41 @@ $('setVol').oninput=e=>{S.vol=+e.target.value;save();};
 $('setSens').oninput=e=>{S.sens=+e.target.value;save();};
 $('setFov').oninput=e=>{S.fov=+e.target.value;save();};
 $('setQ').onchange=e=>{S.q=+e.target.value;save();};
-$('resetSave').onclick=()=>{S=JSON.parse(JSON.stringify(DEF));save();$('setVol').value=S.vol;$('setSens').value=S.sens;$('setFov').value=S.fov;$('setQ').value=S.q;refresh();};
+$('resetSave').onclick=()=>{S=JSON.parse(JSON.stringify(DEF));save();$('setVol').value=S.vol;$('setSens').value=S.sens;$('setFov').value=S.fov;$('setQ').value=S.q;$('setDiff').value=S.diff;refresh();};
 let cat='primary';
 document.querySelectorAll('[data-cat]').forEach(t=>t.onclick=()=>{cat=t.dataset.cat;document.querySelectorAll('[data-cat]').forEach(x=>x.classList.toggle('on',x===t));renderStore();});
+function renderPerks(){
+  const box=$('storeList');box.innerHTML='';
+  const info=document.createElement('p');info.className='tag';info.textContent='You can have up to 2 perks selected. They unlock by level (your level: '+lvl()+').';box.appendChild(info);
+  PERKS.forEach(p=>{
+    const open=lvl()>=p.lvl,on=hasPerk(p.id);
+    const d=document.createElement('div');d.className='item';if(!open)d.style.opacity=.55;
+    d.innerHTML='<div class="n">'+p.n+'<small>'+p.desc+'</small></div><span class="tag">'+(open?(on?'Selected':'Unlocked'):'Level '+p.lvl)+'</span>';
+    const b=document.createElement('button');b.className='btn small';b.textContent=on?'Remove':'Select';b.disabled=!open;
+    b.onclick=()=>{S.perks=S.perks||[];const i=S.perks.indexOf(p.id);if(i>=0)S.perks.splice(i,1);else{if(S.perks.length>=2){$('storeMsg').textContent='You already have 2 perks. Remove one first.';return;}S.perks.push(p.id);}save();renderStore();};
+    d.appendChild(b);box.appendChild(d);
+  });
+}
+function renderAtt(){
+  const box=$('storeList');box.innerHTML='';
+  const info=document.createElement('p');info.className='tag';info.textContent='Attachments are applied to the weapon in the slot (only firearms without a special mode). One attachment per slot.';box.appendChild(info);
+  [['primary','Primary'],['secondary','Secondary']].forEach(([slot,sn])=>{
+    const h=document.createElement('h4');h.className='sec';h.style.gridColumn='auto';h.textContent=sn+': '+WEAPONS[S[slot]].name;box.appendChild(h);
+    Object.entries(ATT).forEach(([id,a])=>{
+      S.attOwned=S.attOwned||{};S.att=S.att||{};
+      const own=S.attOwned[id],on=S.att[slot]===id;
+      const d=document.createElement('div');d.className='item';
+      d.innerHTML='<div class="n">'+a.n+'<small>'+a.desc+'</small></div><span class="tag">'+(own?(on?'Equipped':'Owned'):a.price+' Weapoints')+'</span>';
+      const b=document.createElement('button');b.className='btn small';
+      if(!own){b.textContent='Buy';b.onclick=()=>{if(S.wp>=a.price){S.wp-=a.price;S.attOwned[id]=1;save();refresh();}else $('storeMsg').textContent='Not enough Weapoints ('+S.wp+' / '+a.price+').';};}
+      else{b.textContent=on?'Remove':'Equip';b.onclick=()=>{S.att[slot]=on?'':id;save();renderStore();};}
+      d.appendChild(b);box.appendChild(d);
+    });
+  });
+}
 function renderStore(){
+  if(cat==='perks')return renderPerks();
+  if(cat==='att')return renderAtt();
   const box=$('storeList');box.innerHTML='';
   Object.entries(WEAPONS).filter(([k,w])=>w.cat===cat).forEach(([k,w])=>{
     const d=document.createElement('div');d.className='item';
@@ -72,4 +103,4 @@ function renderStore(){
     d.appendChild(b);box.appendChild(d);
   });
 }
-
+$('setDiff').value=S.diff;$('setDiff').onchange=e=>{S.diff=+e.target.value;save();};

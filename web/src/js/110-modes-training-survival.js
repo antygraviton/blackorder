@@ -17,10 +17,10 @@ function spawnTraining(){
 function trainCycle(){
   const k=slots[cur],cat=WEAPONS[k].cat,ids=Object.keys(WEAPONS).filter(i=>WEAPONS[i].cat===cat);
   const nk=ids[(ids.indexOf(k)+1)%ids.length];slots[cur]=nk;const w=WEAPONS[nk];
-  wp[nk]=w.mag?{mag:w.mag,res:w.res}:(w.cat==='grenade'?{n:3}:{});reloadT=0;buildView();say(w.name,1.3);hud();
+  wp[nk]=w.mag?{mag:magOf(nk),res:w.res}:(w.cat==='grenade'?{n:3}:{});reloadT=0;buildView();say(w.name,1.3);hud();
 }
 function trainRefill(){
-  for(const k of slots){const w=WEAPONS[k];if(!wp[k])continue;if(w.mag){wp[k].mag=w.mag;wp[k].res=w.res;}else if(w.cat==='grenade')wp[k].n=3;}
+  for(const k of slots){const w=WEAPONS[k];if(!wp[k])continue;if(w.mag){wp[k].mag=magOf(k);wp[k].res=w.res;}else if(w.cat==='grenade')wp[k].n=3;}
 }
 function initSurvival(){wave=0;survPaid=false;surv={timer:4,alive:false};}
 function survLeft(){return enemies.filter(e=>e.alive).length+vehicles.filter(v=>v.alive&&v.type!=='jet').length;}

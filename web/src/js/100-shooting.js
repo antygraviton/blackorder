@@ -34,8 +34,8 @@ function fire(first){
   flashT=.05;flash.intensity=3;
   if(mflash){mflash.visible=true;mflT=.045;mflash.rotation.z=Math.random()*6;const sc=.7+Math.random()*.7;mflash.scale.set(sc,sc,sc);}
   beep(w.dmg>60?90:180,.12,'square',w.dmg>60?.35:.2);
-  alertNear(50);
-  const n=w.pellets||1,sp=w.spread*(aim?.35:1);
+  if(!silent(k))alertNear(50);
+  const n=w.pellets||1,sp=w.spread*(aim?.35:1)*spreadMul(k);
   const targets=obstMesh.concat(...enemies.filter(e=>e.alive).map(e=>e.parts),...vehicles.filter(v=>v.alive&&v.g.visible).map(v=>v.parts));
   for(let i=0;i<n;i++){
     const d=new THREE.Vector3();cam.getWorldDirection(d);
@@ -45,8 +45,8 @@ function fire(first){
     const gh=groundHit(cam.position,d);
     if(hit&&(!gh||hit.distance<gh.distanceTo(cam.position))){
       if(hit.object.userData.enemy){const e=enemies.find(x=>x.g===hit.object.userData.enemy);
-        if(e){const head=hit.object.userData.tag==='head';bloodBurst(hit.point,head?10:6);dmg(e,w.dmg*(head?2.5:1),head);}}
-      else if(hit.object.userData.vehicle){vdmg(hit.object.userData.vehicle,w.dmg,false);if(i<2)dustBurst(hit.point,0xc0c0b0);}
+        if(e){const head=hit.object.userData.tag==='head';bloodBurst(hit.point,head?10:6);dmg(e,w.dmg*dmgMul(k)*(head?2.5:1),head);}}
+      else if(hit.object.userData.vehicle){vdmg(hit.object.userData.vehicle,w.dmg*dmgMul(k),false);if(i<2)dustBurst(hit.point,0xc0c0b0);}
       else if(i<3)dustBurst(hit.point,0x9a9186);
     } else if(gh&&i<3)dustBurst(gh,0x7a6a4c);
   }
@@ -122,6 +122,7 @@ function hurt(v,from){
     const dx=from.x-P.x,dz=from.z-P.z,dl=Math.hypot(dx,dz)||1,fx=-Math.sin(P.yaw),fz=-Math.cos(P.yaw);
     if((dx*fx+dz*fz)/dl>.3)v*=.15;
   }
+  v*=DIFF().dmg*(hasPerk('armor')?.85:1);
   if(mounted&&pheli&&pheli.alive){pheli.hp-=v*.7;shake=Math.max(shake,.03);beep(110,.1,'sawtooth',.12);if(pheli.hp<=0)crashHeli();hud();return;}
   P.hp-=v;splat(1+Math.floor(v/7));beep(110,.15,'sawtooth');shake=Math.max(shake,.03);
   if(P.hp<=0&&!over&&!pDead){if(canRespawn())playerDown();else failMission();}

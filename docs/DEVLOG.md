@@ -10,11 +10,11 @@ Rules for this file: `AGENTS.md` section 10.
 * **In progress:** integrating the v1.1 drafts (lean plan, 3–4 commits). Nothing integrated yet.
 * **Lean plan:**
   1. ~~Clean the drafts~~ DONE: Czech leftovers translated in `drafts/v1.1`, `failMission(msg)` extended. Radio `r.done` reset moves to step 3 (when radio code lands in `doStart()`); `addKit(...,ammo)` (needs pickup logic in `160-main-loop.js`) and `mkEnemy(...,opt.noGun)` move to the deferred killstreaks/Zombie work.
-  2. Data, difficulty, perks, attachments (`ext_data.js` -> `10-data.js`, `DEF` in `00-save-data.js`, Store tabs from `ext_ui.js`).
+  2. ~~Data, difficulty~~ DONE (perks, attachments, difficulty; code lives in `10-data.js` and `20-menu.js`, hooks in fire/hurt/reload/enemy AI). Still in `drafts/ext_data.js`: `DOCS`, `ACH`, mission edits, `lbase`; in `ext_ui.js`: Archive (`renderExtras`).
   3. Objectives, new missions, briefing, radio, weather (`ext_game.js` -> one `105-extensions.js`).
   4. Bosses and barrels. Then a short `tests/extensions.test.js`, version bump, docs.
 * **Deferred:** multiplayer replication (new objective missions solo-only, hidden in the lobby), jeep, Zombie Arena, killstreaks, ally orders, documents/Archive.
-* **Next step:** plan step 2 (data, difficulty, perks, attachments).
+* **Next step:** plan step 3 (objectives, new missions, briefing, radio, weather: `ext_game.js` + mission edits from `ext_data.js`; reset `r.done` of radio in `doStart()`).
 * **Owner decisions:** keep the draft balance numbers; commit straight to `main`. Bosses are only partly drafted: `makeBoss`/`markBossTank`/`bossDead`/`bossHpPct` exist but nothing calls them; spawning in `doStart()`, armor in `dmg()`, stun/flinch immunity and double tank shells must be written.
 * **Tip:** macOS `sed -i` needs `sed -i ''`; prefer small python3 replace scripts with `assert` on the anchor.
 
@@ -74,3 +74,9 @@ Rules for this file: `AGENTS.md` section 10.
 * Committed the working rules. Translated leftover Czech words in `drafts/v1.1` (`Ghost`, `Remove`, `Select`, `Buy`, `Equip`, `Equipped`, `Found`, `Correspondence`, `ALARM!`, `of`). `failMission(msg)` now accepts a custom message (title `Mission failed`).
 * Verified: `i18n` and `solo-campaign` tests pass; full `npm test` green (4 files).
 * Open: steps 2-4 of the lean plan.
+
+## 2026-10-18 (cont.) – step 2 of the lean plan
+* Integrated difficulty (`DIFFS`, `DIFF()`; Settings > Game select `#setDiff`), perks (`PERKS`, `hasPerk`) and attachments (`ATT`, `attOf`, `magOf`, `spreadMul`, `dmgMul`, `silent`) into `10-data.js`; Store tabs `perks`/`att` in `20-menu.js`/`template.html`; new `DEF` fields `diff, perks, att, attOwned`.
+* Hooks: enemy hp x `DIFF().hp`, enemy accuracy x `DIFF().acc`, player damage x `DIFF().dmg` and armor perk in `hurt()`, ghost perk shrinks sight range, sprint perk, quick-reload perk, grenadier perk, magazine size via `magOf()` in reload/start/training, suppressor skips `alertNear`, laser and damage multipliers in `fire()`.
+* Not hooked (hitscanFrom/MP and heli/jeep fire ignore damage and spread multipliers).
+* Verified: new `tests/extensions.test.js` (19 checks) and full `npm test`.
