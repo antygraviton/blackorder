@@ -77,6 +77,12 @@ Host only:
 5. Keep presence under 4 KiB (the mock room in `tests/lib/harness.js` throws above that).
 6. Extend `tests/multiplayer.test.js`.
 
+## Mission objectives (destroy, hack, rescue, defend)
+* Every machine rebuilds the same objects: `placeObjectives()` uses a seeded RNG (`L.seed*53`) and runs on the host and on clients, after the same world generation, so depots, terminal, prisoner, extraction point and zone are at the same places. The prisoner is the last non-remote ally, so the `a` array of the snapshot covers it.
+* The host publishes `s.ob = [alarm, prisonerFree, [[progress*1000, done], ...]]` (one entry per objective, same order). Clients apply it in `clientApply`; a depot that becomes `done` plays `depotVis`. The explosion itself comes through the normal `fx` events. Mission end, radio/briefing messages and failure messages reuse `s.o` and `s.m`.
+* Clients send `u:1` in their presence while E is held; the host reads it into the remote avatar (`a.use`), which is what `humansNear(..., needUse)` checks for hacking and freeing the prisoner. Stealth alarm, waves, win and fail are host-only.
+* Known gaps: a client's suppressor and damage perks are not applied to its shots on the host (`hostShot`), so a suppressed client shot still alerts enemies; radio messages are replicated as "last message" only.
+
 ## Pause, lobby and rejoin
 * **Host pause stops the game for everybody.** The host stops its simulation and publishes `ps:1` in its presence; clients see the "Host paused" screen (`clientPauseSync`, driven by `onPeers`, because the client loop is stopped) and can continue only after the host resumed. A client's own pause menu does not stop the game.
 * **Only the host starts a game** (`mpStartGame`); clients enter it only through the host's `go` presence, and only if their peer id is in `go.ro`.
@@ -86,6 +92,6 @@ Host only:
 ## Known limitations
 
 * No anti-cheat; positions and shots are trusted.
-* The player helicopter, Training, Survival and all v1.1 drafts are single-player only. Objective missions (`L.ob`: Silent Infiltration, Airfield, Rescue the Prisoner, Base Defense) are not replicated and are hidden from the co-op lobby (`mpFillMissions`); campaign 1 co-op therefore offers the three kill-all missions only.
+* The player helicopter, Training, Survival, killstreaks, ally orders, documents, the jeep and Zombie Arena (drafts) are single-player only. Objectives, bosses and barrels: see "Mission objectives" below.
 * Latency is about 100–200 ms (12 Hz snapshots with interpolation); there is no lag compensation.
 * Tested only with an in-memory mock of the room API, never with real remote players.

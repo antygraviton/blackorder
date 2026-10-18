@@ -77,5 +77,43 @@ const rows = g => g.E("[...document.querySelectorAll('#mpPlayers tr')].map(r => 
   A.E('mpStartGame()'); await sleep(300);
   check(A.E('NET.role') === 'solo' && H.E('NET.role') === 'solo', 'a client cannot start the game, only the host can');
 
+  // ---- objective missions in co-op ----
+  const pos = g => g.E("objs.map(o => o.t + ':' + Math.round(o.x) + ',' + Math.round(o.z)).join(' ')");
+  const startMission = async name => {
+    H.E(`NET.lobbyMode = 'coop'; NET.lobbyLv = LEVELS.findIndex(l => l.n === ${JSON.stringify(name)}); mpStartGame()`);
+    await sleep(1500);
+  };
+  const backToLobby = async () => { for (const g of [A, B, H]) g.click('endMenu'); await sleep(400); };
+  const cycle = async (n) => { for (let i = 0; i < n; i++) { H.step(4, 16); A.step(4, 16); B.step(4, 16); await sleep(15); } };
+  check(H.E("[...document.querySelectorAll('#mpMission option')].some(o => /Silent Infiltration/.test(o.textContent) && /Airfield/.test(document.getElementById('mpMission').textContent) && /Base Defense/.test(document.getElementById('mpMission').textContent))"), 'all missions, including the objective missions, are offered in the co-op lobby');
+  await backToLobby();
+
+  await startMission('Airfield');
+  check(H.E('NET.role') === 'host' && A.E('NET.role') === 'client' && B.E('NET.role') === 'client', 'Airfield: co-op game started');
+  check(H.E('objs.length') === 4 && pos(H) === pos(A) && pos(H) === pos(B), 'Airfield: all players have the same four depots (' + pos(H) + ')');
+  check(A.E('total') > 1e8 && /Destroy fuel depots: 0 \/ 4/.test(A.E("$('obj').textContent")), 'Airfield: clients show the objective in the HUD');
+  H.E('objHit(objs[1], 1e4)'); await cycle(10);
+  check(A.E('objs[1].done') && B.E('objs[1].done') && !A.E('objs[0].done'), 'Airfield: a destroyed depot is destroyed for the clients too');
+  check(/1 \/ 4/.test(A.E("$('obj').textContent")), 'Airfield: clients see the progress (1 / 4)');
+  H.E('objs.forEach(o => objHit(o, 1e4))'); await cycle(60);
+  check(H.E('over') && A.E('over') && B.E('over'), 'Airfield: the mission ends for everybody when the last depot falls');
+  await backToLobby();
+
+  await startMission('Rescue the Prisoner');
+  check(H.E("allies.some(a => a.hostage)") && A.E("allies.some(a => a.hostage)") && pos(H) === pos(A), 'Rescue: the prisoner and the extraction point exist for the clients too');
+  H.E("allies.find(a => a.hostage).free = true"); await cycle(10);
+  check(A.E("allies.find(a => a.hostage).free") && /extraction/.test(A.E("$('obj').textContent")), 'Rescue: clients see that the prisoner was freed');
+  await backToLobby();
+
+  await startMission('Silent Infiltration');
+  H.E("enemies.forEach(e => { e.x = 1000; e.z = 1000; e.g.position.set(1000, 0, 1000); })");
+  A.E("(function () { const t = objs.find(o => o.t === 'term'); P.x = t.x; P.z = t.z + 1; P.y = H(P.x, P.z) + 1.7; keys.KeyE = true; })()");
+  H.E("P.x = 0; P.z = 70");
+  await cycle(80);
+  check(H.E("objs.find(o => o.t === 'term').prog") > .3, 'Silent Infiltration: a client holding E at the terminal progresses the hack on the host (' + H.E("objs.find(o => o.t === 'term').prog").toFixed(2) + ')');
+  check(B.E("objs.find(o => o.t === 'term').prog") > .3, 'Silent Infiltration: the other client sees the hack progress');
+  A.E('keys.KeyE = false');
+  await backToLobby();
+
   process.exit(check.done() ? 0 : 1);
 })();

@@ -58,7 +58,7 @@ Never edit `web/dist/black-order.html` by hand: it is generated from `web/src/`.
 * The host publishes world state in its presence field `s` (about 12 Hz); effects are one-shot events in `s.fx`.
 * World generation must stay deterministic from `L.seed` (`build()` uses a seeded RNG). Mines, kits, enemies and vehicles are sent in the `go` manifest.
 * When you add an entity type that exists in missions, you must add it to the manifest (`go`), to the snapshot (`hostSnap`), to `clientApply`/`clientTick`, and to `tests/multiplayer.test.js`.
-* The helicopter, Training, Survival and the 1.1 drafts are solo-only today.
+* The helicopter, Training, Survival and the remaining 1.1 drafts (killstreaks, ally orders, documents, jeep, Zombie Arena) are solo-only today. Mission objectives are replicated (see `docs/MULTIPLAYER.md`).
 
 ## 6. Known pitfalls
 

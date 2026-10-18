@@ -1217,7 +1217,7 @@ function doStart(){
     if(curMode==='survival')initSurvival();
     if(curMode==='tdm')initTdm();
   }
-  if(!man&&!curMode)placeObjectives();
+  if(!curMode)placeObjectives();
   pheli=(L.camp===1&&NET.role==='solo'&&!curMode)?mkPlayerHeli(14,58):null;mounted=false;
   killed=0;total=(curMode||(L.ob&&L.ob!=='kill'))?1e9:enemies.length+vehicles.filter(v=>v.type!=='jet').length;over=false;$('blood').innerHTML='';
   slots=[S.primary,S.secondary,S.melee||'knife',S.grenade||'m67'];
@@ -2171,7 +2171,7 @@ function mpUI(inRoom){
 }
 function mpFillMissions(){
   const sel=$('mpMission');sel.innerHTML='';
-  LEVELS.forEach((l,i)=>{if(l.ob&&l.ob!=='kill')return;const o=document.createElement('option');o.value=i;o.textContent='Campaign '+(l.camp+1)+' – mission '+(idxIn(i)+1)+': '+l.n;sel.appendChild(o);});
+  LEVELS.forEach((l,i)=>{const o=document.createElement('option');o.value=i;o.textContent='Campaign '+(l.camp+1)+' – mission '+(idxIn(i)+1)+': '+l.n;sel.appendChild(o);});
   sel.value=NET.lobbyLv;
 }
 function mpModeTabs(){
@@ -2315,7 +2315,7 @@ function avatarFor(pr,idx){
   return a;
 }
 function readAvatarPresence(a,pr){
-  const p=pr.presence.p;
+  const p=pr.presence.p;a.use=!!pr.presence.u;
   if(p&&a.alive){a.px=p[0]/10;a.py=p[1]/10;a.pz=p[2]/10;a.pyaw=p[3]/100;}
   const sh=pr.presence.sh;
   if(sh&&sh.length){const id=sh[sh.length-1][0];if(id!==a.lastSh){a.lastSh=id;a.mf.visible=true;a.mfT=.06;}}
@@ -2351,6 +2351,7 @@ function hostSnap(){
     a:allies.filter(a=>!a.remote).map(a=>[qn(a.x),qn(a.z),Math.round(a.g.rotation.y*100),a.alive?1:0]),
     pl,st:[killed,total>1e8?0:total,over?1:0,tdm?Math.round(tdm.t):0,tdm?tdm.red:0],
     mn:mines.map(m=>m.live?'1':'0').join(''),ki:kits.map(k=>k.used?'1':'0').join(''),fx:NET.fx};
+  if(L.ob&&L.ob!=='kill'){const h=allies.find(a=>a.hostage);s.ob=[alarm?1:0,h&&h.free?1:0,objs.map(o=>[Math.round(o.prog*1000),o.done?1:0])];}
   if(NET.lastMsg)s.m=NET.lastMsg;
   if(NET.endInfo)s.o=NET.endInfo;
   return s;
@@ -2454,6 +2455,10 @@ function clientApply(s){
   }
   for(const f of (s.fx||[])){if(f[0]<=NET.fxSeen)continue;NET.fxSeen=f[0];clientFx(f);}
   if(s.m&&s.m[0]>NET.msgSeen){NET.msgSeen=s.m[0];say(s.m[1],s.m[2]);}
+  if(s.ob){
+    alarm=!!s.ob[0];const h=allies.find(a=>a.hostage);if(h)h.free=!!s.ob[1];
+    s.ob[2].forEach((d,i)=>{const o=objs[i];if(!o)return;o.prog=d[0]/1000;if(d[1]&&!o.done){o.done=true;if(o.t==='depot')depotVis(o);}});
+  }
   if(s.o&&!over)clientEnd(s.o);
 }
 function clientEnd(o){
@@ -2529,7 +2534,7 @@ function clientTick(dt){
     if(p.t<=0||p.m.position.y<H(p.m.position.x,p.m.position.z)){scene.remove(p.m);vprojs.splice(i,1);}}
   for(let i=vnades.length-1;i>=0;i--){const n=vnades[i];n.v.y-=14*dt;n.m.position.addScaledVector(n.v,dt);const g0=H(n.m.position.x,n.m.position.z)+.06;
     if(n.m.position.y<g0){n.m.position.y=g0;n.v.y*=-.35;n.v.x*=.6;n.v.z*=.6;}n.t-=dt;if(n.t<=0){scene.remove(n.m);vnades.splice(i,1);}}
-  updateFires(dt);updateClouds(dt);
+  updateFires(dt);updateClouds(dt);updateWx(dt);updateCabin();
   $('prompt').textContent=pDead?'You died – back in '+Math.ceil(respT)+' s':'';
 }
 function netTick(dt){
@@ -2539,7 +2544,7 @@ function netTick(dt){
     NET.t=0;
     const st={p:[qn(P.x),qn(P.y),qn(P.z),Math.round(P.yaw*100),Math.round(P.pitch*100),pDead?0:1]};
     if(NET.role==='host'){st.s=hostSnap();if(JSON.stringify(st.s).length>3000)st.s.fx=st.s.fx.slice(-3);if(NET.sent.length)st.sh=NET.sent;}
-    else st.sh=NET.sent;
+    else{st.sh=NET.sent;st.u=keys.KeyE?1:0;}
     Promise.resolve(room.presence(st)).catch(()=>{});
   }
   if(NET.role==='host')hostRead(dt);else clientRead(dt);
