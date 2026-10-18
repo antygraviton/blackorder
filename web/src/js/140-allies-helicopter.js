@@ -8,7 +8,7 @@ function mkAlly(x,z,idx){
 function allyDmg(e,v,head,shooter){
   e.hp-=v*(head?2.5:1);e.alerted=true;e.flinch=.25;
   if(e.hp>0&&e.alive)banterEnemyHit(e);
-  if(e.hp<=0&&e.alive){e.alive=false;e.dt=0;killed++;S.kills++;beep(300,.1,'triangle',.1);if(shooter&&roll(.45))bark(shooter,'allyKill');else banterEnemyKill(e);if(killed>=total)win();hud();}
+  if(e.hp<=0&&e.alive){e.alive=false;e.dt=0;killed++;S.kills++;beep(300,.1,'triangle',.1);if(shooter&&roll(.6))bark(shooter,'allyKill');else banterEnemyKill(e);if(killed>=total)win();hud();}
 }
 function updateAllies(dt){
   for(const a of allies){

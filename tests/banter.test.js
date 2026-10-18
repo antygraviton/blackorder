@@ -23,6 +23,8 @@ start('The Vanished Village'); g.E('S.cine = 0; banterRate = 100');
 const sprites0 = g.E('scene.children.filter(c => c.isSprite).length');
 g.E("bark(enemies[0], 'enemyHit', true)");
 check(g.E('bubbles.length') === 1 && g.E('scene.children.filter(c => c.isSprite).length') === sprites0 + 1, 'a forced bark creates a speech bubble sprite');
+check(g.E('bubbles[0].sp.material.sizeAttenuation === false && bubbles[0].sp.material.fog === false && bubbles[0].sp.material.toneMapped === false'), 'bubbles keep a constant screen size and are not dimmed by fog or tone mapping');
+check(g.E('bubbles[0].sp.scale.y') > 0.01 && g.E('bubbles[0].sp.scale.y') < 0.4, 'bubble size is a sensible fraction of the screen');
 g.E('banterRate = 0'); g.step(300, 16);
 check(g.E('bubbles.length') === 0 && g.E('scene.children.filter(c => c.isSprite).length') === sprites0, 'the bubble disappears after a few seconds');
 g.E('banterRate = 100');
@@ -43,6 +45,7 @@ g.E('banterT = 0; allies[0].barkT = 0; allies[0].alive = true; allies[0].hp = 10
 check(g.E('bubbles.some(b => b.ent === allies[0])'), 'a hit ally yells');
 g.E('banterT = 0; allyWarnT = 0; allies.forEach(a => { a.barkT = 0; })'); g.E('hurt(5, null)');
 check(g.E('bubbles.some(b => b.ent.ally)'), 'an ally warns the player when he is hurt');
+check(g.E('allies.filter(a => !a.remote).every(a => a.name)'), 'allies have names for their speech bubbles');
 g.E('banterRate = 0; banterT = 0; allies.forEach(a => { a.barkT = 0; })'); const n1 = g.E('bubbles.length');
 g.E("bark(allies[0], 'allyKill')");
 check(g.E('bubbles.length') === n1, 'with banterRate 0 random barks are off');

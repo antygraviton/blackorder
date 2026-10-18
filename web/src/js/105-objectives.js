@@ -69,7 +69,7 @@ function placeObjectives(){
   const rr=rng(L.seed*53);
   if(L.ob==='destroy'){for(let i=0;i<(L.nd||4);i++){const [x,z]=spot(rr,25,4,66);addObj('depot',x,z);}}
   else if(L.ob==='hack'){const [x,z]=spot(rr,55,4,60);addObj('term',x,z);}
-  else if(L.ob==='rescue'){const [x,z]=spot(rr,55,4,60);addObj('host',x,z);const h=mkAlly(x,z,2);h.hostage=true;h.free=false;h.hp=80;if(h.marker)h.marker.material.color.set(0xffd23a);allies.push(h);addObj('ext',0,66);}
+  else if(L.ob==='rescue'){const [x,z]=spot(rr,55,4,60);addObj('host',x,z);const h=mkAlly(x,z,2);h.hostage=true;h.free=false;h.name='Prisoner';h.hp=80;if(h.marker)h.marker.material.color.set(0xffd23a);allies.push(h);addObj('ext',0,66);}
   else if(L.ob==='defend'){const [x,z]=spot(rr,0,6,25);addObj('zone',x,z);}
 }
 function objHit(o,d){
