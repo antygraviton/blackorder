@@ -14,7 +14,8 @@ node tests/solo-campaign.test.js      # a single file (needs a built web/dist)
 | `solo-campaign.test.js` | every mission builds; all 22 weapons fire/reload/switch; enemy and vehicle AI runs; player helicopter (boarding, pitch-controlled flight, three weapons, chase camera, landing, exit, destruction) in campaign 2; every mission is completable |
 | `modes.test.js` | menu rendering; Training (targets, invincibility, respawn, weapon cycling, stats not polluted); Survival (10 waves, vehicle schedule, death payout); Team Match (bots respawn, player respawn, win condition) |
 | `multiplayer.test.js` | lobby and the 3-player limit; co-op mission with 3 instances (same world, position replication, enemy/kill sync, remote shooting, damage and HP replication, death/respawn, explosion effects, 4 KiB presence budget, mission end and rewards, leaving); Team Match with 2 players (NPC count, scoring, respawn, victory overlay) |
-| `net-peerjs.test.js` | the PeerJS room adapter against an in-memory fake PeerJS: hub election, relay between members, `null` deletes keys, leave, late joiners, room isolation |
+| `net-peerjs.test.js` | the PeerJS room adapter against an in-memory fake PeerJS (`tests/lib/fakepeer.js`): hub election, relay between members, `null` deletes keys, leave, late joiners, room isolation, silent members are dropped |
+| `lobby.test.js` | online lobby with three game instances over the real PeerJS adapter and a fake PeerJS: joining, duplicate Join clicks, same-name players, English labels, back to the lobby after a game, restarting |
 | `touch.test.js` | the touch overlay: stick -> W/A/S/D and sprint, look drag, fire/aim/reload/jump/use/swap/grenade/pause buttons (plain events with `changedTouches`; no real device) |
 | `i18n.test.js` | no Czech diacritics anywhere in the repository |
 

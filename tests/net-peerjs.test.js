@@ -2,46 +2,8 @@
 /**
  * PeerJS room adapter test (web/src/js/129-net-peerjs.js) against an in-memory fake of PeerJS.
  */
-const fs = require('fs');
-const path = require('path');
 const { makeChecker, sleep } = require('./lib/harness');
-
-const src = fs.readFileSync(path.join(__dirname, '..', 'web', 'src', 'js', '129-net-peerjs.js'), 'utf8');
-const { makePeerRoomApi } = new Function(src + '; return { makePeerRoomApi };')();
-
-/** Minimal PeerJS fake: a global registry of peer ids, asynchronous delivery. */
-function makeFakePeer() {
-  const reg = new Map();
-  const later = f => setTimeout(f, 1);
-  class Conn {
-    constructor() { this.open = false; this.h = {}; this.other = null; }
-    on(ev, f) { this.h[ev] = f; }
-    send(m) { const o = this.other; const d = JSON.parse(JSON.stringify(m)); later(() => o.open && o.h.data && o.h.data(d)); }
-    close() { if (!this.open) return; this.open = false; const o = this.other; later(() => { if (o.open) { o.open = false; o.h.close && o.h.close(); } }); }
-  }
-  return class Peer {
-    constructor(id) {
-      this.h = {}; this.id = id || 'anon-' + Math.random().toString(36).slice(2); this.conns = [];
-      later(() => {
-        if (reg.has(this.id)) return this.h.error && this.h.error({ type: 'unavailable-id' });
-        reg.set(this.id, this); this.h.open && this.h.open(this.id);
-      });
-    }
-    on(ev, f) { this.h[ev] = f; }
-    connect(id) {
-      const mine = new Conn(), theirs = new Conn(); mine.other = theirs; theirs.other = mine;
-      later(() => {
-        const t = reg.get(id);
-        if (!t) return this.h.error && this.h.error({ type: 'peer-unavailable' });
-        mine.open = theirs.open = true;
-        t.h.connection && t.h.connection(theirs);
-        mine.h.open && mine.h.open();
-      });
-      this.conns.push(mine); return mine;
-    }
-    destroy() { if (reg.get(this.id) === this) reg.delete(this.id); this.conns.forEach(c => c.close()); }
-  };
-}
+const { makePeerRoomApi, makeFakePeer } = require('./lib/fakepeer');
 
 (async () => {
   const check = makeChecker('net-peerjs');
@@ -84,5 +46,15 @@ function makeFakePeer() {
 
   await a.leave(); await sleep(30);
   check(c.peers().length === 1 && d.peers().length === 1, 'when the hub leaves, guests are left alone');
+  // a member that stops talking (closed laptop, dead tab) is dropped by the hub; live members stay
+  const FP = makeFakePeer();
+  const fast = makePeerRoomApi(FP, { pingMs: 30, timeoutMs: 150 });
+  const h1 = await fast.join('cr-ping'), g1 = await fast.join('cr-ping'), g2 = await fast.join('cr-ping');
+  await sleep(100);
+  check(h1.peers().length === 3, 'ping: three members before the silence');
+  FP.instances.filter(p => p.conns.length)[0].muted = true;   // g1 stops sending (including its pings)
+  await sleep(500);
+  check(h1.peers().length === 2 && g2.peers().length === 2, 'ping: the silent member is dropped, the live one stays');
+  check(g1.peers().length === 1, 'ping: the dropped member is told it is alone');
   process.exit(check.done() ? 0 : 1);
 })();

@@ -13,14 +13,16 @@ function loadPeerJs(){
     setTimeout(()=>rej(new Error('PeerJS load timeout')),8000);
   });
 }
-function makePeerRoomApi(PeerCtor){
+function makePeerRoomApi(PeerCtor,opts){
   const PREFIX='blackorder-v1-';
+  const PING=(opts&&opts.pingMs)||3000,TIMEOUT=(opts&&opts.timeoutMs)||12000;
   const rid=()=>Math.random().toString(36).slice(2,10);
   async function join(name){
     const me=rid(),hubId=PREFIX+name;
     const members=new Map([[me,{presence:{},updatedAt:0}]]);
     const handlers=[],conns=new Map();
-    let peer=null,hubConn=null,isHub=false,closed=false;
+    const seen=new Map();   // hub: member id -> time of the last message (silent members are dropped)
+    let peer=null,hubConn=null,isHub=false,closed=false,timer=null;
     const view=()=>[...members].map(([id,m])=>Object.freeze({peer:id,by:null,isMe:id===me,sameTab:id===me,kind:'viewer',guest:false,presence:m.presence,updatedAt:m.updatedAt}));
     let cache=view();
     const notify=()=>{cache=view();handlers.slice().forEach(h=>{try{h({peers:cache,joined:[],left:[],updated:[]});}catch(e){console.error(e);}});};
@@ -31,13 +33,15 @@ function makePeerRoomApi(PeerCtor){
       m.presence=merged;m.updatedAt++;
     };
     const bcast=(msg,except)=>{for(const [id,c] of conns)if(id!==except&&c.open)c.send(msg);};
-    const dropMember=id=>{if(!members.has(id))return;conns.delete(id);members.delete(id);if(isHub)bcast({t:'left',id});notify();};
+    const dropMember=id=>{seen.delete(id);if(!members.has(id))return;conns.delete(id);members.delete(id);if(isHub)bcast({t:'left',id});notify();};
     function onGuest(conn){
       let cid=null;
       conn.on('data',d=>{
         if(!d)return;
+        if(cid)seen.set(cid,Date.now());
+        if(d.t==='ping')return;
         if(d.t==='hello'&&!cid&&d.id&&!members.has(d.id)){
-          cid=d.id;conns.set(cid,conn);members.set(cid,{presence:{},updatedAt:0});
+          cid=d.id;seen.set(cid,Date.now());conns.set(cid,conn);members.set(cid,{presence:{},updatedAt:0});
           conn.send({t:'snap',peers:[...members].map(([id,m])=>[id,m.presence,m.updatedAt])});
           bcast({t:'join',id:cid},cid);notify();
         } else if(d.t==='pres'&&cid){apply(cid,d.patch);bcast({t:'pres',id:cid,patch:d.patch},cid);notify();}
@@ -60,28 +64,30 @@ function makePeerRoomApi(PeerCtor){
       let settled=false;
       const fail=(code)=>{if(settled)return;settled=true;try{peer&&peer.destroy();}catch(e){}reject(Object.assign(new Error('room: '+code),{code}));};
       const done=()=>{if(!settled){settled=true;resolve();}};
-      const timer=setTimeout(()=>fail('timeout'),10000);
+      const startT=setTimeout(()=>fail('timeout'),10000);
       const asHub=()=>{
         peer=new PeerCtor(hubId);
-        peer.on('open',()=>{isHub=true;peer.on('connection',onGuest);clearTimeout(timer);done();});
+        peer.on('open',()=>{isHub=true;peer.on('connection',onGuest);clearTimeout(startT);done();
+          timer=setInterval(()=>{const now=Date.now();for(const [id,t] of [...seen])if(now-t>TIMEOUT){const c=conns.get(id);dropMember(id);try{c&&c.close();}catch(e){}}},Math.max(50,Math.min(PING,TIMEOUT/3)));});
         peer.on('error',e=>{
           if(settled)return;
           if(e&&e.type==='unavailable-id'){try{peer.destroy();}catch(x){}asGuest();}
-          else{clearTimeout(timer);fail((e&&e.type)||'error');}
+          else{clearTimeout(startT);fail((e&&e.type)||'error');}
         });
       };
       const asGuest=()=>{
         peer=new PeerCtor();
         peer.on('open',()=>{
           hubConn=peer.connect(hubId,{reliable:true,serialization:'json'});
-          hubConn.on('open',()=>{hubConn.send({t:'hello',id:me});clearTimeout(timer);done();});
+          hubConn.on('open',()=>{hubConn.send({t:'hello',id:me});clearTimeout(startT);done();
+            timer=setInterval(()=>{if(hubConn&&hubConn.open)hubConn.send({t:'ping'});},PING);});
           hubConn.on('data',onHubData);
           hubConn.on('close',()=>{if(closed)return;for(const id of [...members.keys()])if(id!==me)members.delete(id);notify();});
         });
         peer.on('error',e=>{
           if(settled)return;
-          if(e&&e.type==='peer-unavailable'&&attempt<2){clearTimeout(timer);try{peer.destroy();}catch(x){}start(attempt+1).then(resolve,reject);settled=true;}
-          else{clearTimeout(timer);fail(e&&e.type==='peer-unavailable'?'no-room':((e&&e.type)||'error'));}
+          if(e&&e.type==='peer-unavailable'&&attempt<2){clearTimeout(startT);try{peer.destroy();}catch(x){}start(attempt+1).then(resolve,reject);settled=true;}
+          else{clearTimeout(startT);fail(e&&e.type==='peer-unavailable'?'no-room':((e&&e.type)||'error'));}
         });
       };
       asHub();
@@ -96,7 +102,7 @@ function makePeerRoomApi(PeerCtor){
       },
       peers:()=>cache,
       onPeers:h=>{handlers.push(h);return()=>{const i=handlers.indexOf(h);if(i>=0)handlers.splice(i,1);};},
-      leave:async()=>{closed=true;try{for(const c of conns.values())c.close();if(hubConn)hubConn.close();if(peer)peer.destroy();}catch(e){}members.clear();members.set(me,{presence:{},updatedAt:0});conns.clear();notify();},
+      leave:async()=>{closed=true;clearInterval(timer);try{for(const c of conns.values())c.close();if(hubConn)hubConn.close();if(peer)peer.destroy();}catch(e){}members.clear();members.set(me,{presence:{},updatedAt:0});conns.clear();notify();},
     };
   }
   return {join};

@@ -29,9 +29,12 @@ function mpModeTabs(){
   $('mpMissionWrap').style.display=NET.lobbyMode==='coop'?'flex':'none';
 }
 async function mpEnter(code,host){
+  if(NET.room||NET.joining)return;
+  NET.joining=true;
   const api=await netApi();
-  if(!api){mpMsg('Online play is not available: the connection library could not be loaded. Check your internet connection and reload the page.');return;}
-  try{NET.room=await api.join('cr-'+code.toLowerCase());}catch(e){mpMsg('Could not join the game ('+((e&&e.code)||'error')+').');return;}
+  if(!api){NET.joining=false;mpMsg('Online play is not available: the connection library could not be loaded. Check your internet connection and reload the page.');return;}
+  try{NET.room=await api.join('cr-'+code.toLowerCase());}catch(e){NET.joining=false;mpMsg('Could not join the game ('+((e&&e.code)||'error')+').');return;}
+  NET.joining=false;
   NET.code=code;NET.host=host;NET.joinedAt=Date.now();NET.ro=null;NET.go=null;NET.role='solo';
   $('partyCode').textContent=code;
   NET.room.presence({n:S.name,r:host?'h':'c'});
@@ -46,6 +49,12 @@ function mpLeave(msg){
   if(NET.room){try{NET.room.leave();}catch(e){}}
   NET.room=null;NET.host=false;NET.role='solo';NET.go=null;NET.ro=null;NET.avatars={};
   mpUI(false);if(msg)mpMsg(msg);
+}
+/** Name shown in the lobby; players with the same name get a number so they can be told apart. Also HTML-escaped. */
+function lobbyName(ro,peers,i){
+  const nm=id=>{const q=peers.find(x=>x.peer===id);return String((q&&q.presence.n)||'Player');};
+  const mine=nm(ro[i]);let k=1;for(let j=0;j<i;j++)if(nm(ro[j])===mine)k++;
+  return (mine+(k>1?' ('+k+')':'')).replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';');
 }
 function mpPeers(ch){
   if(NET.role!=='solo'||!NET.room)return;
@@ -62,7 +71,7 @@ function mpPeers(ch){
   for(let i=0;i<3;i++){
     const id=ro[i],p=id&&peers.find(x=>x.peer===id);
     const tr=document.createElement('tr');
-    tr.innerHTML='<td>'+(i+1)+'</td><td>'+(p?((p.presence.n||'Player')+(i===0?' (hostitel)':'')+(p.sameTab?' (ty)':'')):'<span class="tag">free slot (an AI ally takes it)</span>')+'</td>';
+    tr.innerHTML='<td>'+(i+1)+'</td><td>'+(p?(lobbyName(ro,peers,i)+(i===0?' (host)':'')+(p.sameTab?' (you)':'')):'<span class="tag">free slot (an AI ally takes it)</span>')+'</td>';
     t.appendChild(tr);
   }
   if(!NET.host){
@@ -70,7 +79,7 @@ function mpPeers(ch){
     if(ro.length&&ro.indexOf(NET.myPeer)<0&&Date.now()-NET.joinedAt>2500){mpLeave('The game is full (max. 3 players).');return;}
     const md=hostP.presence.md==='tdm'?'Team Match vs Bots':'Co-op campaign'+(hostP.presence.lv!==undefined&&LEVELS[hostP.presence.lv]?' – '+LEVELS[hostP.presence.lv].n:'');
     $('mpClientText').textContent='Host selected: '+md+'. Wait for the host to start the game.';
-    const g=hostP.presence.go;if(g&&(!NET.go||NET.go.id!==g.id))mpGo(g);
+    const g=hostP.presence.go;if(g&&g.id!==NET.goDone&&(!NET.go||NET.go.id!==g.id))mpGo(g);
   }
 }
 function mpStartGame(){
@@ -96,6 +105,14 @@ function mpGo(g){
   if(g.md==='tdm'){curMode='tdm';curLevel=0;L=MODES.tdm;}else{curMode=null;curLevel=g.lv;L=LEVELS[g.lv];}
   show('game');$('loading').style.display='grid';
   setTimeout(()=>{try{doStart();}catch(e){console.error(e);$('loading').textContent='Loading error: '+e.message;return;}$('loading').style.display='none';},40);
+}
+/** Leave a running online game but stay in the room, so the lobby (player list, host's start button) is shown again. */
+function mpBackToLobby(){
+  NET.goDone=NET.go?NET.go.id:NET.goDone;
+  for(const a of allies)if(a.remote&&a.g&&scene)scene.remove(a.g);
+  NET.avatars={};NET.role='solo';NET.go=null;NET.roster=[];NET.fx=[];NET.sent=[];NET.snap=null;NET.ro=null;NET.joinedAt=Date.now();
+  Promise.resolve(NET.room.presence({go:null,s:null,sh:null,p:null})).catch(()=>{});
+  mpUI(true);
 }
 function netLeave(){
   mpLeave();

@@ -44,10 +44,10 @@
   <div class="bar"><button class="btn small" id="multiBack">Back</button><h2>Multiplayer</h2><span class="wallet" data-wallet></span></div>
   <div id="mpStart">
     <p class="tag" id="mpStatus" style="min-height:22px"></p>
-    <div class="setrow"><label>Nickname</label><input type="text" id="mpName" maxlength="14"></div>
+    <div class="setrow"><label>Nickname</label><input type="text" id="mpName" maxlength="14" autocomplete="off" autocorrect="off" spellcheck="false"></div>
     <div class="cards">
       <div class="card"><h3>1. Create a game</h3><p>You become the host and get a code. Send it to your friends (up to 3 players in total).</p><button class="btn small" id="mpCreate">Create game</button></div>
-      <div class="card"><h3>2. Join a game</h3><p>Enter the code from the host.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><input type="text" id="joinCode" placeholder="CODE" maxlength="6"><button class="btn small" id="joinBtn">Join</button></div></div>
+      <div class="card"><h3>2. Join a game</h3><p>Enter the code from the host.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><input type="text" id="joinCode" placeholder="CODE" maxlength="6" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"><button class="btn small" id="joinBtn">Join</button></div></div>
     </div>
     <div class="card" style="margin-top:14px"><h3>How it works</h3><p><b>Co-op campaign</b> for 1 to 3 players: friends replace the AI allies (three players = no AI allies).<br><b>Team Match vs Bots</b>: a team of players against bots on one map.<br>Online play works only for signed-in people you have shared the game with (the Share button in claude.ai). A public link without signing in is not enough.</p></div>
   </div>
