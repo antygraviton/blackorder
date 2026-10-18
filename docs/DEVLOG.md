@@ -94,3 +94,8 @@ Rules for this file: `AGENTS.md` section 10.
 * Trade-off: Silent Infiltration and Airfield are no longer available in co-op (objective state is not replicated). Replication is the deferred item in the plan.
 * Verified: `tests/extensions.test.js` now has 40 checks (each objective type, failure by prisoner death, alarm, explosions vs depots, weather, briefing, radio reset, modes unaffected); `solo-campaign` skips the kill-all check for objective missions.
 * Gotcha: `LEVELS.splice(3,0,...)` shifts global level indexes (campaign 2 now starts at index 5); tests must look levels up by name (`multiplayer.test.js` now does).
+
+## 2026-10-18 (cont.) – touch controls
+* New `165-touch.js` + CSS block at the end of `styles.css`: left stick (W/A/S/D, edge = sprint), right-side look, buttons Fire (also looks), Aim (toggle), Jump, Reload, Swap, Nade, Use (hold E), Pause; portrait hint; fullscreen and landscape lock attempted on the first touch. It dispatches synthetic key/mouse events, so no game logic changed. Enabled on `(pointer:coarse)`, `?touch=1` forces it, `?touch=0` disables it. In touch mode the minimap is smaller and the ammo readout moves under it; the viewport meta disables pinch zoom.
+* Verified: `tests/touch.test.js` (22 checks). **Not verified:** real phones (feel, button size and position, performance, iOS fullscreen/audio). Helicopter: stick up/down = climb/descend, look = steer, Aim button cycles weapons; jeep is still a draft.
+* Open: tune button layout after a real-device test; menus are only lightly responsive (one `max-width:700px` rule).

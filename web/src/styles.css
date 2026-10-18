@@ -86,3 +86,26 @@ input[type=text]{background:var(--ink);border:1px solid var(--steel2);color:var(
 .overlay .menu-list{align-items:center}
 #loading{position:absolute;inset:0;background:#0b0e0f;display:none;place-items:center;font-family:'Barlow Condensed';font-size:34px;z-index:8}
 @media (max-width:700px){.screen{padding:18px}.player-box{position:relative;top:0;right:0;width:100%;margin-bottom:12px}.btn{font-size:28px}}
+/* ---- touch controls (see 165-touch.js) ---- */
+body.touch{overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#touch{position:absolute;inset:0;z-index:8;display:none;touch-action:none;-webkit-tap-highlight-color:transparent}
+body.touch #touch{display:block}
+#tJoy{position:absolute;left:0;bottom:0;width:45%;height:65%}
+#tLook{position:absolute;right:0;top:0;width:55%;height:100%}
+#tBase{position:fixed;display:none;width:120px;height:120px;margin:-60px 0 0 -60px;border:2px solid rgba(231,227,212,.45);border-radius:50%;background:rgba(20,26,30,.25);pointer-events:none}
+#tKnob{position:absolute;left:36px;top:36px;width:48px;height:48px;border-radius:50%;background:rgba(231,227,212,.5)}
+.tb{position:absolute;display:grid;place-items:center;border-radius:50%;background:rgba(20,26,30,.45);border:2px solid rgba(231,227,212,.5);color:var(--bone);font:700 12px/1 'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.04em}
+.tb.on{background:rgba(125,140,85,.75)}
+#tFire{right:22px;bottom:22px;width:92px;height:92px;font-size:15px;background:rgba(160,40,30,.5)}
+#tAim{right:124px;bottom:30px;width:66px;height:66px}
+#tJump{right:34px;bottom:128px;width:62px;height:62px}
+#tReload{right:108px;bottom:112px;width:58px;height:58px}
+#tSwap{right:182px;bottom:100px;width:54px;height:54px}
+#tNade{right:34px;bottom:200px;width:56px;height:56px}
+#tUse{right:108px;bottom:184px;width:56px;height:56px}
+#tPause{right:150px;top:18px;width:40px;height:40px;font-size:16px}
+#tRotate{display:none;position:absolute;inset:0;place-items:center;text-align:center;background:rgba(10,13,15,.92);color:var(--bone);font:600 24px 'Barlow Condensed',sans-serif;padding:24px}
+@media (orientation:portrait){body.touch #tRotate{display:grid}}
+body.touch #mm{width:110px;height:110px}
+body.touch .ammo{right:20px;bottom:auto;top:136px;font-size:28px}
+body.touch .ammo small{font-size:13px}

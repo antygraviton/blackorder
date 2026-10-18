@@ -40,6 +40,7 @@ weapons, characters and vehicles are assembled from primitives, sounds are synth
 | `140-allies-helicopter.js` | AI allies and the player helicopter | `mkAlly`, `updateAllies`, `mkPlayerHeli`, `flyHeli`, `heliFire` |
 | `150-minimap.js` | circular minimap | `drawMap` |
 | `160-main-loop.js` | collision, line of sight, the per-frame `loop()` | `collide`, `los`, `loop` |
+| `165-touch.js` | touch overlay for phones/tablets: stick, look, action buttons; only feeds the desktop input paths | `initTouch`, `touchWanted` |
 
 The files are numbered with gaps so a new module can be inserted without renumbering (for example `105-…`).
 

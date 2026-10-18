@@ -15,6 +15,7 @@ node tests/solo-campaign.test.js      # a single file (needs a built web/dist)
 | `modes.test.js` | menu rendering; Training (targets, invincibility, respawn, weapon cycling, stats not polluted); Survival (10 waves, vehicle schedule, death payout); Team Match (bots respawn, player respawn, win condition) |
 | `multiplayer.test.js` | lobby and the 3-player limit; co-op mission with 3 instances (same world, position replication, enemy/kill sync, remote shooting, damage and HP replication, death/respawn, explosion effects, 4 KiB presence budget, mission end and rewards, leaving); Team Match with 2 players (NPC count, scoring, respawn, victory overlay) |
 | `net-peerjs.test.js` | the PeerJS room adapter against an in-memory fake PeerJS: hub election, relay between members, `null` deletes keys, leave, late joiners, room isolation |
+| `touch.test.js` | the touch overlay: stick -> W/A/S/D and sprint, look drag, fire/aim/reload/jump/use/swap/grenade/pause buttons (plain events with `changedTouches`; no real device) |
 | `i18n.test.js` | no Czech diacritics anywhere in the repository |
 
 ## The harness (`tests/lib/harness.js`)
