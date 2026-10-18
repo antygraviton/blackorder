@@ -1,0 +1,14 @@
+node_modules/
+.DS_Store
+*.log
+# Unreal
+engines/unreal/Binaries/
+engines/unreal/Intermediate/
+engines/unreal/Saved/
+engines/unreal/DerivedDataCache/
+engines/unreal/.vs/
+engines/unreal/*.sln
+engines/unreal/build_log.txt
+# Godot
+engines/godot/.godot/
+engines/godot/export/

@@ -1,0 +1,12 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "5.4",
+	"Category": "",
+	"Description": "Black Order - first-person war game, campaign 2015",
+	"Modules": [
+		{ "Name": "CernyRad", "Type": "Runtime", "LoadingPhase": "Default", "AdditionalDependencies": [ "Engine" ] }
+	],
+	"Plugins": [
+		{ "Name": "ProceduralMeshComponent", "Enabled": true }
+	]
+}

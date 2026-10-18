@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Black Order – version 1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Barlow:wght@400;500&display=swap">
+<style>
+@@CSS@@</style>
+</head>
+<body>
+
+<!-- 1 MAIN MENU -->
+<section id="menu" class="screen on">
+  <div class="player-box">
+    <div class="row"><div class="avatar">☗</div><div><b id="pName">PLAYER</b><span class="tag" id="pTag">LVL: 1</span></div></div>
+    <div class="stats" id="pStats"></div>
+  </div>
+  <h1 class="title">BLACK<br>ORDER</h1>
+  <p class="sub">Campaign 2015 · version 1.0 (multiplayer)</p>
+  <div class="menu-list">
+    <button class="btn" data-go="play">Play<small>Campaign and quick games</small></button>
+    <button class="btn" data-go="multi">Multiplayer<small>Co-op campaign for 3 and team match against bots</small></button>
+    <button class="btn" data-go="store">Store<small>Weapons and gear</small></button>
+    <button class="btn" data-go="settings">Settings<small>Sound, controls, graphics</small></button>
+    <button class="btn danger" id="quitBtn">Quit</button>
+  </div>
+  <svg class="bg" viewBox="0 0 800 220" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 150 Q200 90 400 140 T800 120 V220 H0Z" fill="#141b18"/>
+    <g fill="#0e1311"><rect x="610" y="70" width="46" height="70"/><path d="M604 70 L633 48 L662 70Z"/><rect x="150" y="100" width="8" height="45"/><circle cx="154" cy="92" r="24"/><rect x="420" y="112" width="6" height="30"/><circle cx="423" cy="106" r="17"/></g>
+  </svg>
+</section>
+
+<!-- 2 PLAY -->
+<section id="play" class="screen">
+  <div class="bar"><button class="btn small" data-go="menu">Back</button><h2>Play</h2><span class="wallet" data-wallet></span></div>
+  <div class="tabs big" id="playTabs"></div>
+  <div class="loadout" id="loadout"></div>
+  <div class="cards" id="playBody"></div>
+</section>
+
+<!-- 3 MULTIPLAYER -->
+<section id="multi" class="screen">
+  <div class="bar"><button class="btn small" id="multiBack">Back</button><h2>Multiplayer</h2><span class="wallet" data-wallet></span></div>
+  <div id="mpStart">
+    <p class="tag" id="mpStatus" style="min-height:22px"></p>
+    <div class="setrow"><label>Nickname</label><input type="text" id="mpName" maxlength="14"></div>
+    <div class="cards">
+      <div class="card"><h3>1. Create a game</h3><p>You become the host and get a code. Send it to your friends (up to 3 players in total).</p><button class="btn small" id="mpCreate">Create game</button></div>
+      <div class="card"><h3>2. Join a game</h3><p>Enter the code from the host.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><input type="text" id="joinCode" placeholder="CODE" maxlength="6"><button class="btn small" id="joinBtn">Join</button></div></div>
+    </div>
+    <div class="card" style="margin-top:14px"><h3>How it works</h3><p><b>Co-op campaign</b> for 1 to 3 players: friends replace the AI allies (three players = no AI allies).<br><b>Team Match vs Bots</b>: a team of players against bots on one map.<br>Online play works only for signed-in people you have shared the game with (the Share button in claude.ai). A public link without signing in is not enough.</p></div>
+  </div>
+  <div id="mpLobby" style="display:none">
+    <div class="cards">
+      <div class="card"><div class="tag">Game code</div><div class="code" id="partyCode"></div><table id="mpPlayers" style="margin-top:8px"></table></div>
+      <div class="card" id="mpHostCfg">
+        <h3>Game settings</h3>
+        <div class="tabs"><button class="tab on" data-mpmode="coop">Co-op campaign</button><button class="tab" data-mpmode="tdm">Team Match vs Bots</button></div>
+        <div id="mpMissionWrap" class="setrow"><label>Mission</label><select id="mpMission" style="background:var(--steel);color:var(--bone);border:1px solid var(--steel2);padding:6px;max-width:260px"></select></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px"><button class="btn small" id="mpStartBtn">Start game</button><button class="btn small danger" id="mpLeaveBtn">Leave</button></div>
+      </div>
+      <div class="card" id="mpClientInfo"><h3>Waiting room</h3><p id="mpClientText">Wait for the host to start the game.</p><button class="btn small danger" id="mpLeaveBtn2">Leave</button></div>
+    </div>
+    <p class="tag" id="mpLobbyMsg"></p>
+  </div>
+</section>
+
+<!-- 4 SETTINGS -->
+<section id="settings" class="screen">
+  <div class="bar"><button class="btn small" data-go="menu">Back</button><h2>Settings</h2></div>
+  <div class="tabs"><button class="tab on" data-stab="audio">Audio</button><button class="tab" data-stab="controls">Controls</button><button class="tab" data-stab="gamet">Game</button></div>
+  <div id="st-audio" class="stab">
+    <div class="setrow"><label>Effects volume</label><input type="range" id="setVol" min="0" max="100"></div>
+  </div>
+  <div id="st-controls" class="stab" style="display:none">
+    <div class="setrow"><label>Mouse sensitivity</label><input type="range" id="setSens" min="10" max="100"></div>
+    <table><tr><td>Movement</td><td>W A S D</td></tr><tr><td>Sprint / jump</td><td>Shift / Space</td></tr><tr><td>Fire / aim</td><td>Left / right mouse button</td></tr><tr><td>Reload</td><td>R</td></tr><tr><td>Weapons</td><td>1 primary · 2 secondary · 3 melee · 4 grenade · 5 RPG (campaign 2)</td></tr><tr><td>Helicopter (campaign 2)</td><td>mouse = heading and pitch, W / S climb / descend, Space fire, 1–3 weapons, E board / exit</td></tr><tr><td>Pause</td><td>Esc</td></tr></table>
+  </div>
+  <div id="st-gamet" class="stab" style="display:none">
+    <div class="setrow"><label>Field of view (FOV)</label><input type="range" id="setFov" min="60" max="110"></div>
+    <div class="setrow"><label>Quality (shadows and detail)</label><select id="setQ" style="background:var(--steel);color:var(--bone);border:1px solid var(--steel2);padding:6px"><option value="1">Low</option><option value="2">Medium</option><option value="3">High</option></select></div>
+    <div class="setrow"><button class="btn small danger" id="resetSave">Delete progress</button></div>
+  </div>
+</section>
+
+<!-- 5 STORE -->
+<section id="store" class="screen">
+  <div class="bar"><button class="btn small" data-go="menu">Back</button><h2>Store</h2><span class="wallet" data-wallet></span></div>
+  <div class="tabs">
+    <button class="tab on" data-cat="primary">Primary</button><button class="tab" data-cat="secondary">Secondary</button><button class="tab" data-cat="melee">Melee</button><button class="tab" data-cat="grenade">Grenade</button>
+  </div>
+  <p class="tag" id="storeMsg" style="min-height:20px"></p>
+  <div id="storeList" style="max-width:640px"></div>
+</section>
+
+<!-- GAME -->
+<section id="game" class="screen">
+  <canvas id="cv"></canvas>
+  <div class="hud" id="hud">
+    <div id="cine"></div>
+    <div id="flashw" style="position:absolute;inset:0;background:#fff;opacity:0"></div>
+    <div id="scope"></div>
+    <div id="vig"></div>
+    <div id="blood"></div>
+    <canvas id="mm" width="320" height="320"></canvas>
+    <div class="obj" id="obj"></div>
+    <div class="cross" id="cross"></div>
+    <div class="hp" id="hp"></div>
+    <div class="ammo" id="ammo"></div>
+    <div class="msg" id="msg"></div>
+    <div class="warn" id="warn"></div>
+    <div class="warn" id="prompt" style="top:44%;color:var(--bone)"></div>
+  </div>
+  <div id="loading">Loading map…</div>
+  <div class="overlay" id="pause"><div><h2>Pause</h2><p>Click Resume to return to the game.</p><div class="menu-list"><button class="btn" id="resume">Resume</button><button class="btn danger" id="toMenu">To menu</button></div></div></div>
+  <div class="overlay" id="end"><div><h2 id="endT"></h2><p id="endP"></p><div class="menu-list"><button class="btn" id="nextBtn">Next mission</button><button class="btn" id="again">Play again</button><button class="btn" id="endMenu">To menu</button></div></div></div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+@@JS@@</script>
+</body>
+</html>
