@@ -27,6 +27,7 @@ function hud(){
   if(curMode==='tdm'){const tl=Math.max(0,Math.round(tdm?tdm.time-tdm.t:0));$('obj').innerHTML='Team match: players '+killed+' – '+(tdm?tdm.red:0)+' bots<small>Goal '+(tdm?tdm.limit:25)+' kills · time '+Math.floor(tl/60)+':'+String(tl%60).padStart(2,'0')+(NET.role!=='solo'?' · players: '+NET.roster.length:'')+'</small>';}
   else if(curMode==='training')$('obj').innerHTML='Training: targets destroyed '+killed+'<small>Q = next weapon in slot · unlimited ammo · invincible</small>';
   else if(curMode==='survival')$('obj').innerHTML='Survival – wave '+wave+' · kills '+killed+'<small>Enemies left: '+survLeft()+' · record '+(S.bestWave||0)+' waves · Allies: '+allies.filter(a=>a.alive).length+'/'+allies.length+'</small>';
+  else if(L.ob&&L.ob!=='kill'){const ot=objText();$('obj').innerHTML=ot[0]+'<small>'+ot[1]+' · '+L.n+'</small>';}
   else $('obj').innerHTML='Destroy targets: '+killed+' / '+total+'<small>'+CAMPS[L.camp].n+' – mission '+(idxIn(curLevel)+1)+': '+L.n+' · Allies: '+allies.filter(a=>a.alive).length+'/'+allies.length+'</small>';
   if(pDead&&NET.role!=='client')$('prompt').textContent='You died – back in '+Math.ceil(respT)+' s';
   const low=Math.max(0,(60-P.hp)/60);

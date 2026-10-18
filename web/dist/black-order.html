@@ -163,7 +163,7 @@ input[type=text]{background:var(--ink);border:1px solid var(--steel2);color:var(
   </div>
   <div id="st-controls" class="stab" style="display:none">
     <div class="setrow"><label>Mouse sensitivity</label><input type="range" id="setSens" min="10" max="100"></div>
-    <table><tr><td>Movement</td><td>W A S D</td></tr><tr><td>Sprint / jump</td><td>Shift / Space</td></tr><tr><td>Fire / aim</td><td>Left / right mouse button</td></tr><tr><td>Reload</td><td>R</td></tr><tr><td>Weapons</td><td>1 primary · 2 secondary · 3 melee · 4 grenade · 5 RPG (campaign 2)</td></tr><tr><td>Helicopter (campaign 2)</td><td>mouse = heading and pitch, W / S climb / descend, Space fire, 1–3 weapons, E board / exit</td></tr><tr><td>Pause</td><td>Esc</td></tr></table>
+    <table><tr><td>Movement</td><td>W A S D</td></tr><tr><td>Sprint / jump</td><td>Shift / Space</td></tr><tr><td>Fire / aim</td><td>Left / right mouse button</td></tr><tr><td>Reload</td><td>R</td></tr><tr><td>Hold E near objective / flashlight (night)</td><td>E / F</td></tr><tr><td>Weapons</td><td>1 primary · 2 secondary · 3 melee · 4 grenade · 5 RPG (campaign 2)</td></tr><tr><td>Helicopter (campaign 2)</td><td>mouse = heading and pitch, W / S climb / descend, Space fire, 1–3 weapons, E board / exit</td></tr><tr><td>Pause</td><td>Esc</td></tr></table>
   </div>
   <div id="st-gamet" class="stab" style="display:none">
     <div class="setrow"><label>Field of view (FOV)</label><input type="range" id="setFov" min="60" max="110"></div>
@@ -202,6 +202,7 @@ input[type=text]{background:var(--ink);border:1px solid var(--steel2);color:var(
     <div class="warn" id="prompt" style="top:44%;color:var(--bone)"></div>
   </div>
   <div id="loading">Loading map…</div>
+  <div class="overlay" id="brief"><div><h2 id="briefT"></h2><p id="briefP"></p><div class="menu-list"><button class="btn" id="briefGo">Start mission</button><button class="btn" id="briefBack">Back</button></div></div></div>
   <div class="overlay" id="pause"><div><h2>Pause</h2><p>Click Resume to return to the game.</p><div class="menu-list"><button class="btn" id="resume">Resume</button><button class="btn danger" id="toMenu">To menu</button></div></div></div>
   <div class="overlay" id="end"><div><h2 id="endT"></h2><p id="endP"></p><div class="menu-list"><button class="btn" id="nextBtn">Next mission</button><button class="btn" id="again">Play again</button><button class="btn" id="endMenu">To menu</button></div></div></div>
 </section>
@@ -285,6 +286,18 @@ const magOf=k=>Math.round((WEAPONS[k].mag||0)*(attOf(k)==='mag'?1.5:1));
 const spreadMul=k=>attOf(k)==='laser'?.65:1;
 const dmgMul=k=>(attOf(k)==='supp'?.85:1)*(hasPerk('dmg')?1.1:1);
 const silent=k=>attOf(k)==='supp';
+/* ---- new and modified missions ---- */
+const _L=LEVELS.slice();
+const lbase=l=>{const o=Object.assign({},l);['ob','stealth','docs','radio','brief','wx','bossS','bossT','nd','tanks','apcs','helis','jets','desert','runway'].forEach(k=>delete o[k]);return o;};
+Object.assign(_L[0],{brief:'HQ: The mountain village has stopped broadcasting. Investigate it, neutralize the patrols and find out who is behind this. Watch out for mines.',radio:[{t:15,m:'HQ: We hear gunfire from the east, be careful.'},{k:6,m:'HQ: Half of the patrols are gone, keep going.'}]});
+Object.assign(_L[1],{n:'Silent Infiltration',txt:'The Order has taken the mine. Slip through the dark to the terminal on the far side of the map and hack it (hold E). Do not raise the alarm.',brief:'The Order has taken the mine. You must not raise the alarm: enemies see you only from close range and hear loud gunshots. A suppressor, a knife and a bow are your friends. Flashlight: key F. Find the terminal on the far side of the map and hack it (hold E).',ob:'hack',stealth:true,wx:'night',radio:[{t:20,m:'Contact: The terminal is on the opposite side of the map.'},{t:90,m:'Contact: Stay away from the lights.'}]});
+Object.assign(_L[2],{brief:'HQ: The Order holds a small town on the border. Evening, fog, mines in the streets. Clear the streets of all patrols.',radio:[{t:20,m:'HQ: Watch the streets, they are mined.'}]});
+Object.assign(_L[3],{brief:'HQ: An Order armored convoy is driving through the desert toward the border town. Ambush it. Ordinary bullets are not enough against armor: use the RPG (key 5), grenades or napalm.',radio:[{t:20,m:'Contact: The tank is last in the convoy.'}]});
+Object.assign(_L[4],{n:'Airfield',txt:'The Order stores fuel at the airfield. Destroy all four fuel depots (gunfire or explosions). Watch out for helicopters and the jet.',brief:'The Order has taken the airfield and stores fuel there. Destroy all four fuel depots with gunfire or explosions. Watch out for helicopters and jet strikes. It is raining.',ob:'destroy',nd:4,wx:'rain',radio:[{t:30,m:'Contact: The depots are the red fuel tanks.'}]});
+Object.assign(_L[5],{wx:'storm',brief:'The command post of the Order division. Armor, helicopters and jets all at once. When the last machine falls, the Order loses its strength on the border. A storm is raging.',radio:[{t:20,m:'HQ: Good luck, you have the whole sky against you.'}]});
+const L_RESCUE=Object.assign(lbase(_L[0]),{camp:0,n:'Rescue the Prisoner',txt:'Find the prisoner (E), free him and bring him to the extraction point at the start. Do not let him die.',brief:'The Order has captured an officer of our ally. Find him in the settlement (hold E next to him), free him and lead him to the extraction point at the start of the map. If he dies, the mission fails. It is raining.',ob:'rescue',wx:'rain',en:14,mines:6,kits:4,houses:12,ruins:3,seed:41,reward:320,medals:30,xp:110,acc:.6,hp:65,radio:[{t:25,m:'Contact: The prisoner is somewhere in the middle of the settlement.'},{t:120,m:'Contact: Extraction waits at the start of the map.'}]});
+const L_DEFEND=Object.assign(lbase(_L[2]),{camp:0,n:'Base Defense',txt:'Defend the marked zone for 2.5 minutes. The attackers come in waves.',brief:'We captured their command transmitter. The Order will launch a counterattack. Defend the marked zone (blue circle) for 2.5 minutes. Attackers come in waves every twenty seconds. Fog.',ob:'defend',wx:'fog',en:24,mines:0,kits:5,houses:8,ruins:5,seed:47,reward:420,medals:40,xp:130,acc:.65,hp:70,radio:[{t:30,m:'HQ: Waves arrive every 20 seconds.'},{t:100,m:'HQ: Hold on a little longer!'}]});
+LEVELS.splice(3,0,L_RESCUE,L_DEFEND);
 /* ============ MENU ============ */
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));if(['menu','play','store'].includes(id))refresh();}
 function refresh(){
@@ -996,6 +1009,7 @@ function hud(){
   if(curMode==='tdm'){const tl=Math.max(0,Math.round(tdm?tdm.time-tdm.t:0));$('obj').innerHTML='Team match: players '+killed+' – '+(tdm?tdm.red:0)+' bots<small>Goal '+(tdm?tdm.limit:25)+' kills · time '+Math.floor(tl/60)+':'+String(tl%60).padStart(2,'0')+(NET.role!=='solo'?' · players: '+NET.roster.length:'')+'</small>';}
   else if(curMode==='training')$('obj').innerHTML='Training: targets destroyed '+killed+'<small>Q = next weapon in slot · unlimited ammo · invincible</small>';
   else if(curMode==='survival')$('obj').innerHTML='Survival – wave '+wave+' · kills '+killed+'<small>Enemies left: '+survLeft()+' · record '+(S.bestWave||0)+' waves · Allies: '+allies.filter(a=>a.alive).length+'/'+allies.length+'</small>';
+  else if(L.ob&&L.ob!=='kill'){const ot=objText();$('obj').innerHTML=ot[0]+'<small>'+ot[1]+' · '+L.n+'</small>';}
   else $('obj').innerHTML='Destroy targets: '+killed+' / '+total+'<small>'+CAMPS[L.camp].n+' – mission '+(idxIn(curLevel)+1)+': '+L.n+' · Allies: '+allies.filter(a=>a.alive).length+'/'+allies.length+'</small>';
   if(pDead&&NET.role!=='client')$('prompt').textContent='You died – back in '+Math.ceil(respT)+' s';
   const low=Math.max(0,(60-P.hp)/60);
@@ -1014,11 +1028,13 @@ function buildView(){
 }
 
 /* ============ MISSION START ============ */
-function startMission(idx){
-  curMode=null;curLevel=idx;L=LEVELS[idx];show('game');$('loading').style.display='grid';
-  setTimeout(()=>{try{doStart();}catch(e){console.error(e);$('loading').textContent='Loading error: '+e.message;return;}$('loading').style.display='none';},40);
+function startMission(idx,skipBrief){
+  curMode=null;curLevel=idx;L=LEVELS[idx];show('game');
+  if(L.brief&&!skipBrief){$('briefT').textContent=L.n;$('briefP').textContent=L.brief;$('brief').classList.add('on');return;}
+  beginLoad();
 }
 function doStart(){
+  L=applyWx(L);
   if(!ren){ren=new THREE.WebGLRenderer({canvas:$('cv'),antialias:S.q>=2});ren.outputEncoding=THREE.sRGBEncoding;ren.toneMapping=THREE.ACESFilmicToneMapping;ren.shadowMap.enabled=true;ren.shadowMap.type=THREE.PCFSoftShadowMap;}
   ren.setPixelRatio(Math.min(window.devicePixelRatio||1,S.q>=3?2:1.4));
   ren.setSize(innerWidth,innerHeight);
@@ -1030,8 +1046,9 @@ function doStart(){
   pDead=false;respT=0;tdm=null;vprojs=[];vnades=[];
   cam=new THREE.PerspectiveCamera(S.fov,innerWidth/innerHeight,.03,1800);
   cam.position.set(P.x,P.y,P.z);scene.add(cam);
-  flash=new THREE.PointLight(0xffc070,0,9);cam.add(flash);
+  flash=new THREE.PointLight(0xffc070,0,9);cam.add(flash);initWx();
   const kin=curMode?0:idxIn(curLevel);
+  objs=[];alarm=false;missionT=0;defT=0;defGroup=0;if(L.radio)L.radio.forEach(r=>{r.done=false;});
   if(man){
     man.mi.forEach(([x,z])=>addMine(x/10,z/10));
     man.ki.forEach(([x,z])=>addKit(x/10,z/10));
@@ -1053,8 +1070,9 @@ function doStart(){
     if(curMode==='survival')initSurvival();
     if(curMode==='tdm')initTdm();
   }
+  if(!man&&!curMode)placeObjectives();
   pheli=(L.camp===1&&NET.role==='solo'&&!curMode)?mkPlayerHeli(14,58):null;mounted=false;
-  killed=0;total=curMode?1e9:enemies.length+vehicles.filter(v=>v.type!=='jet').length;over=false;$('blood').innerHTML='';
+  killed=0;total=(curMode||(L.ob&&L.ob!=='kill'))?1e9:enemies.length+vehicles.filter(v=>v.type!=='jet').length;over=false;$('blood').innerHTML='';
   slots=[S.primary,S.secondary,S.melee||'knife',S.grenade||'m67'];
   if(L.camp===1&&S.primary!=='rpg'&&!curMode)slots.push('rpg');
   wp={};
@@ -1078,7 +1096,7 @@ function pauseGame(){if(NET.role==='solo')run=false;$('pause').classList.add('on
 $('resume').onclick=()=>{$('pause').classList.remove('on');lockMouse();run=true;lastT=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);};
 $('toMenu').onclick=()=>{stopGame();show('menu');};
 $('endMenu').onclick=()=>{stopGame();show('menu');};
-$('again').onclick=()=>{if(curMode)startMode(curMode);else startMission(curLevel);};
+$('again').onclick=()=>{if(curMode)startMode(curMode);else startMission(curLevel,true);};
 $('nextBtn').onclick=()=>{const nx=nextInCamp(curLevel);if(nx>=0)startMission(nx);};
 function stopGame(){if(NET.role!=='solo')netLeave();if(curMode==='survival'&&!survPaid&&wave>0)survPay();run=false;over=true;try{document.exitPointerLock();}catch(e){}$('pause').classList.remove('on');$('end').classList.remove('on');$('scope').style.display='none';}
 const canAct=()=>run&&(locked||fallback)&&!pDead;
@@ -1088,6 +1106,7 @@ addEventListener('keydown',e=>{keys[e.code]=true;
   if(mounted){if(e.code==='Digit1')heliWeapon=0;if(e.code==='Digit2')heliWeapon=1;if(e.code==='Digit3')heliWeapon=2;if(e.code==='Space'&&heliWeapon>0)heliFire(true);hud();}
   if(e.code==='Escape'&&!locked)pauseGame();
   if(e.code==='KeyR')reload();
+  if(e.code==='KeyF'&&torch)torch.visible=!torch.visible;
   if(e.code==='Digit1')sw(0);if(e.code==='Digit2')sw(1);if(e.code==='Digit3')sw(2);if(e.code==='Digit4')sw(3);if(e.code==='Digit5')sw(4);if(e.code==='KeyE')toggleHeli();
 });
 addEventListener('keyup',e=>keys[e.code]=false);
@@ -1148,7 +1167,7 @@ function fire(first){
       if(hit.object.userData.enemy){const e=enemies.find(x=>x.g===hit.object.userData.enemy);
         if(e){const head=hit.object.userData.tag==='head';bloodBurst(hit.point,head?10:6);dmg(e,w.dmg*dmgMul(k)*(head?2.5:1),head);}}
       else if(hit.object.userData.vehicle){vdmg(hit.object.userData.vehicle,w.dmg*dmgMul(k),false);if(i<2)dustBurst(hit.point,0xc0c0b0);}
-      else if(i<3)dustBurst(hit.point,0x9a9186);
+      else{if(hit.object.userData.obj)objHit(hit.object.userData.obj,w.dmg*dmgMul(k));if(i<3)dustBurst(hit.point,0x9a9186);}
     } else if(gh&&i<3)dustBurst(gh,0x7a6a4c);
   }
   if(C)netShot('g',k,cam.position,camDir());
@@ -1215,6 +1234,7 @@ function explode(p,r,dm){
   for(const e of enemies){if(!e.alive)continue;const d=Math.hypot(e.x-p.x,e.z-p.z);if(d<r){bloodBurst(new THREE.Vector3(e.x,1.2,e.z),8);dmg(e,dm*(1-d/(r+1)),false);}}
   for(const v of vehicles){if(!v.alive||!v.g.visible)continue;const d=Math.max(0,v.g.position.distanceTo(p)-3);if(d<r)vdmg(v,dm*1.6*(1-d/(r+1)),true);}
   for(const a of allies){if(!a.remote||!a.alive)continue;const da=Math.hypot(a.x-p.x,a.z-p.z);if(da<r)allyHit(a,dm*.5*(1-da/(r+1)));}
+  for(const o of objs){if(o.t!=='depot'||o.done)continue;const od=Math.hypot(o.x-p.x,o.z-p.z);if(od<r+1.5)objHit(o,dm*(1-od/(r+2.5)));}
   const d=Math.hypot(P.x-p.x,P.z-p.z,(mounted?P.y-p.y:0));if(d<r)hurt(dm*.6*(1-d/(r+1)));
 }
 function hurt(v,from){
@@ -1580,11 +1600,157 @@ function runway(){
   obst.push({a:cx-13,b:cx+13,c:-76,d:76,nm:true,ph:true});
 }
 
+/* ============ MISSION EXTENSIONS: objectives, weather, briefing, radio ============ */
+/* Objective missions (L.ob = destroy | hack | rescue | defend) are solo-only: they are not replicated (see docs/MULTIPLAYER.md). */
+let objs=[],alarm=false,missionT=0,defT=0,defGroup=0,torch=null,rain=[],lightT=8,thunderAt=0;
+function flagSet(k){S.flag=S.flag||{};S.flag[k]=1;}
+/* ---- weather and night ---- */
+function applyWx(l){
+  const w=l.wx;if(!w)return l;const o=Object.assign({},l);
+  if(w==='night')Object.assign(o,{skyTop:0x05080f,skyHor:0x1a2433,fog:0x0a0e16,fogN:18,fogF:190,sun:0x8fa6cc,sunI:.2,hemiI:.3,exp:1.2,cloud:.1});
+  else if(w==='fog')Object.assign(o,{skyTop:0x8f98a0,skyHor:0xb8bfc2,fog:0xb8bfc2,fogN:6,fogF:150,sunI:l.sunI*.6});
+  else if(w==='rain')Object.assign(o,{skyTop:0x58636b,skyHor:0x8a949a,fog:0x7a858c,fogN:22,fogF:250,sunI:l.sunI*.45,hemiI:l.hemiI*.9,cloud:.9});
+  else if(w==='storm')Object.assign(o,{skyTop:0x2f363d,skyHor:0x5a646b,fog:0x4e575d,fogN:16,fogF:190,sunI:l.sunI*.25,hemiI:l.hemiI*.7,cloud:1});
+  return o;
+}
+function initWx(){
+  rain=[];torch=null;lightT=8;thunderAt=0;
+  if(L.wx==='rain'||L.wx==='storm'){
+    const n=1400,pos=new Float32Array(n*6);
+    for(let i=0;i<n;i++){const x=(Math.random()-.5)*44,y=Math.random()*30,z=(Math.random()-.5)*44;pos.set([x,y,z,x-.1,y-.8,z-.05],i*6);}
+    const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    const mat=new THREE.LineBasicMaterial({color:0xaab6c0,transparent:true,opacity:.42});
+    for(let k=0;k<2;k++){const r=new THREE.LineSegments(geo,mat);r.frustumCulled=false;scene.add(r);rain.push(r);}
+  }
+  if(L.wx==='night'){
+    torch=new THREE.SpotLight(0xfff0d0,1.7,75,.5,.5,1);cam.add(torch);
+    const tt=new THREE.Object3D();tt.position.set(0,0,-6);cam.add(tt);torch.target=tt;
+  }
+}
+function updateWx(dt){
+  rain.forEach((r,i)=>r.position.set(cam.position.x,cam.position.y-12-(((tAll*22)+i*15)%30),cam.position.z));
+  if(L.wx==='storm'){
+    lightT-=dt;if(lightT<=0){lightT=6+Math.random()*9;flashA=.75;thunderAt=1+Math.random()*1.4;}
+    if(thunderAt>0){thunderAt-=dt;if(thunderAt<=0){beep(55,.9,'sawtooth',.35);shake=Math.max(shake,.02);}}
+  }
+}
+/* ---- briefing and radio ---- */
+function beginLoad(){
+  $('brief').classList.remove('on');$('loading').style.display='grid';
+  setTimeout(()=>{try{doStart();}catch(e){console.error(e);$('loading').textContent='Loading error: '+e.message;return;}$('loading').style.display='none';},40);
+}
+function updateRadio(dt){
+  missionT+=dt;
+  for(const r of (L.radio||[])){if(r.done)continue;if((r.t&&missionT>=r.t)||(r.k&&killed>=r.k)){r.done=true;say('📻 '+r.m,5);beep(1200,.12,'sine',.1);}}
+}
+/* ---- mission objectives ---- */
+function addObj(t,x,z){
+  const o={t,x,z,hp:150,prog:0,done:false,free:false,m:null,vis:false};objs.push(o);
+  if(t==='host')return o;
+  const g=new THREE.Group();g.position.set(x,H(x,z),z);scene.add(g);o.m=g;
+  const mk=(geo,mat,px,py,pz)=>{const m=new THREE.Mesh(geo,mat);m.position.set(px,py,pz);m.castShadow=true;g.add(m);return m;};
+  if(t==='depot'){
+    mk(new THREE.CylinderGeometry(1.1,1.1,2.2,14),stdM(null,{color:lin(0xb13a22),roughness:.5,metalness:.4}),0,1.1,0);
+    mk(new THREE.CylinderGeometry(1.14,1.14,.3,14),stdM(null,{color:lin(0xe0c33a),roughness:.6}),0,1.5,0);
+    mk(new THREE.CylinderGeometry(.35,.35,.4,10),stdM(null,{color:lin(0x2b2b2b)}),0,2.4,0);
+    addBlock(x,z,2.4,2.4,H(x,z),2.4,false);const px=obstMesh[obstMesh.length-1];px.userData.obj=o;o.px=px;o.co=obst[obst.length-1];
+  } else if(t==='term'){
+    mk(new THREE.BoxGeometry(1.4,1.3,.9),stdM(null,{color:lin(0x2c3236),roughness:.5,metalness:.5}),0,.65,0);
+    const scr=mk(new THREE.BoxGeometry(1.1,.6,.05),new THREE.MeshBasicMaterial({color:0x3dff9a}),0,1.1,.47);o.scr=scr;
+    const lt=new THREE.PointLight(0x3dff9a,1.2,9);lt.position.set(0,1.4,1);g.add(lt);o.lt=lt;
+    addBlock(x,z,1.5,1,H(x,z),1.3,false);
+  } else if(t==='zone'||t==='ext'){
+    const col=t==='zone'?0x4aa8ff:0x4aff7a,r=t==='zone'?14:7;
+    const ring=new THREE.Mesh(new THREE.RingGeometry(r-.5,r,48),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.55,side:THREE.DoubleSide,depthWrite:false}));
+    ring.rotation.x=-Math.PI/2;ring.position.y=.35;g.add(ring);o.r=r;
+    const beam=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,30,6),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.35}));beam.position.y=15;g.add(beam);
+  }
+  return o;
+}
+function placeObjectives(){
+  const rr=rng(L.seed*53);
+  if(L.ob==='destroy'){for(let i=0;i<(L.nd||4);i++){const [x,z]=spot(rr,25,4,66);addObj('depot',x,z);}}
+  else if(L.ob==='hack'){const [x,z]=spot(rr,55,4,60);addObj('term',x,z);}
+  else if(L.ob==='rescue'){const [x,z]=spot(rr,55,4,60);addObj('host',x,z);const h=mkAlly(x,z,2);h.hostage=true;h.free=false;h.hp=80;if(h.marker)h.marker.material.color.set(0xffd23a);allies.push(h);addObj('ext',0,66);}
+  else if(L.ob==='defend'){const [x,z]=spot(rr,0,6,25);addObj('zone',x,z);}
+}
+function objHit(o,d){
+  if(NET.role==='client'||o.t!=='depot'||o.done)return;
+  o.hp-=d;if(o.hp<=0)depotBoom(o);
+}
+function depotBoom(o){
+  o.done=true;const p=new THREE.Vector3(o.x,H(o.x,o.z)+1,o.z);
+  depotVis(o);explode(p,7,90);say('Fuel depot destroyed!',2);
+}
+function depotVis(o){
+  if(o.vis)return;o.vis=true;
+  if(o.px){const i=obstMesh.indexOf(o.px);if(i>=0)obstMesh.splice(i,1);}
+  if(o.co){const i=obst.indexOf(o.co);if(i>=0)obst.splice(i,1);}
+  if(o.m){o.m.traverse(m=>{if(m.isMesh&&m.material&&m.material.color){m.material=m.material.clone();m.material.color.multiplyScalar(.2);}});o.m.scale.y=.45;}
+  fireZone(new THREE.Vector3(o.x,H(o.x,o.z),o.z),0);
+}
+function humansNear(x,z,r,needUse){
+  if(!pDead&&Math.hypot(P.x-x,P.z-z)<r&&(!needUse||keys.KeyE))return true;
+  for(const a of allies)if(a.remote&&a.alive&&Math.hypot(a.x-x,a.z-z)<r&&(!needUse||a.use))return true;
+  return false;
+}
+function hostageTick(a,dt){
+  if(!a.free){
+    if(humansNear(a.x,a.z,3,true)){a.fp=(a.fp||0)+dt/1.5;if(a.fp>=1){a.free=true;say('Prisoner freed! Lead him to the extraction point.',4);beep(700,.3,'sine',.2);}}else a.fp=Math.max(0,(a.fp||0)-dt);
+    a.legs.forEach(q=>{q.hip.rotation.x*=.8;q.knee.rotation.x*=.8;});return;
+  }
+  const t=pickTarget(a.x,a.z);if(!t)return;
+  const dx=t.x-a.x,dz=t.z-a.z,d=Math.hypot(dx,dz);
+  if(d>4){a.x+=dx/d*3.6*dt;a.z+=dz/d*3.6*dt;collide(a,.5);a.g.position.set(a.x,H(a.x,a.z),a.z);
+    let da=Math.atan2(dx,dz)-a.g.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));a.g.rotation.y+=da*Math.min(1,dt*8);
+    a.walk+=dt*8;const s1=Math.sin(a.walk);a.legs[0].hip.rotation.x=s1*.7;a.legs[1].hip.rotation.x=-s1*.7;}
+  else a.legs.forEach(q=>{q.hip.rotation.x*=.8;q.knee.rotation.x*=.8;});
+}
+function updateObjectives(dt){
+  if(over)return;
+  if(L.stealth&&!alarm&&enemies.some(e=>e.alive&&e.alerted))raiseAlarm('Enemy alerted!');
+  const ob=L.ob;if(!ob||ob==='kill')return;
+  for(const o of objs){
+    if(o.t==='term'&&!o.done){
+      const near=humansNear(o.x,o.z,3.2,true);
+      o.prog=Math.max(0,Math.min(1,o.prog+(near?dt/6:-dt/30)));
+      if(o.prog>=1){o.done=true;say('Terminal hacked!',3);beep(900,.4,'sine',.2);}
+    }
+    if(o.t==='zone'){
+      const inside=humansNear(o.x,o.z,o.r,false);o.inside=inside;
+      if(inside)o.prog=Math.min(1,o.prog+dt/150);
+      defT+=dt;const grp=Math.floor(defT/20);
+      while(defGroup<grp&&defGroup<4){for(let i=defGroup*6;i<defGroup*6+6&&i<enemies.length;i++){enemies[i].alerted=true;}defGroup++;say('Another wave of attackers!',3);beep(600,.25,'sawtooth',.2);}
+      if(o.prog>=1)o.done=true;
+    }
+  }
+  if(ob==='destroy'&&objs.length&&objs.every(o=>o.done))win();
+  else if(ob==='hack'&&objs.every(o=>o.t!=='term'||o.done)){if(!alarm){flagSet('ghost');}win();}
+  else if(ob==='rescue'){
+    const h=allies.find(a=>a.hostage);
+    if(h&&!h.alive){failMission('The prisoner died. Mission failed.');return;}
+    const ex=objs.find(o=>o.t==='ext');
+    if(h&&h.free&&ex&&Math.hypot(h.x-ex.x,h.z-ex.z)<ex.r)win();
+  }
+  else if(ob==='defend'){const z=objs.find(o=>o.t==='zone');if(z&&z.prog>=1){enemies.forEach(e=>{if(e.alive)e.alerted=false;});win();}}
+}
+function objText(){
+  if(L.ob==='destroy'){const t=objs.filter(o=>o.t==='depot'),n=t.filter(o=>o.done).length;return ['Destroy fuel depots: '+n+' / '+t.length,'Gunfire and explosions destroy the depots'];}
+  if(L.ob==='hack'){const o=objs.find(x=>x.t==='term');return ['Hack the terminal: '+Math.round((o?o.prog:0)*100)+' %'+(alarm?' · ALARM':''),'Hold E at the terminal · stealth '+(alarm?'broken':'intact')];}
+  if(L.ob==='rescue'){const h=allies.find(a=>a.hostage);return [!h?'Rescue the prisoner':(h.free?'Lead the prisoner to extraction (green circle)':'Find the prisoner and free him (hold E)'),h&&!h.alive?'The prisoner died':'The prisoner must survive'];}
+  if(L.ob==='defend'){const z=objs.find(o=>o.t==='zone');const s=Math.max(0,Math.round(150*(1-(z?z.prog:0))));return ['Defend the zone: '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0'),(z&&humansNear(z.x,z.z,z.r,false))?'You are in the zone':'Return to the blue circle'];}
+  return ['',''];
+}
+function raiseAlarm(msg){
+  if(alarm)return;alarm=true;say('ALARM! '+msg,3.5);beep(800,.5,'sawtooth',.25);
+  for(const e of enemies)if(e.alive)e.alerted=true;
+}
+$('briefGo').onclick=beginLoad;$('briefBack').onclick=()=>{$('brief').classList.remove('on');show('play');};
 /* ============ MODES: TRAINING AND SURVIVAL ============ */
 const MODES={
-  training:Object.assign({},LEVELS[0],{n:'Training',txt:'Shooting range: targets and vehicles respawn, ammo is unlimited and you cannot die. Q switches the weapon in the current slot (slots 1–4).',en:0,mines:0,kits:0,houses:2,ruins:0,seed:5,reward:0,medals:0,xp:0}),
-  survival:Object.assign({},LEVELS[2],{n:'Survival',txt:'Survive as long as you can. The enemy waves keep getting stronger.',en:0,mines:6,kits:2,houses:12,ruins:4,seed:91,reward:0,medals:0,xp:0}),
-  tdm:Object.assign({},LEVELS[1],{n:'Team Match vs Bots',txt:'Team of players versus bots. First to 25 kills wins, or whoever has more kills after 6 minutes.',en:0,mines:0,kits:3,houses:12,ruins:5,seed:57,reward:0,medals:0,xp:0})
+  training:Object.assign({},lbase(LEVELS[0]),{n:'Training',txt:'Shooting range: targets and vehicles respawn, ammo is unlimited and you cannot die. Q switches the weapon in the current slot (slots 1–4).',en:0,mines:0,kits:0,houses:2,ruins:0,seed:5,reward:0,medals:0,xp:0}),
+  survival:Object.assign({},lbase(LEVELS[2]),{n:'Survival',txt:'Survive as long as you can. The enemy waves keep getting stronger.',en:0,mines:6,kits:2,houses:12,ruins:4,seed:91,reward:0,medals:0,xp:0}),
+  tdm:Object.assign({},lbase(LEVELS[1]),{n:'Team Match vs Bots',txt:'Team of players versus bots. First to 25 kills wins, or whoever has more kills after 6 minutes.',en:0,mines:0,kits:3,houses:12,ruins:5,seed:57,reward:0,medals:0,xp:0})
 };
 function startMode(name){
   curMode=name;curLevel=0;L=MODES[name];show('game');$('loading').style.display='grid';
@@ -1838,7 +2004,7 @@ function mpUI(inRoom){
 }
 function mpFillMissions(){
   const sel=$('mpMission');sel.innerHTML='';
-  LEVELS.forEach((l,i)=>{const o=document.createElement('option');o.value=i;o.textContent='Campaign '+(l.camp+1)+' – mission '+(idxIn(i)+1)+': '+l.n;sel.appendChild(o);});
+  LEVELS.forEach((l,i)=>{if(l.ob&&l.ob!=='kill')return;const o=document.createElement('option');o.value=i;o.textContent='Campaign '+(l.camp+1)+' – mission '+(idxIn(i)+1)+': '+l.n;sel.appendChild(o);});
   sel.value=NET.lobbyLv;
 }
 function mpModeTabs(){
@@ -2030,6 +2196,7 @@ function hitscanFrom(o,dir,w){
     if(hit&&(!gh||hit.distance<gh.distanceTo(o))){
       if(hit.object.userData.enemy){const e=enemies.find(x=>x.g===hit.object.userData.enemy);if(e){const head=hit.object.userData.tag==='head';bloodBurst(hit.point,head?10:6);dmg(e,w.dmg*(head?2.5:1),head);}}
       else if(hit.object.userData.vehicle)vdmg(hit.object.userData.vehicle,w.dmg,false);
+      else if(hit.object.userData.obj)objHit(hit.object.userData.obj,w.dmg);
     }
   }
 }
@@ -2188,6 +2355,7 @@ function updateAllies(dt){
   for(const a of allies){
     if(a.remote)continue;
     if(a.marker)a.marker.rotation.y+=dt*2;
+    if(a.hostage&&a.alive){hostageTick(a,dt);continue;}
     if(!a.alive){
       if(a.dt<1){a.dt+=dt*2.2;const q=Math.min(1,a.dt);a.g.rotation.x=-q*1.5;a.g.position.y=H(a.x,a.z)-q*.05;a.legs[0].hip.rotation.x=q*.5;a.legs[1].hip.rotation.x=-q*.3;if(a.marker)a.marker.visible=false;}
       continue;
@@ -2340,7 +2508,7 @@ function heliFire(first){
     if(hit&&(!gh||hit.distance<gh.distanceTo(mz))){
       if(hit.object.userData.enemy){const e=enemies.find(x=>x.g===hit.object.userData.enemy);if(e){const head=hit.object.userData.tag==='head';bloodBurst(hit.point,head?10:6);dmg(e,16*(head?2:1),head);}}
       else if(hit.object.userData.vehicle){vdmg(hit.object.userData.vehicle,16,false);dustBurst(hit.point,0xc0c0b0);}
-      else dustBurst(hit.point,0x9a9186);
+      else{if(hit.object.userData.obj)objHit(hit.object.userData.obj,16);dustBurst(hit.point,0x9a9186);}
     } else if(gh)dustBurst(gh,0x7a6a4c);
   } else if(heliWeapon===1){
     if(now-lastRocket<.8)return;
@@ -2376,6 +2544,8 @@ function drawMap(){
   mmc.translate(160,160);mmc.rotate(P.yaw);mmc.scale(sc,sc);mmc.translate(-P.x,-P.z);
   for(const b of obst){if(b.nm)continue;mmc.fillStyle=b.f?'rgba(180,170,120,.7)':'rgba(120,130,110,.55)';mmc.fillRect(b.a,b.c,b.b-b.a,b.d-b.c);}
   mmc.fillStyle='#e8e8e0';for(const k of kits)if(!k.used)mmc.fillRect(k.x-.8,k.z-.8,1.6,1.6);
+  for(const o of objs){if(o.done||o.t==='host')continue;mmc.fillStyle=o.t==='depot'?'#ff3a2a':o.t==='term'?'#3dff9a':o.t==='ext'?'#4aff7a':'#4aa8ff';mmc.fillRect(o.x-2,o.z-2,4,4);}
+  const hos=allies.find(a=>a.hostage&&a.alive);if(hos){mmc.fillStyle='#ffd23a';mmc.fillRect(hos.x-2,hos.z-2,4,4);}
   mmc.fillStyle='#d6402a';
   for(const e of enemies){if(!e.alive||Math.hypot(e.x-P.x,e.z-P.z)>50)continue;mmc.beginPath();mmc.arc(e.x,e.z,1.5,0,Math.PI*2);mmc.fill();}
   mmc.fillStyle='#ff7a1e';
@@ -2486,10 +2656,10 @@ function loop(){
     let dx=P.x-e.x,dz=P.z-e.z,dist=Math.hypot(dx,dz);
     const gH=H(e.x,e.z);
     const hd=new THREE.Vector3(e.x,gH+1.7,e.z);
-    let see=!pDead&&dist<60*(hasPerk('ghost')?.8:1)&&los(hd,eye)&&!smokeBlocks(hd,eye);
+    let see=!pDead&&dist<(L.stealth&&!alarm?22:60)*(hasPerk('ghost')?.8:1)&&los(hd,eye)&&!smokeBlocks(hd,eye);
     let tAlly=null;
     for(const a of allies){if(!a.alive)continue;const da=Math.hypot(a.x-e.x,a.z-e.z);
-      if(da<(see?dist:55)&&da<50){const ta=new THREE.Vector3(a.x,H(a.x,a.z)+1.5,a.z);if(los(hd,ta)&&!smokeBlocks(hd,ta)){tAlly=a;dx=a.x-e.x;dz=a.z-e.z;dist=da;see=true;}}}
+      if(da<(see?dist:55)&&da<(L.stealth&&!alarm?22:50)){const ta=new THREE.Vector3(a.x,H(a.x,a.z)+1.5,a.z);if(los(hd,ta)&&!smokeBlocks(hd,ta)){tAlly=a;dx=a.x-e.x;dz=a.z-e.z;dist=da;see=true;}}}
     if(see)e.alerted=true;
     let walking=false;
     if(e.flinch>0){e.flinch-=dt;e.g.rotation.x=-.18*(e.flinch/.25);}else e.g.rotation.x=0;
@@ -2516,6 +2686,7 @@ function loop(){
   if(curMode==='survival')updateSurvival(dt);
   if(curMode==='training')trainRefill();
   if(curMode==='tdm')updateTDM(dt);
+  updateRadio(dt);updateObjectives(dt);updateWx(dt);
   updateVehicles(dt);updateAllies(dt);updateHeliIdle(dt);updateProjs(dt);updateFires(dt);updateClouds(dt);
   }else clientTick(dt);
   netTick(dt);

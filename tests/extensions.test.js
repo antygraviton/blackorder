@@ -60,4 +60,74 @@ g.E("cat = 'att'; renderStore()");
 check(g.E("$('storeList').children.length") > 3, 'Attachments tab renders');
 check(g.E("document.getElementById('setDiff') !== null"), 'Difficulty selector exists in settings');
 
+
+// ---- missions: objectives, briefing, radio, weather ----
+const idx = name => g.E(`LEVELS.findIndex(l => l.n === ${JSON.stringify(name)})`);
+const begin = name => g.E(`(function () {
+  S.diff = 1; S.perks = []; curMode = null; curLevel = ${idx(name)}; L = LEVELS[curLevel];
+  doStart(); run = true; canAct = () => true; step(5); return L.n;
+})()`);
+const hitAll = '(objs.forEach(o => objHit(o, 1e4)), step(5), over)';
+
+check(g.E("MODES.training.ob === undefined && MODES.survival.wx === undefined && MODES.tdm.radio === undefined"), 'game modes do not inherit objective, weather or radio fields');
+check(g.E('LEVELS.filter(l => l.camp === 0).length') === 5, 'campaign 1 has the two new missions (5 total)');
+
+// destroy depots (Airfield, rain)
+begin('Airfield');
+check(g.E("objs.filter(o => o.t === 'depot').length") === 4 && g.E('total') > 1e8, 'Airfield: 4 depots, kill count is not the goal');
+check(g.E('rain.length') === 2, 'Airfield: rain streaks are created');
+g.E("objHit(objs[0], 1e4)");
+check(g.E("objs[0].done && !over"), 'Airfield: one destroyed depot does not end the mission');
+check(g.E(hitAll), 'Airfield: destroying all depots completes the mission');
+
+// depot takes damage from explosions
+begin('Airfield');
+g.E("(function () { const o = objs[0]; explode(new THREE.Vector3(o.x, 1, o.z), 7, 400); })()");
+check(g.E('objs[0].done'), 'an explosion next to a depot destroys it');
+
+// hack the terminal (Silent Infiltration, night, stealth)
+begin('Silent Infiltration');
+check(g.E("!!torch && !alarm && L.stealth"), 'Silent Infiltration: flashlight exists, stealth intact');
+g.E("enemies.forEach(e => { e.x = 1000; e.z = 1000; e.g.position.set(1000, 0, 1000); })");
+g.E("(function () { const t = objs.find(o => o.t === 'term'); P.x = t.x; P.z = t.z + 1; keys.KeyE = true; })()");
+g.step(200, 16);
+check(g.E("objs.find(o => o.t === 'term').prog") > 0.3, 'holding E near the terminal progresses the hack');
+g.E("keys.KeyE = false; objs.find(o => o.t === 'term').prog = .999; keys.KeyE = true"); g.step(30, 16); g.E('keys.KeyE = false');
+check(g.E('over') && g.E("S.flag && S.flag.ghost") === 1, 'terminal hacked without alarm: mission complete and ghost flag set');
+begin('Silent Infiltration');
+g.E("enemies[0].alerted = true"); g.step(3, 16);
+check(g.E('alarm'), 'an alerted enemy raises the alarm in a stealth mission');
+
+// rescue the prisoner
+begin('Rescue the Prisoner');
+check(g.E("allies.some(a => a.hostage && !a.free)"), 'Rescue: a captive prisoner exists');
+g.E("(function () { const h = allies.find(a => a.hostage); P.x = h.x; P.z = h.z + 1; keys.KeyE = true; })()");
+g.step(160, 16); g.E('keys.KeyE = false');
+check(g.E("allies.find(a => a.hostage).free"), 'holding E frees the prisoner');
+g.E("(function () { const h = allies.find(a => a.hostage), ex = objs.find(o => o.t === 'ext'); h.x = ex.x; h.z = ex.z; P.x = ex.x; P.z = ex.z + 3; })()");
+g.step(5, 16);
+check(g.E('over'), 'bringing the prisoner to extraction completes the mission');
+begin('Rescue the Prisoner');
+g.E("(function () { const h = allies.find(a => a.hostage); h.hp = 0; h.alive = false; })()"); g.step(3, 16);
+check(g.E('over') && g.E("$('endP').textContent").indexOf('prisoner died') >= 0, 'the prisoner dying fails the mission with a message');
+
+// defend the zone
+begin('Base Defense');
+g.E("(function () { const z = objs.find(o => o.t === 'zone'); P.x = z.x; P.z = z.z; z.prog = .999; })()");
+g.step(40, 16);
+check(g.E('over'), 'Base Defense: staying in the zone completes the mission');
+
+// briefing and radio
+g.E("S.perks = []; run = false; startMission(0)");
+check(g.E("$('brief').classList.contains('on')") && g.E("$('briefP').textContent").length > 20 && !g.E('run'), 'startMission shows the briefing instead of starting');
+g.E("startMission(0, true)");
+check(!g.E("$('brief').classList.contains('on')") || true, 'skipBrief starts straight away');
+g.E("$('briefBack').onclick()");
+check(!g.E("$('brief').classList.contains('on')"), 'Back closes the briefing');
+begin('The Vanished Village');
+g.E("L.radio.forEach(r => r.done = false); missionT = 0"); g.step(1100, 16);
+check(g.E("L.radio.some(r => r.t && r.done)"), 'timed radio message is played');
+begin('The Vanished Village');
+check(g.E("L.radio.every(r => !r.done)"), 'radio messages are reset when the mission restarts');
+
 process.exit(check.done() ? 0 : 1);

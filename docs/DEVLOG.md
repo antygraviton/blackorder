@@ -11,12 +11,12 @@ Rules for this file: `AGENTS.md` section 10.
 * **Lean plan:**
   1. ~~Clean the drafts~~ DONE: Czech leftovers translated in `drafts/v1.1`, `failMission(msg)` extended. Radio `r.done` reset moves to step 3 (when radio code lands in `doStart()`); `addKit(...,ammo)` (needs pickup logic in `160-main-loop.js`) and `mkEnemy(...,opt.noGun)` move to the deferred killstreaks/Zombie work.
   2. ~~Data, difficulty~~ DONE (perks, attachments, difficulty; code lives in `10-data.js` and `20-menu.js`, hooks in fire/hurt/reload/enemy AI). Still in `drafts/ext_data.js`: `DOCS`, `ACH`, mission edits, `lbase`; in `ext_ui.js`: Archive (`renderExtras`).
-  3. Objectives, new missions, briefing, radio, weather (`ext_game.js` -> one `105-extensions.js`).
+  3. ~~Objectives, new missions, briefing, radio, weather~~ DONE (`105-objectives.js`, data in `10-data.js`, `lbase()` keeps game modes clean). Co-op lobby hides the objective missions (solo-only).
   4. Bosses and barrels. Then a short `tests/extensions.test.js`, version bump, docs.
 * **Deferred:** multiplayer replication (new objective missions solo-only, hidden in the lobby), jeep, Zombie Arena, killstreaks, ally orders, documents/Archive.
 * **Hosting/online:** PeerJS adapter integrated (D13) and Pages workflow added (`.github/workflows/pages.yml`); needs a public repo (or paid plan) and Settings > Pages > Source = GitHub Actions. Real two-browser test still open.
 * **Known flaky test:** `tests/multiplayer.test.js` sometimes fails 1-3 checks (client HP, bullets, mission complete) when the machine is busy; it also fails on the pre-PeerJS baseline, so it is timing (`sleep`) related, not a regression. Re-run alone before suspecting code. Repo is now public.
-* **Next step:** plan step 3 (objectives, new missions, briefing, radio, weather: `ext_game.js` + mission edits from `ext_data.js`; reset `r.done` of radio in `doStart()`).
+* **Next step:** plan step 4: bosses (`makeBoss`, `markBossTank`, `bossDead`, `bossHpPct`, `L_BOSS`, `L_TANKB` in drafts; spawn in `doStart()`, `ob==='boss'` branches in `updateObjectives`/`objText`, armor in `dmg()`, flinch/stun immunity, double tank shells) and explosive barrels (`barrel()` in `70-world.js`, `barrelHit` in fire/hitscanFrom/heliFire, chain in `explode()`), then version bump 1.1 (see AGENTS.md rule 8) and docs. Then the mobile touch layer (`165-touch.js`, sets `keys.*`, rotates `P.yaw/P.pitch`; input listeners are in `90-mission-start.js`).
 * **Owner decisions:** keep the draft balance numbers; commit straight to `main`. Bosses are only partly drafted: `makeBoss`/`markBossTank`/`bossDead`/`bossHpPct` exist but nothing calls them; spawning in `doStart()`, armor in `dmg()`, stun/flinch immunity and double tank shells must be written.
 * **Tip:** macOS `sed -i` needs `sed -i ''`; prefer small python3 replace scripts with `assert` on the anchor.
 
@@ -87,3 +87,9 @@ Rules for this file: `AGENTS.md` section 10.
 * Owner wants to try the prototype quickly: chose GitHub Pages + own network layer (variant C), then finish steps 3 and 4. Owner agreed to make the repo public (not yet done).
 * Added `129-net-peerjs.js` (`loadPeerJs`, `makePeerRoomApi`), `netApi()` fallback and a new offline message, `tests/net-peerjs.test.js` (13 checks), `.github/workflows/pages.yml`, D13, docs.
 * Verified: adapter test and full `npm test`. **Not verified:** real PeerJS broker, real browsers, NAT traversal (no TURN).
+
+## 2026-10-18 (cont.) – step 3 of the lean plan
+* New `105-objectives.js` (from `ext_game.js`, boss/killstreak/jeep/barrel/document parts left out); mission data and `lbase()` appended to `10-data.js` (existing missions get briefings, radio, weather; Base Infiltration became *Silent Infiltration* (hack, night, stealth), Airfield now asks to destroy 4 fuel depots; new campaign-1 missions *Rescue the Prisoner* and *Base Defense*). Documents (`docs:`) were stripped from the data for now.
+* Hooks: `doStart` (weather, resets, objectives, `total=1e9` for objective missions), loop (`updateRadio/updateObjectives/updateWx`), HUD objective text, bullets and explosions damage depots, hostage handled in `updateAllies`, stealth sight range 22 m (also for allies), briefing overlay in the template, F toggles the flashlight, minimap markers.
+* Trade-off: Silent Infiltration and Airfield are no longer available in co-op (objective state is not replicated). Replication is the deferred item in the plan.
+* Verified: `tests/extensions.test.js` now has 40 checks (each objective type, failure by prisoner death, alarm, explosions vs depots, weather, briefing, radio reset, modes unaffected); `solo-campaign` skips the kill-all check for objective missions.* Gotcha: `LEVELS.splice(3,0,...)` shifts global level indexes (campaign 2 now starts at index 5); tests must look levels up by name (`multiplayer.test.js` now does).

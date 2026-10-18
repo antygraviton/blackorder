@@ -22,7 +22,7 @@ async function coop(check) {
   await sleep(100);
   check(A.E('NET.ro.length') === 3, 'host roster has 3 players');
   check(A.$('mpPlayers').textContent.includes('Client1'), 'lobby lists the clients');
-  A.E("NET.lobbyMode='coop';NET.lobbyLv=3;");           // first mission of campaign 2
+  A.E("NET.lobbyMode='coop';NET.lobbyLv=LEVELS.findIndex(l=>l.n==='Convoy');");  // first mission of campaign 2
   A.E('mpStartGame()'); await sleep(900);
   check(A.E('NET.role') === 'host', 'host role set');
   await sleep(600);

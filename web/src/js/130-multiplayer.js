@@ -21,7 +21,7 @@ function mpUI(inRoom){
 }
 function mpFillMissions(){
   const sel=$('mpMission');sel.innerHTML='';
-  LEVELS.forEach((l,i)=>{const o=document.createElement('option');o.value=i;o.textContent='Campaign '+(l.camp+1)+' – mission '+(idxIn(i)+1)+': '+l.n;sel.appendChild(o);});
+  LEVELS.forEach((l,i)=>{if(l.ob&&l.ob!=='kill')return;const o=document.createElement('option');o.value=i;o.textContent='Campaign '+(l.camp+1)+' – mission '+(idxIn(i)+1)+': '+l.n;sel.appendChild(o);});
   sel.value=NET.lobbyLv;
 }
 function mpModeTabs(){
@@ -213,6 +213,7 @@ function hitscanFrom(o,dir,w){
     if(hit&&(!gh||hit.distance<gh.distanceTo(o))){
       if(hit.object.userData.enemy){const e=enemies.find(x=>x.g===hit.object.userData.enemy);if(e){const head=hit.object.userData.tag==='head';bloodBurst(hit.point,head?10:6);dmg(e,w.dmg*(head?2.5:1),head);}}
       else if(hit.object.userData.vehicle)vdmg(hit.object.userData.vehicle,w.dmg,false);
+      else if(hit.object.userData.obj)objHit(hit.object.userData.obj,w.dmg);
     }
   }
 }

@@ -80,6 +80,6 @@ Host only:
 ## Known limitations
 
 * No anti-cheat; positions and shots are trusted.
-* The player helicopter, Training, Survival and all v1.1 drafts are single-player only.
+* The player helicopter, Training, Survival and all v1.1 drafts are single-player only. Objective missions (`L.ob`: Silent Infiltration, Airfield, Rescue the Prisoner, Base Defense) are not replicated and are hidden from the co-op lobby (`mpFillMissions`); campaign 1 co-op therefore offers the three kill-all missions only.
 * Latency is about 100–200 ms (12 Hz snapshots with interpolation); there is no lag compensation.
 * Tested only with an in-memory mock of the room API, never with real remote players.

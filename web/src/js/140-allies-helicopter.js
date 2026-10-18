@@ -13,6 +13,7 @@ function updateAllies(dt){
   for(const a of allies){
     if(a.remote)continue;
     if(a.marker)a.marker.rotation.y+=dt*2;
+    if(a.hostage&&a.alive){hostageTick(a,dt);continue;}
     if(!a.alive){
       if(a.dt<1){a.dt+=dt*2.2;const q=Math.min(1,a.dt);a.g.rotation.x=-q*1.5;a.g.position.y=H(a.x,a.z)-q*.05;a.legs[0].hip.rotation.x=q*.5;a.legs[1].hip.rotation.x=-q*.3;if(a.marker)a.marker.visible=false;}
       continue;
@@ -165,7 +166,7 @@ function heliFire(first){
     if(hit&&(!gh||hit.distance<gh.distanceTo(mz))){
       if(hit.object.userData.enemy){const e=enemies.find(x=>x.g===hit.object.userData.enemy);if(e){const head=hit.object.userData.tag==='head';bloodBurst(hit.point,head?10:6);dmg(e,16*(head?2:1),head);}}
       else if(hit.object.userData.vehicle){vdmg(hit.object.userData.vehicle,16,false);dustBurst(hit.point,0xc0c0b0);}
-      else dustBurst(hit.point,0x9a9186);
+      else{if(hit.object.userData.obj)objHit(hit.object.userData.obj,16);dustBurst(hit.point,0x9a9186);}
     } else if(gh)dustBurst(gh,0x7a6a4c);
   } else if(heliWeapon===1){
     if(now-lastRocket<.8)return;

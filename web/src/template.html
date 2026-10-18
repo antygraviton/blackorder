@@ -75,7 +75,7 @@
   </div>
   <div id="st-controls" class="stab" style="display:none">
     <div class="setrow"><label>Mouse sensitivity</label><input type="range" id="setSens" min="10" max="100"></div>
-    <table><tr><td>Movement</td><td>W A S D</td></tr><tr><td>Sprint / jump</td><td>Shift / Space</td></tr><tr><td>Fire / aim</td><td>Left / right mouse button</td></tr><tr><td>Reload</td><td>R</td></tr><tr><td>Weapons</td><td>1 primary · 2 secondary · 3 melee · 4 grenade · 5 RPG (campaign 2)</td></tr><tr><td>Helicopter (campaign 2)</td><td>mouse = heading and pitch, W / S climb / descend, Space fire, 1–3 weapons, E board / exit</td></tr><tr><td>Pause</td><td>Esc</td></tr></table>
+    <table><tr><td>Movement</td><td>W A S D</td></tr><tr><td>Sprint / jump</td><td>Shift / Space</td></tr><tr><td>Fire / aim</td><td>Left / right mouse button</td></tr><tr><td>Reload</td><td>R</td></tr><tr><td>Hold E near objective / flashlight (night)</td><td>E / F</td></tr><tr><td>Weapons</td><td>1 primary · 2 secondary · 3 melee · 4 grenade · 5 RPG (campaign 2)</td></tr><tr><td>Helicopter (campaign 2)</td><td>mouse = heading and pitch, W / S climb / descend, Space fire, 1–3 weapons, E board / exit</td></tr><tr><td>Pause</td><td>Esc</td></tr></table>
   </div>
   <div id="st-gamet" class="stab" style="display:none">
     <div class="setrow"><label>Field of view (FOV)</label><input type="range" id="setFov" min="60" max="110"></div>
@@ -114,6 +114,7 @@
     <div class="warn" id="prompt" style="top:44%;color:var(--bone)"></div>
   </div>
   <div id="loading">Loading map…</div>
+  <div class="overlay" id="brief"><div><h2 id="briefT"></h2><p id="briefP"></p><div class="menu-list"><button class="btn" id="briefGo">Start mission</button><button class="btn" id="briefBack">Back</button></div></div></div>
   <div class="overlay" id="pause"><div><h2>Pause</h2><p>Click Resume to return to the game.</p><div class="menu-list"><button class="btn" id="resume">Resume</button><button class="btn danger" id="toMenu">To menu</button></div></div></div>
   <div class="overlay" id="end"><div><h2 id="endT"></h2><p id="endP"></p><div class="menu-list"><button class="btn" id="nextBtn">Next mission</button><button class="btn" id="again">Play again</button><button class="btn" id="endMenu">To menu</button></div></div></div>
 </section>

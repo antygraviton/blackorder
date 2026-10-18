@@ -1,9 +1,11 @@
 /* ============ MISSION START ============ */
-function startMission(idx){
-  curMode=null;curLevel=idx;L=LEVELS[idx];show('game');$('loading').style.display='grid';
-  setTimeout(()=>{try{doStart();}catch(e){console.error(e);$('loading').textContent='Loading error: '+e.message;return;}$('loading').style.display='none';},40);
+function startMission(idx,skipBrief){
+  curMode=null;curLevel=idx;L=LEVELS[idx];show('game');
+  if(L.brief&&!skipBrief){$('briefT').textContent=L.n;$('briefP').textContent=L.brief;$('brief').classList.add('on');return;}
+  beginLoad();
 }
 function doStart(){
+  L=applyWx(L);
   if(!ren){ren=new THREE.WebGLRenderer({canvas:$('cv'),antialias:S.q>=2});ren.outputEncoding=THREE.sRGBEncoding;ren.toneMapping=THREE.ACESFilmicToneMapping;ren.shadowMap.enabled=true;ren.shadowMap.type=THREE.PCFSoftShadowMap;}
   ren.setPixelRatio(Math.min(window.devicePixelRatio||1,S.q>=3?2:1.4));
   ren.setSize(innerWidth,innerHeight);
@@ -15,8 +17,9 @@ function doStart(){
   pDead=false;respT=0;tdm=null;vprojs=[];vnades=[];
   cam=new THREE.PerspectiveCamera(S.fov,innerWidth/innerHeight,.03,1800);
   cam.position.set(P.x,P.y,P.z);scene.add(cam);
-  flash=new THREE.PointLight(0xffc070,0,9);cam.add(flash);
+  flash=new THREE.PointLight(0xffc070,0,9);cam.add(flash);initWx();
   const kin=curMode?0:idxIn(curLevel);
+  objs=[];alarm=false;missionT=0;defT=0;defGroup=0;if(L.radio)L.radio.forEach(r=>{r.done=false;});
   if(man){
     man.mi.forEach(([x,z])=>addMine(x/10,z/10));
     man.ki.forEach(([x,z])=>addKit(x/10,z/10));
@@ -38,8 +41,9 @@ function doStart(){
     if(curMode==='survival')initSurvival();
     if(curMode==='tdm')initTdm();
   }
+  if(!man&&!curMode)placeObjectives();
   pheli=(L.camp===1&&NET.role==='solo'&&!curMode)?mkPlayerHeli(14,58):null;mounted=false;
-  killed=0;total=curMode?1e9:enemies.length+vehicles.filter(v=>v.type!=='jet').length;over=false;$('blood').innerHTML='';
+  killed=0;total=(curMode||(L.ob&&L.ob!=='kill'))?1e9:enemies.length+vehicles.filter(v=>v.type!=='jet').length;over=false;$('blood').innerHTML='';
   slots=[S.primary,S.secondary,S.melee||'knife',S.grenade||'m67'];
   if(L.camp===1&&S.primary!=='rpg'&&!curMode)slots.push('rpg');
   wp={};
@@ -63,7 +67,7 @@ function pauseGame(){if(NET.role==='solo')run=false;$('pause').classList.add('on
 $('resume').onclick=()=>{$('pause').classList.remove('on');lockMouse();run=true;lastT=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);};
 $('toMenu').onclick=()=>{stopGame();show('menu');};
 $('endMenu').onclick=()=>{stopGame();show('menu');};
-$('again').onclick=()=>{if(curMode)startMode(curMode);else startMission(curLevel);};
+$('again').onclick=()=>{if(curMode)startMode(curMode);else startMission(curLevel,true);};
 $('nextBtn').onclick=()=>{const nx=nextInCamp(curLevel);if(nx>=0)startMission(nx);};
 function stopGame(){if(NET.role!=='solo')netLeave();if(curMode==='survival'&&!survPaid&&wave>0)survPay();run=false;over=true;try{document.exitPointerLock();}catch(e){}$('pause').classList.remove('on');$('end').classList.remove('on');$('scope').style.display='none';}
 const canAct=()=>run&&(locked||fallback)&&!pDead;
@@ -73,6 +77,7 @@ addEventListener('keydown',e=>{keys[e.code]=true;
   if(mounted){if(e.code==='Digit1')heliWeapon=0;if(e.code==='Digit2')heliWeapon=1;if(e.code==='Digit3')heliWeapon=2;if(e.code==='Space'&&heliWeapon>0)heliFire(true);hud();}
   if(e.code==='Escape'&&!locked)pauseGame();
   if(e.code==='KeyR')reload();
+  if(e.code==='KeyF'&&torch)torch.visible=!torch.visible;
   if(e.code==='Digit1')sw(0);if(e.code==='Digit2')sw(1);if(e.code==='Digit3')sw(2);if(e.code==='Digit4')sw(3);if(e.code==='Digit5')sw(4);if(e.code==='KeyE')toggleHeli();
 });
 addEventListener('keyup',e=>keys[e.code]=false);

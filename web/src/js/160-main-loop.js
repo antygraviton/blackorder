@@ -97,10 +97,10 @@ function loop(){
     let dx=P.x-e.x,dz=P.z-e.z,dist=Math.hypot(dx,dz);
     const gH=H(e.x,e.z);
     const hd=new THREE.Vector3(e.x,gH+1.7,e.z);
-    let see=!pDead&&dist<60*(hasPerk('ghost')?.8:1)&&los(hd,eye)&&!smokeBlocks(hd,eye);
+    let see=!pDead&&dist<(L.stealth&&!alarm?22:60)*(hasPerk('ghost')?.8:1)&&los(hd,eye)&&!smokeBlocks(hd,eye);
     let tAlly=null;
     for(const a of allies){if(!a.alive)continue;const da=Math.hypot(a.x-e.x,a.z-e.z);
-      if(da<(see?dist:55)&&da<50){const ta=new THREE.Vector3(a.x,H(a.x,a.z)+1.5,a.z);if(los(hd,ta)&&!smokeBlocks(hd,ta)){tAlly=a;dx=a.x-e.x;dz=a.z-e.z;dist=da;see=true;}}}
+      if(da<(see?dist:55)&&da<(L.stealth&&!alarm?22:50)){const ta=new THREE.Vector3(a.x,H(a.x,a.z)+1.5,a.z);if(los(hd,ta)&&!smokeBlocks(hd,ta)){tAlly=a;dx=a.x-e.x;dz=a.z-e.z;dist=da;see=true;}}}
     if(see)e.alerted=true;
     let walking=false;
     if(e.flinch>0){e.flinch-=dt;e.g.rotation.x=-.18*(e.flinch/.25);}else e.g.rotation.x=0;
@@ -127,6 +127,7 @@ function loop(){
   if(curMode==='survival')updateSurvival(dt);
   if(curMode==='training')trainRefill();
   if(curMode==='tdm')updateTDM(dt);
+  updateRadio(dt);updateObjectives(dt);updateWx(dt);
   updateVehicles(dt);updateAllies(dt);updateHeliIdle(dt);updateProjs(dt);updateFires(dt);updateClouds(dt);
   }else clientTick(dt);
   netTick(dt);

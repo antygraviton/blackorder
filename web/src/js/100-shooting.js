@@ -47,7 +47,7 @@ function fire(first){
       if(hit.object.userData.enemy){const e=enemies.find(x=>x.g===hit.object.userData.enemy);
         if(e){const head=hit.object.userData.tag==='head';bloodBurst(hit.point,head?10:6);dmg(e,w.dmg*dmgMul(k)*(head?2.5:1),head);}}
       else if(hit.object.userData.vehicle){vdmg(hit.object.userData.vehicle,w.dmg*dmgMul(k),false);if(i<2)dustBurst(hit.point,0xc0c0b0);}
-      else if(i<3)dustBurst(hit.point,0x9a9186);
+      else{if(hit.object.userData.obj)objHit(hit.object.userData.obj,w.dmg*dmgMul(k));if(i<3)dustBurst(hit.point,0x9a9186);}
     } else if(gh&&i<3)dustBurst(gh,0x7a6a4c);
   }
   if(C)netShot('g',k,cam.position,camDir());
@@ -114,6 +114,7 @@ function explode(p,r,dm){
   for(const e of enemies){if(!e.alive)continue;const d=Math.hypot(e.x-p.x,e.z-p.z);if(d<r){bloodBurst(new THREE.Vector3(e.x,1.2,e.z),8);dmg(e,dm*(1-d/(r+1)),false);}}
   for(const v of vehicles){if(!v.alive||!v.g.visible)continue;const d=Math.max(0,v.g.position.distanceTo(p)-3);if(d<r)vdmg(v,dm*1.6*(1-d/(r+1)),true);}
   for(const a of allies){if(!a.remote||!a.alive)continue;const da=Math.hypot(a.x-p.x,a.z-p.z);if(da<r)allyHit(a,dm*.5*(1-da/(r+1)));}
+  for(const o of objs){if(o.t!=='depot'||o.done)continue;const od=Math.hypot(o.x-p.x,o.z-p.z);if(od<r+1.5)objHit(o,dm*(1-od/(r+2.5)));}
   const d=Math.hypot(P.x-p.x,P.z-p.z,(mounted?P.y-p.y:0));if(d<r)hurt(dm*.6*(1-d/(r+1)));
 }
 function hurt(v,from){

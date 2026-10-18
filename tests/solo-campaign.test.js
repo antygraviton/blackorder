@@ -27,7 +27,8 @@ const MISSION_DRIVER = `(function (lv) {
   enemies.forEach(e => e.alerted = true); step(200);
   vehicles.forEach(v => { if (v.type === 'jet') v.jwait = 0; }); step(400);
   over = false; P.hp = 100; pDead = false; run = true;
-  if (allies.length !== 2) bad('expected 2 AI allies, got ' + allies.length);
+  const nAllies = allies.filter(a => !a.hostage).length;
+  if (nAllies !== 2) bad('expected 2 AI allies, got ' + nAllies);
   if ((L.camp === 1) !== !!pheli) bad('the player helicopter must exist only in campaign 2');
   if (pheli) {
     P.x = pheli.g.position.x + 2; P.z = pheli.g.position.z; P.y = H(P.x, P.z) + 1.7;
@@ -60,7 +61,8 @@ const MISSION_DRIVER = `(function (lv) {
   enemies.forEach(e => { if (e.alive) dmg(e, 9999, false); });
   step(100);
   out.killed = killed; out.finalTotal = total;
-  if (killed < total) bad('mission cannot be completed: ' + killed + '/' + total);
+  // objective missions (L.ob) are completed through their objective; see extensions.test.js
+  if (!(L.ob && L.ob !== 'kill') && killed < total) bad('mission cannot be completed: ' + killed + '/' + total);
   return out;
 })`;
 

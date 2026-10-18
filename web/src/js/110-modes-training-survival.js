@@ -1,8 +1,8 @@
 /* ============ MODES: TRAINING AND SURVIVAL ============ */
 const MODES={
-  training:Object.assign({},LEVELS[0],{n:'Training',txt:'Shooting range: targets and vehicles respawn, ammo is unlimited and you cannot die. Q switches the weapon in the current slot (slots 1–4).',en:0,mines:0,kits:0,houses:2,ruins:0,seed:5,reward:0,medals:0,xp:0}),
-  survival:Object.assign({},LEVELS[2],{n:'Survival',txt:'Survive as long as you can. The enemy waves keep getting stronger.',en:0,mines:6,kits:2,houses:12,ruins:4,seed:91,reward:0,medals:0,xp:0}),
-  tdm:Object.assign({},LEVELS[1],{n:'Team Match vs Bots',txt:'Team of players versus bots. First to 25 kills wins, or whoever has more kills after 6 minutes.',en:0,mines:0,kits:3,houses:12,ruins:5,seed:57,reward:0,medals:0,xp:0})
+  training:Object.assign({},lbase(LEVELS[0]),{n:'Training',txt:'Shooting range: targets and vehicles respawn, ammo is unlimited and you cannot die. Q switches the weapon in the current slot (slots 1–4).',en:0,mines:0,kits:0,houses:2,ruins:0,seed:5,reward:0,medals:0,xp:0}),
+  survival:Object.assign({},lbase(LEVELS[2]),{n:'Survival',txt:'Survive as long as you can. The enemy waves keep getting stronger.',en:0,mines:6,kits:2,houses:12,ruins:4,seed:91,reward:0,medals:0,xp:0}),
+  tdm:Object.assign({},lbase(LEVELS[1]),{n:'Team Match vs Bots',txt:'Team of players versus bots. First to 25 kills wins, or whoever has more kills after 6 minutes.',en:0,mines:0,kits:3,houses:12,ruins:5,seed:57,reward:0,medals:0,xp:0})
 };
 function startMode(name){
   curMode=name;curLevel=0;L=MODES[name];show('game');$('loading').style.display='grid';

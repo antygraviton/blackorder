@@ -6,6 +6,8 @@ function drawMap(){
   mmc.translate(160,160);mmc.rotate(P.yaw);mmc.scale(sc,sc);mmc.translate(-P.x,-P.z);
   for(const b of obst){if(b.nm)continue;mmc.fillStyle=b.f?'rgba(180,170,120,.7)':'rgba(120,130,110,.55)';mmc.fillRect(b.a,b.c,b.b-b.a,b.d-b.c);}
   mmc.fillStyle='#e8e8e0';for(const k of kits)if(!k.used)mmc.fillRect(k.x-.8,k.z-.8,1.6,1.6);
+  for(const o of objs){if(o.done||o.t==='host')continue;mmc.fillStyle=o.t==='depot'?'#ff3a2a':o.t==='term'?'#3dff9a':o.t==='ext'?'#4aff7a':'#4aa8ff';mmc.fillRect(o.x-2,o.z-2,4,4);}
+  const hos=allies.find(a=>a.hostage&&a.alive);if(hos){mmc.fillStyle='#ffd23a';mmc.fillRect(hos.x-2,hos.z-2,4,4);}
   mmc.fillStyle='#d6402a';
   for(const e of enemies){if(!e.alive||Math.hypot(e.x-P.x,e.z-P.z)>50)continue;mmc.beginPath();mmc.arc(e.x,e.z,1.5,0,Math.PI*2);mmc.fill();}
   mmc.fillStyle='#ff7a1e';
