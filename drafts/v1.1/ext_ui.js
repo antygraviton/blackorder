@@ -6,7 +6,7 @@ function renderPerks(){
     const open=lvl()>=p.lvl,on=hasPerk(p.id);
     const d=document.createElement('div');d.className='item';if(!open)d.style.opacity=.55;
     d.innerHTML='<div class="n">'+p.n+'<small>'+p.desc+'</small></div><span class="tag">'+(open?(on?'Selected':'Unlocked'):'Level '+p.lvl)+'</span>';
-    const b=document.createElement('button');b.className='btn small';b.textContent=on?'Sundat':'Vybrat';b.disabled=!open;
+    const b=document.createElement('button');b.className='btn small';b.textContent=on?'Remove':'Select';b.disabled=!open;
     b.onclick=()=>{S.perks=S.perks||[];const i=S.perks.indexOf(p.id);if(i>=0)S.perks.splice(i,1);else{if(S.perks.length>=2){$('storeMsg').textContent='You already have 2 perks. Remove one first.';return;}S.perks.push(p.id);}save();renderStore();};
     d.appendChild(b);box.appendChild(d);
   });
@@ -20,10 +20,10 @@ function renderAtt(){
       S.attOwned=S.attOwned||{};S.att=S.att||{};
       const own=S.attOwned[id],on=S.att[slot]===id;
       const d=document.createElement('div');d.className='item';
-      d.innerHTML='<div class="n">'+a.n+'<small>'+a.desc+'</small></div><span class="tag">'+(own?(on?'Nasazeno':'Owned'):a.price+' Weapoints')+'</span>';
+      d.innerHTML='<div class="n">'+a.n+'<small>'+a.desc+'</small></div><span class="tag">'+(own?(on?'Equipped':'Owned'):a.price+' Weapoints')+'</span>';
       const b=document.createElement('button');b.className='btn small';
-      if(!own){b.textContent='Koupit';b.onclick=()=>{if(S.wp>=a.price){S.wp-=a.price;S.attOwned[id]=1;save();refresh();}else $('storeMsg').textContent='Not enough Weapoints ('+S.wp+' / '+a.price+').';};}
-      else{b.textContent=on?'Sundat':'Nasadit';b.onclick=()=>{S.att[slot]=on?'':id;save();renderStore();};}
+      if(!own){b.textContent='Buy';b.onclick=()=>{if(S.wp>=a.price){S.wp-=a.price;S.attOwned[id]=1;save();refresh();}else $('storeMsg').textContent='Not enough Weapoints ('+S.wp+' / '+a.price+').';};}
+      else{b.textContent=on?'Remove':'Equip';b.onclick=()=>{S.att[slot]=on?'':id;save();renderStore();};}
       d.appendChild(b);box.appendChild(d);
     });
   });
@@ -34,12 +34,12 @@ function renderExtras(){
   const box=$('xBody');box.innerHTML='';
   if(xTab==='ach'){
     const n=ACH.filter(a=>S.ach&&S.ach[a.id]).length;
-    const p=document.createElement('p');p.className='tag';p.textContent='Unlocked '+n+' z '+ACH.length;box.appendChild(p);
+    const p=document.createElement('p');p.className='tag';p.textContent='Unlocked '+n+' of '+ACH.length;box.appendChild(p);
     ACH.forEach(a=>{const own=S.ach&&S.ach[a.id];const d=document.createElement('div');d.className='item';if(!own)d.style.opacity=.55;
       d.innerHTML='<div class="n">'+(own?'🏆 ':'🔒 ')+a.n+'<small>'+a.d+'</small></div><span class="tag">'+(own?'Completed':'Locked')+'</span>';box.appendChild(d);});
   } else if(xTab==='docs'){
     const n=DOCS.filter(d=>S.docs&&S.docs[d.id]).length;
-    const p=document.createElement('p');p.className='tag';p.textContent='Nalezeno '+n+' z '+DOCS.length+'. Look for documents in campaign missions (golden glowing papers).';box.appendChild(p);
+    const p=document.createElement('p');p.className='tag';p.textContent='Found '+n+' of '+DOCS.length+'. Look for documents in campaign missions (golden glowing papers).';box.appendChild(p);
     DOCS.forEach(dc=>{const own=S.docs&&S.docs[dc.id];const d=document.createElement('div');d.className='item';d.style.display='block';if(!own)d.style.opacity=.55;
       d.innerHTML='<div class="n">'+(own?'📄 '+dc.t:'🔒 ???')+'<small>'+(own?dc.x:'This document has not been found yet.')+'</small></div>';box.appendChild(d);});
   } else {

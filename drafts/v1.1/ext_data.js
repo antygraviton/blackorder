@@ -5,7 +5,7 @@ const DIFF=()=>DIFFS[S.diff===undefined?1:S.diff]||DIFFS[1];
 const PERKS=[
  {id:'fast',n:'Quick hands',lvl:2,desc:'Reloading is 25% faster'},
  {id:'armor',n:'Body armor',lvl:3,desc:'Damage taken −15%'},
- {id:'ghost',n:'Duch',lvl:4,desc:'Enemies see you only from 80% of the distance'},
+ {id:'ghost',n:'Ghost',lvl:4,desc:'Enemies see you only from 80% of the distance'},
  {id:'nades',n:'Grenadier',lvl:5,desc:'+2 grenades every mission'},
  {id:'dmg',n:'Piercing rounds',lvl:6,desc:'Weapons deal 10% more damage'},
  {id:'run',n:'Sprinter',lvl:7,desc:'Sprinting is 15% faster'}
@@ -23,7 +23,7 @@ const DOCS=[
  {id:'d3',t:'Supply list',x:'Fuel: 400 barrels. Ammunition: 90 crates. New uniforms: 800. Nobody is allowed into the village yet. Patrols in pairs.'},
  {id:'d4',t:'Mine plan',x:'Shaft B leads to the control room. The terminal is protected by a double bar. It can only be hacked from inside, without an alarm and preferably in the dark.'},
  {id:'d5',t:'Commander order',x:'Keep the prisoner alive. Interrogation first, then we decide. Whoever lets him escape takes his place.'},
- {id:'d6',t:'Korespondence',x:'The town is ours. The border is open, but we still have no allies. We need a steel fist, otherwise nobody will fear us.'},
+ {id:'d6',t:'Correspondence',x:'The town is ours. The border is open, but we still have no allies. We need a steel fist, otherwise nobody will fear us.'},
  {id:'d7',t:'Chemist notes',x:'The experiments on prisoners failed. The subjects are fast, feel no pain and cannot be stopped by a body shot. Aim for the head. Never leave them unsupervised.'},
  {id:'d8',t:'Radio transcript',x:'The convoy departs at dawn. Five APCs and a tank. Target: the border town. Radio silence until arrival.'},
  {id:'d9',t:'Defense order',x:'The airfield must fall last. Protect the fuel depots at the cost of lives. Without fuel we cannot go further.'},
@@ -39,7 +39,7 @@ const ACH=[
  {id:'surv',n:'Survivor',d:'Survival: reach wave 15',ok:()=>(S.bestWave||0)>=15},
  {id:'zomb',n:'Undead hunter',d:'Zombie Arena: reach wave 10',ok:()=>((S.rec||{}).zomb||0)>=10},
  {id:'flaw',n:'Not a scratch',d:'Complete a mission without taking damage',ok:()=>!!(S.flag&&S.flag.flawless)},
- {id:'ghost',n:'Duch',d:'Complete Silent Infiltration without an alarm',ok:()=>!!(S.flag&&S.flag.ghost)},
+ {id:'ghost',n:'Ghost',d:'Complete Silent Infiltration without an alarm',ok:()=>!!(S.flag&&S.flag.ghost)},
  {id:'boss1',n:'Fall of the commander',d:'Defeat the commander of the Order',ok:()=>!!(S.flag&&S.flag.boss1)},
  {id:'boss2',n:'Steel Fist broken',d:'Destroy the Armata tank',ok:()=>!!(S.flag&&S.flag.boss2)},
  {id:'coop',n:'Team player',d:'Complete a mission in co-op multiplayer',ok:()=>!!(S.flag&&S.flag.coop)},

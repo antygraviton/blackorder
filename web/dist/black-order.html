@@ -1628,13 +1628,14 @@ function respawnPlayer(){
   pDead=false;P.hp=100;const sx=[0,-3,3][NET.role==='solo'?0:NET.mi]||0;
   P.x=sx;P.z=70;P.y=H(P.x,70)+1.7;P.vy=0;say('Back in the fight!',2);hud();
 }
-function failMission(){
+function failMission(msg){
   over=true;S.deaths++;const sv=(curMode==='survival')?survPay():null;if(!sv)S.wp+=10;save();
-  const txt=sv||'Mission failed. You get 10 Weapoints for the effort.';
-  NET.endInfo=[2,'You died',txt,10,0,0];
+  const txt=sv||(msg?msg+' You get 10 Weapoints for the effort.':'Mission failed. You get 10 Weapoints for the effort.');
+  const ttl=msg?'Mission failed':'You died';
+  NET.endInfo=[2,ttl,txt,10,0,0];
   if(NET.role==='solo')run=false;
   try{document.exitPointerLock();}catch(e){}
-  splat(8);$('endT').textContent='You died';$('endP').textContent=txt;$('nextBtn').style.display='none';$('scope').style.display='none';$('end').classList.add('on');hud();
+  splat(8);$('endT').textContent=ttl;$('endP').textContent=txt;$('nextBtn').style.display='none';$('scope').style.display='none';$('end').classList.add('on');hud();
 }
 function allyHit(a,d){
   a.hp-=d;a.flinch=.25;

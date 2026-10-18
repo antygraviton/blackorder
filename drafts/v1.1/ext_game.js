@@ -166,7 +166,7 @@ function objText(){
   return ['',''];
 }
 function raiseAlarm(msg){
-  if(alarm)return;alarm=true;say('POPLACH! '+msg,3.5);beep(800,.5,'sawtooth',.25);
+  if(alarm)return;alarm=true;say('ALARM! '+msg,3.5);beep(800,.5,'sawtooth',.25);
   for(const e of enemies)if(e.alive)e.alerted=true;
 }
 /* ---- killstreaks ---- */

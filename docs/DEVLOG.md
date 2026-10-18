@@ -9,14 +9,14 @@ Rules for this file: `AGENTS.md` section 10.
 * **Version:** 1.0. `npm test` green on `main`.
 * **In progress:** integrating the v1.1 drafts (lean plan, 3–4 commits). Nothing integrated yet.
 * **Lean plan:**
-  1. Clean the drafts: leftover Czech words without diacritics (`Duch`, `Sundat`, `Vybrat`, `Koupit`, `Nasadit`, `Nasazeno`, `Nalezeno`, `Korespondence`, `POPLACH`, `' z '`), reset `r.done` of radio messages in `doStart()`, extend signatures `failMission(msg)`, `addKit(x,z,ammo)`, `mkEnemy(x,z,opt)`.
+  1. ~~Clean the drafts~~ DONE: Czech leftovers translated in `drafts/v1.1`, `failMission(msg)` extended. Radio `r.done` reset moves to step 3 (when radio code lands in `doStart()`); `addKit(...,ammo)` (needs pickup logic in `160-main-loop.js`) and `mkEnemy(...,opt.noGun)` move to the deferred killstreaks/Zombie work.
   2. Data, difficulty, perks, attachments (`ext_data.js` -> `10-data.js`, `DEF` in `00-save-data.js`, Store tabs from `ext_ui.js`).
   3. Objectives, new missions, briefing, radio, weather (`ext_game.js` -> one `105-extensions.js`).
   4. Bosses and barrels. Then a short `tests/extensions.test.js`, version bump, docs.
 * **Deferred:** multiplayer replication (new objective missions solo-only, hidden in the lobby), jeep, Zombie Arena, killstreaks, ally orders, documents/Archive.
-* **Next step:** plan step 1.
+* **Next step:** plan step 2 (data, difficulty, perks, attachments).
 * **Owner decisions:** keep the draft balance numbers; commit straight to `main`. Bosses are only partly drafted: `makeBoss`/`markBossTank`/`bossDead`/`bossHpPct` exist but nothing calls them; spawning in `doStart()`, armor in `dmg()`, stun/flinch immunity and double tank shells must be written.
-* **Uncommitted:** rule changes in `AGENTS.md`/`CLAUDE.md`/this file and the new `package-lock.json`; commit them first.
+* **Tip:** macOS `sed -i` needs `sed -i ''`; prefer small python3 replace scripts with `assert` on the anchor.
 
 ---
 
@@ -69,3 +69,8 @@ Rules for this file: `AGENTS.md` section 10.
 * Agreed a lean integration plan (see "Current state"); multiplayer replication and secondary features are deferred.
 * Added rules for working on a limited token budget (`AGENTS.md` section 9) and for keeping this log as a handoff document (section 10, "Current state" section above).
 * Verified: `tests/i18n.test.js` after the doc changes. No game code changed.
+
+## 2026-10-18 (cont.) – step 1 of the lean plan
+* Committed the working rules. Translated leftover Czech words in `drafts/v1.1` (`Ghost`, `Remove`, `Select`, `Buy`, `Equip`, `Equipped`, `Found`, `Correspondence`, `ALARM!`, `of`). `failMission(msg)` now accepts a custom message (title `Mission failed`).
+* Verified: `i18n` and `solo-campaign` tests pass; full `npm test` green (4 files).
+* Open: steps 2-4 of the lean plan.
