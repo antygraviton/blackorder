@@ -38,5 +38,9 @@ Bullets must barely hurt armor so that explosives, RPG and napalm matter (`pm` m
 ## D11. Fences instead of walls, no grass
 Owner's visual direction: bounded maps use fences, mountains and cliffs behind them, and no grass.
 
+## D13. PeerJS transport for online play outside claude.ai
+**Why:** the `room` capability exists only inside claude.ai artifacts, so hosting the game elsewhere (GitHub Pages) had no multiplayer. `web/src/js/129-net-peerjs.js` implements the subset of `room` the game uses (join, presence, peers, onPeers, leave) over PeerJS/WebRTC, as a star: the first player to join a room id becomes the hub and relays presence. `netApi()` prefers `window.claude` and falls back to PeerJS, which is loaded lazily from jsDelivr.
+**Consequence:** no game-code changes in the replication layer; the public PeerJS broker has no uptime guarantee and there is no TURN relay, so some strict NATs cannot connect. **Revisit when:** a WebSocket relay server is acceptable.
+
 ## D12. Start orientation
 Players start at `(0, 70)` and look toward -Z into the map (`yaw = 0`); an early version started facing the fence by mistake.

@@ -1,6 +1,9 @@
 # Multiplayer protocol
 
 Online play is implemented with the **`room` capability of claude.ai published artifacts**
+
+**Outside claude.ai** (for example GitHub Pages) the game falls back to `makePeerRoomApi` in `129-net-peerjs.js` (PeerJS over WebRTC, star topology, see D13). Same game code, same 4 KiB presence budget. Not tested with real browsers yet.
+
 (`const room = await claude.use('room')`). There is no custom server.
 
 ## Constraints of the platform (important)

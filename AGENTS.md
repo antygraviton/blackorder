@@ -33,7 +33,7 @@ Never edit `web/dist/black-order.html` by hand: it is generated from `web/src/`.
 1. **English only.** `tests/i18n.test.js` fails if any Czech diacritics appear in a text file. UI strings, comments and docs must be English.
    Czech words without diacritics are also forbidden; grep for them when you translate. The only exceptions are `README.md` and `docs/GLOSSARY.md`, which quote the original Czech names (allow-list in the test).
 2. **Do not introduce external runtime dependencies or assets.** The game is one file; textures, models and sounds are generated procedurally.
-   Only Three.js r128 from cdnjs is loaded. No images, no audio files, no web fonts other than the Google Fonts already in the template.
+   Only Three.js r128 from cdnjs is loaded (plus PeerJS 1.5.4 from jsDelivr, loaded lazily and only for online play outside claude.ai; see D13). No images, no audio files, no web fonts other than the Google Fonts already in the template.
 3. **Never use `localStorage` keys other than `blackorder_save`** (legacy `cernyrad03` is read once for migration).
 4. **Keep the host-authoritative multiplayer invariants** (section 5). Single-player behavior must not change when `NET.role === 'solo'`.
 5. **Presence payloads must stay under 4096 bytes** (the room API limit). The test harness fails above that.

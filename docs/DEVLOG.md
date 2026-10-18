@@ -14,6 +14,8 @@ Rules for this file: `AGENTS.md` section 10.
   3. Objectives, new missions, briefing, radio, weather (`ext_game.js` -> one `105-extensions.js`).
   4. Bosses and barrels. Then a short `tests/extensions.test.js`, version bump, docs.
 * **Deferred:** multiplayer replication (new objective missions solo-only, hidden in the lobby), jeep, Zombie Arena, killstreaks, ally orders, documents/Archive.
+* **Hosting/online:** PeerJS adapter integrated (D13) and Pages workflow added (`.github/workflows/pages.yml`); needs a public repo (or paid plan) and Settings > Pages > Source = GitHub Actions. Real two-browser test still open.
+* **Known flaky test:** `tests/multiplayer.test.js` sometimes fails 1-3 checks (client HP, bullets, mission complete) when the machine is busy; it also fails on the pre-PeerJS baseline, so it is timing (`sleep`) related, not a regression. Re-run alone before suspecting code. Repo is now public.
 * **Next step:** plan step 3 (objectives, new missions, briefing, radio, weather: `ext_game.js` + mission edits from `ext_data.js`; reset `r.done` of radio in `doStart()`).
 * **Owner decisions:** keep the draft balance numbers; commit straight to `main`. Bosses are only partly drafted: `makeBoss`/`markBossTank`/`bossDead`/`bossHpPct` exist but nothing calls them; spawning in `doStart()`, armor in `dmg()`, stun/flinch immunity and double tank shells must be written.
 * **Tip:** macOS `sed -i` needs `sed -i ''`; prefer small python3 replace scripts with `assert` on the anchor.
@@ -80,3 +82,8 @@ Rules for this file: `AGENTS.md` section 10.
 * Hooks: enemy hp x `DIFF().hp`, enemy accuracy x `DIFF().acc`, player damage x `DIFF().dmg` and armor perk in `hurt()`, ghost perk shrinks sight range, sprint perk, quick-reload perk, grenadier perk, magazine size via `magOf()` in reload/start/training, suppressor skips `alertNear`, laser and damage multipliers in `fire()`.
 * Not hooked (hitscanFrom/MP and heli/jeep fire ignore damage and spread multipliers).
 * Verified: new `tests/extensions.test.js` (19 checks) and full `npm test`.
+
+## 2026-10-18 (cont.) – online play outside claude.ai
+* Owner wants to try the prototype quickly: chose GitHub Pages + own network layer (variant C), then finish steps 3 and 4. Owner agreed to make the repo public (not yet done).
+* Added `129-net-peerjs.js` (`loadPeerJs`, `makePeerRoomApi`), `netApi()` fallback and a new offline message, `tests/net-peerjs.test.js` (13 checks), `.github/workflows/pages.yml`, D13, docs.
+* Verified: adapter test and full `npm test`. **Not verified:** real PeerJS broker, real browsers, NAT traversal (no TURN).

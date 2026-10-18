@@ -5,6 +5,7 @@ const wid=w=>Object.keys(WEAPONS).find(k=>WEAPONS[k]===w)||'';
 async function netApi(){
   if(NET.api!==undefined)return NET.api;
   try{NET.api=(window.claude&&window.claude.use)?await window.claude.use('room'):null;}catch(e){NET.api=null;}
+  if(!NET.api){try{await loadPeerJs();NET.api=window.Peer?makePeerRoomApi(window.Peer):null;}catch(e){NET.api=null;}}
   return NET.api;
 }
 function fxPush(arr){if(NET.role!=='host')return;NET.fxId++;NET.fx.push([NET.fxId,...arr]);if(NET.fx.length>10)NET.fx.shift();}
@@ -29,7 +30,7 @@ function mpModeTabs(){
 }
 async function mpEnter(code,host){
   const api=await netApi();
-  if(!api){mpMsg('Online play is not available. The game must be opened from a signed-in claude.ai account (not through a public link).');return;}
+  if(!api){mpMsg('Online play is not available: the connection library could not be loaded. Check your internet connection and reload the page.');return;}
   try{NET.room=await api.join('cr-'+code.toLowerCase());}catch(e){mpMsg('Could not join the game ('+((e&&e.code)||'error')+').');return;}
   NET.code=code;NET.host=host;NET.joinedAt=Date.now();NET.ro=null;NET.go=null;NET.role='solo';
   $('partyCode').textContent=code;
