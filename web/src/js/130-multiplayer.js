@@ -161,18 +161,19 @@ function newAvatar(name,idx){
 }
 function avatarFor(pr,idx){
   let a=NET.avatars[pr.peer];
-  if(!a){a=NET.avatars[pr.peer]=newAvatar(pr.presence.n||'Player',idx);const p=pr.presence.p;if(p){a.x=a.px=p[0]/10;a.z=a.pz=p[2]/10;}}
+  if(!a){a=NET.avatars[pr.peer]=newAvatar(pr.presence.n||'Player',idx);a.ridx=idx;const p=pr.presence.p;if(p){a.x=a.px=p[0]/10;a.z=a.pz=p[2]/10;}}
   return a;
 }
 function readAvatarPresence(a,pr){
-  const p=pr.presence.p;a.use=!!pr.presence.u;
-  if(p&&a.alive){a.px=p[0]/10;a.py=p[1]/10;a.pz=p[2]/10;a.pyaw=p[3]/100;}
+  const p=pr.presence.p;a.use=!!pr.presence.u;a.hm=!!pr.presence.hm;
+  if(p&&a.alive){a.px=p[0]/10;a.py=p[1]/10;a.pz=p[2]/10;a.pyaw=p[3]/100;a.ppitch=p[4]/100;}
   const sh=pr.presence.sh;
   if(sh&&sh.length){const id=sh[sh.length-1][0];if(id!==a.lastSh){a.lastSh=id;a.mf.visible=true;a.mfT=.06;}}
 }
 function updateAvatars(dt){
   for(const a of allies){
     if(!a.remote)continue;
+    a.g.visible=!(pheli&&pheli.alive&&NET.heliPilot>=0&&a.ridx===NET.heliPilot);
     if(a.mfT>0){a.mfT-=dt;if(a.mfT<=0)a.mf.visible=false;}
     if(a.marker)a.marker.rotation.y+=dt*2;
     if(!a.alive){
@@ -202,12 +203,14 @@ function hostSnap(){
     pl,st:[killed,total>1e8?0:total,over?1:0,tdm?Math.round(tdm.t):0,tdm?tdm.red:0],
     mn:mines.map(m=>m.live?'1':'0').join(''),ki:kits.map(k=>k.used?'1':'0').join(''),fx:NET.fx};
   if(L.ob&&L.ob!=='kill'){const h=allies.find(a=>a.hostage);s.ob=[alarm?1:0,h&&h.free?1:0,objs.map(o=>[Math.round(o.prog*1000),o.done?1:0]),bossPct];}
+  if(pheli){const g=pheli.g,p=g.position;s.h=[NET.heliPilot,qn(p.x),qn(p.y),qn(p.z),Math.round(g.rotation.y*100),Math.round(g.rotation.x*100),Math.round(g.rotation.z*100),pheli.alive?1:0,pheli.pod,pheli.atgm,Math.round(pheli.hp)];}
   if(barrels.length)s.br=barrels.map(b=>b.dead?'1':'0').join('');
   if(NET.lastMsg)s.m=NET.lastMsg;
   if(NET.endInfo)s.o=NET.endInfo;
   return s;
 }
 function hostShot(a,s){
+  if(s[1]==='h'||s[1]==='p'||s[1]==='t'){heliShot(a,s);return;}
   const code=s[1],W=WEAPONS[s[2]];if(!W)return;
   const o=new THREE.Vector3(s[3]/10,s[4]/10,s[5]/10),d=new THREE.Vector3(s[6]/1000,s[7]/1000,s[8]/1000).normalize();
   if(code==='g'){alertAt(o,50);hitscanFrom(o,d,W);}
@@ -232,6 +235,7 @@ function hostRead(dt){
     const sh=pr.presence.sh;
     if(sh)for(const s of sh){if(typeof s[1]==='string'&&s[0]>(a.lastShot||0)){a.lastShot=s[0];if(a.alive&&!pDeadAll())hostShot(a,s);}}
   }
+  heliArbitrate(dt);
   for(const id in NET.avatars){
     if(!peers.some(p=>p.peer===id)){const a=NET.avatars[id];scene.remove(a.g);const i=allies.indexOf(a);if(i>=0)allies.splice(i,1);delete NET.avatars[id];
       if(curMode===null&&!over&&pDead&&!allies.some(x=>x.remote&&x.alive))failMission();}
@@ -307,6 +311,7 @@ function clientApply(s){
   }
   for(const f of (s.fx||[])){if(f[0]<=NET.fxSeen)continue;NET.fxSeen=f[0];clientFx(f);}
   if(s.m&&s.m[0]>NET.msgSeen){NET.msgSeen=s.m[0];say(s.m[1],s.m[2]);}
+  if(s.h&&pheli)heliApply(s.h);
   if(s.br)for(let i=0;i<barrels.length;i++)if(s.br[i]==='1'&&!barrels[i].dead)barrelVis(barrels[i]);
   if(s.ob){
     alarm=!!s.ob[0];const h=allies.find(a=>a.hostage);if(h)h.free=!!s.ob[1];
@@ -388,8 +393,9 @@ function clientTick(dt){
     if(p.t<=0||p.m.position.y<H(p.m.position.x,p.m.position.z)){scene.remove(p.m);vprojs.splice(i,1);}}
   for(let i=vnades.length-1;i>=0;i--){const n=vnades[i];n.v.y-=14*dt;n.m.position.addScaledVector(n.v,dt);const g0=H(n.m.position.x,n.m.position.z)+.06;
     if(n.m.position.y<g0){n.m.position.y=g0;n.v.y*=-.35;n.v.x*=.6;n.v.z*=.6;}n.t-=dt;if(n.t<=0){scene.remove(n.m);vnades.splice(i,1);}}
-  updateFires(dt);updateClouds(dt);updateWx(dt);updateCabin();
+  updateFires(dt);updateClouds(dt);updateWx(dt);updateCabin();heliFollow(dt);
   $('prompt').textContent=pDead?'You died – back in '+Math.ceil(respT)+' s':'';
+  if(!pDead)updateHeliIdle(dt);
 }
 function netTick(dt){
   const room=NET.room;if(!room||NET.role==='solo')return;
@@ -398,7 +404,7 @@ function netTick(dt){
     NET.t=0;
     const st={p:[qn(P.x),qn(P.y),qn(P.z),Math.round(P.yaw*100),Math.round(P.pitch*100),pDead?0:1]};
     if(NET.role==='host'){st.s=hostSnap();if(JSON.stringify(st.s).length>3000)st.s.fx=st.s.fx.slice(-3);if(NET.sent.length)st.sh=NET.sent;}
-    else{st.sh=NET.sent;st.u=keys.KeyE?1:0;}
+    else{st.sh=NET.sent;st.u=keys.KeyE?1:0;st.hm=mounted?1:0;}
     Promise.resolve(room.presence(st)).catch(()=>{});
   }
   if(NET.role==='host')hostRead(dt);else clientRead(dt);

@@ -27,7 +27,7 @@ Priorities are the owner's wishes in order of the latest conversation. "Draft" m
 | Story scenes / voiced radio | Idea |
 | Longer campaign (the owner wants 5+ hours; today about 20–30 minutes) | Open |
 | Multiplayer: 1v1 … 5v5 against humans (the sketches show up to 5v5) | Open; current limit is 3 humans |
-| Helicopter, Training, Survival, Zombie in multiplayer | Open |
+| Training, Survival, Zombie in multiplayer | Open (the player helicopter works in co-op since v1.1) |
 | Production version in Unreal with realistic models (Fab/Quixel, Mixamo animations) | Open |
 
 ## Known issues

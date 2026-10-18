@@ -84,6 +84,11 @@ Host only:
 * Bosses and barrels: the manifest (`go`) marks boss enemies/vehicles with a third/fourth element (`en`, `v`), clients call `makeBoss`/`markBossTank` on their ghosts (scale and colour); the boss health percent travels in `s.ob[3]`; destroyed barrels are the string `s.br` ('1' = dead), applied with `barrelVis`. Armor, stun immunity and double shells are host logic.
 * Known gaps: a client's suppressor and damage perks are not applied to its shots on the host (`hostShot`), so a suppressed client shot still alerts enemies; radio messages are replicated as "last message" only.
 
+## The player helicopter (campaign 2)
+* One pilot at a time: `NET.heliPilot` is the roster index of the pilot, -1 = nobody. The pilot's machine flies it: the host flies for itself; a client pilot claims the helicopter with presence `hm:1` when it boards (`toggleHeli` checks `heliFree()`), and the host decides in `heliArbitrate` (first claimant within 9 m while nobody flies). The host then copies the pilot's presence position, yaw and pitch onto `pheli` (so the host sim, enemies and vehicles see it) and publishes `s.h = [pilot, x, y, z, yaw, pitch, roll, alive, pods, missiles, hp]`; all other machines run a ghost (`heliApply`, `heliFollow`). The pilot is hidden as a soldier on the other machines.
+* A client pilot's shots travel as `sh` entries with the codes `h` (machine gun), `p` (one pod rocket), `t` (anti-tank missile); `hostShot` hands them to `heliShot`, which only accepts the current pilot. Damage to the pilot's avatar goes to the helicopter (`allyHit`), and `crashHeliRemote` destroys it for everybody; a helicopter nobody flies sinks to the ground.
+* A client that claims but is not made pilot within 1.5 s is dropped out ("taken by another player").
+
 ## Pause, lobby and rejoin
 * **Host pause stops the game for everybody.** The host stops its simulation and publishes `ps:1` in its presence; clients see the "Host paused" screen (`clientPauseSync`, driven by `onPeers`, because the client loop is stopped) and can continue only after the host resumed. A client's own pause menu does not stop the game.
 * **Only the host starts a game** (`mpStartGame`); clients enter it only through the host's `go` presence, and only if their peer id is in `go.ro`.
@@ -93,6 +98,6 @@ Host only:
 ## Known limitations
 
 * No anti-cheat; positions and shots are trusted.
-* The player helicopter, Training, Survival, killstreaks, ally orders, documents, the jeep and Zombie Arena (drafts) are single-player only. Objectives, bosses and barrels: see "Mission objectives" below.
+* Training, Survival, killstreaks, ally orders, documents, the jeep and Zombie Arena (drafts) are single-player only. Objectives, bosses and barrels: see "Mission objectives" below.
 * Latency is about 100–200 ms (12 Hz snapshots with interpolation); there is no lag compensation.
 * Tested only with an in-memory mock of the room API, never with real remote players.

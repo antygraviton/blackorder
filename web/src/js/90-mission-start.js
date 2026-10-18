@@ -45,7 +45,7 @@ function doStart(){
     if(curMode==='tdm')initTdm();
   }
   if(!curMode)placeObjectives();
-  pheli=(L.camp===1&&NET.role==='solo'&&!curMode)?mkPlayerHeli(14,58):null;mounted=false;
+  pheli=(L.camp===1&&!curMode)?mkPlayerHeli(14,58):null;mounted=false;NET.heliPilot=-1;
   killed=0;total=(curMode||(L.ob&&L.ob!=='kill'))?1e9:enemies.length+vehicles.filter(v=>v.type!=='jet').length;over=false;$('blood').innerHTML='';
   slots=[S.primary,S.secondary,S.melee||'knife',S.grenade||'m67'];
   if(L.camp===1&&S.primary!=='rpg'&&!curMode)slots.push('rpg');

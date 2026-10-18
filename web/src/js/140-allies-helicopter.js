@@ -100,11 +100,12 @@ function toggleHeli(){
   const pos=pheli.g.position;
   if(!mounted){
     if(Math.hypot(P.x-pos.x,P.z-pos.z)>7)return;
-    mounted=true;aim=false;mouseDown=false;heliWeapon=0;
+    if(!heliFree()){say('The helicopter is taken by another player.',2);return;}
+    mounted=true;aim=false;mouseDown=false;heliWeapon=0;NET.boardAt=Date.now();if(NET.role==='host')NET.heliPilot=0;
     say('Mi-24: mouse steers heading and pitch (nose down = fly forward), W climb, S descend, Space fire, 1–3 weapons, E exit',6);
   } else {
     if(pos.y-H(pos.x,pos.z)>4){say('Land to be able to exit (S = descend).',2);return;}
-    mounted=false;P.x=pos.x+4;P.z=pos.z;P.y=H(P.x,P.z)+1.7;P.vy=0;P.ground=true;pheli.vx=pheli.vy=pheli.vz=0;
+    mounted=false;P.x=pos.x+4;P.z=pos.z;P.y=H(P.x,P.z)+1.7;P.vy=0;P.ground=true;pheli.vx=pheli.vy=pheli.vz=0;if(NET.role==='host')NET.heliPilot=-1;
   }
   hud();
 }
@@ -136,7 +137,7 @@ function chasePos(){
   return c;
 }
 function crashHeli(){
-  const h=pheli;h.alive=false;const pos=h.g.position;
+  const h=pheli;h.alive=false;if(NET.role==='host')NET.heliPilot=-1;const pos=h.g.position;
   explode(pos.clone(),8,60);
   mounted=false;
   pos.y=H(pos.x,pos.z)+1.8;h.g.rotation.x=.25;h.g.rotation.z=.45;
@@ -160,6 +161,7 @@ function heliFire(first){
     if(now-lastShot<.06)return;lastShot=now;
     beep(210,.05,'square',.14);shake=Math.max(shake,.006);alertNear(70);
     const d=aimPt.clone().sub(mz).normalize();d.x+=(Math.random()-.5)*.02;d.y+=(Math.random()-.5)*.02;d.z+=(Math.random()-.5)*.02;d.normalize();
+    if(NET.role==='client')netShot('h','heli',mz,d);
     const targets=obstMesh.concat(...enemies.filter(e=>e.alive).map(e=>e.parts),...vehicles.filter(v=>v.alive&&v.g.visible).map(v=>v.parts));
     ray.set(mz,d);ray.far=300;
     const hit=ray.intersectObjects(targets,false)[0],gh=groundHit(mz,d);
@@ -175,14 +177,14 @@ function heliFire(first){
     for(let i=0;i<4;i++){
       const o=pheli.g.localToWorld(new THREE.Vector3((i%2?1:-1)*(i<2?1.7:2.9),-.35,1.1));
       const d=aimPt.clone().sub(o).normalize();d.x+=(Math.random()-.5)*.03;d.y+=(Math.random()-.5)*.03;d.z+=(Math.random()-.5)*.03;
-      spawnProj(HW[1],'rocket',o,d.normalize());
+      heliRocket(HW[1],o,d.normalize());
     }
     beep(90,.3,'sawtooth',.3);shake=.03;alertNear(70);
   } else {
     if(now-lastRocket<1.5)return;
     if(pheli.atgm<=0){say('Out of anti-tank missiles.',1.5);return;}
     lastRocket=now;pheli.atgm--;
-    spawnProj(HW[2],'rocket',mz,aimPt.clone().sub(mz).normalize());
+    heliRocket(HW[2],mz,aimPt.clone().sub(mz).normalize());
     beep(70,.4,'sawtooth',.4);shake=.05;alertNear(70);
   }
   hud();
@@ -193,4 +195,64 @@ function updateHeliIdle(dt){
   const near=pheli.alive&&!mounted&&Math.hypot(P.x-pheli.g.position.x,P.z-pheli.g.position.z)<6;
   $('prompt').textContent=near?'Press E to board the helicopter':(mounted&&pheli.g.position.y-H(pheli.g.position.x,pheli.g.position.z)<4.5?'E = exit':'');
 }
-
+/* ---- helicopter in multiplayer ----
+   One pilot at a time (NET.heliPilot = roster index, -1 = nobody). The pilot's machine flies the helicopter: the host does it for
+   itself, for a client pilot the host copies the position from that player's presence (heliArbitrate) and publishes it in s.h;
+   everybody else sees a ghost that follows the snapshot. A client claims the helicopter with presence hm:1, the host decides. */
+function heliFree(){
+  if(NET.role==='solo')return true;
+  if(NET.role==='host')return NET.heliPilot<0;
+  const h=NET.snap&&NET.snap.h;return !h||h[0]<0;
+}
+function heliRocket(w,o,d){if(NET.role==='client')netShot(w===HW[1]?'p':'t','heli',o,d);else spawnProj(w,'rocket',o,d);}
+function heliShot(a,s){
+  if(!pheli||!pheli.alive||a.ridx!==NET.heliPilot)return;
+  const code=s[1],o=new THREE.Vector3(s[3]/10,s[4]/10,s[5]/10),d=new THREE.Vector3(s[6]/1000,s[7]/1000,s[8]/1000).normalize();
+  if(code==='h'){alertAt(o,70);hitscanFrom(o,d,{dmg:16,spread:0,pellets:1});}
+  else if(code==='p'){spawnProj(HW[1],'rocket',o,d);pheli.pod=Math.max(0,pheli.pod-1);}
+  else if(code==='t'){spawnProj(HW[2],'rocket',o,d);pheli.atgm=Math.max(0,pheli.atgm-1);}
+}
+/** Host: decide who flies, move the helicopter for a client pilot, let it sink when nobody flies it. */
+function heliArbitrate(dt){
+  if(!pheli)return;
+  const ro=NET.roster,av=i=>NET.avatars[ro[i]];
+  if(NET.heliPilot>0){const a=av(NET.heliPilot);if(!a||!a.alive||!a.hm||!pheli.alive)NET.heliPilot=-1;}
+  if(NET.heliPilot===0&&(!mounted||!pheli.alive))NET.heliPilot=-1;
+  if(NET.heliPilot<0&&pheli.alive&&!mounted)for(let i=1;i<ro.length;i++){const a=av(i);if(a&&a.alive&&a.hm&&Math.hypot(a.px-pheli.g.position.x,a.pz-pheli.g.position.z)<9){NET.heliPilot=i;break;}}
+  const pos=pheli.g.position;
+  if(NET.heliPilot>0){
+    const a=av(NET.heliPilot),k=Math.min(1,dt*12);
+    pos.x+=(a.px-pos.x)*k;pos.y+=(a.py-.5-pos.y)*k;pos.z+=(a.pz-pos.z)*k;
+    pheli.g.rotation.y=a.pyaw+Math.PI;pheli.g.rotation.x=Math.max(-.5,Math.min(.5,-Math.max(-.9,Math.min(.6,a.ppitch||0))*.7));
+  } else if(pheli.alive&&NET.heliPilot<0&&!mounted){
+    const gy=H(pos.x,pos.z)+1.8;if(pos.y>gy)pos.y=Math.max(gy,pos.y-6*dt);
+  }
+}
+function crashHeliRemote(a){
+  const pos=pheli.g.position;pheli.alive=false;NET.heliPilot=-1;
+  explode(pos.clone(),8,60);
+  pos.y=H(pos.x,pos.z)+1.8;pheli.g.rotation.x=.25;pheli.g.rotation.z=.45;
+  allyHit(a,35);
+}
+/** Client: take over the host's view of the helicopter. */
+function heliApply(h){
+  NET.heliPilot=h[0];NET.heliSnap=h;
+  const me=h[0]===NET.mi;
+  if(mounted&&!me&&Date.now()-(NET.boardAt||0)>1500){
+    mounted=false;P.x=pheli.g.position.x+4;P.z=pheli.g.position.z;P.y=H(P.x,P.z)+1.7;P.vy=0;P.ground=true;
+    say(h[7]?'The helicopter is taken by another player.':'Helicopter destroyed! You bailed out.',3);
+  }
+  if(!mounted){pheli.pod=h[8];pheli.atgm=h[9];}
+  pheli.hp=h[10];
+  if(!h[7]&&pheli.alive){
+    pheli.alive=false;const pos=pheli.g.position;pos.y=H(pos.x,pos.z)+1.8;pheli.g.rotation.x=.25;pheli.g.rotation.z=.45;
+    if(mounted){mounted=false;P.x=pos.x+5;P.z=pos.z+5;P.y=H(P.x,P.z)+1.7;P.vy=0;P.ground=true;say('Helicopter destroyed! You bailed out.',3);}
+  }
+}
+function heliFollow(dt){
+  const h=NET.heliSnap;if(!pheli||!h||!pheli.alive||mounted)return;
+  const p=pheli.g.position,k=Math.min(1,dt*10);
+  p.x+=(h[1]/10-p.x)*k;p.y+=(h[2]/10-p.y)*k;p.z+=(h[3]/10-p.z)*k;
+  let da=h[4]/100-pheli.g.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));pheli.g.rotation.y+=da*k;
+  pheli.g.rotation.x=h[5]/100;pheli.g.rotation.z=h[6]/100;
+}

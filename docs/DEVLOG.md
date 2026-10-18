@@ -140,3 +140,7 @@ Rules for this file: `AGENTS.md` section 10.
 * Replication: manifest boss flags, `s.ob[3]` boss percent, `s.br` barrel string. Documented in `docs/MULTIPLAYER.md`.
 * Version bumped to 1.1.0 (`package.json`, title, menu subtitle, CHANGELOG, this log). ROADMAP statuses updated.
 * Verified: `tests/extensions.test.js` 74 checks (barrels, chain, bullets, armor values, no flinch/stun, HUD percent, both boss missions complete, tank 3.5x HP and 1.25x size, two shells per volley), `tests/lobby.test.js` 49 checks (boss and barrels replicated in co-op). Not verified: difficulty and balance of the boss fights (numbers are from the drafts, as agreed) and the look of the boss models.
+
+## 2026-10-18 (cont.) – helicopter in co-op
+* Reported: no helicopter in Steel Fist in multiplayer. It was created only when `NET.role==='solo'`. Now it exists on every machine in campaign 2; design in `docs/MULTIPLAYER.md` ("The player helicopter"): pilot arbitration on the host, position of a client pilot copied from its presence, `s.h` in the snapshot, ghost on the other machines, client weapon shots as `h`/`p`/`t`, damage via `allyHit`, crash for everybody.
+* Verified: `tests/lobby.test.js` 65 checks (client and host as pilot, taken helicopter, shots, landing, second pilot, crash). Not verified with real devices; open: no AI allies in the helicopter, jets and enemy fire do not distinguish the helicopter from the soldier avatar (damage reaches the helicopter via the avatar).

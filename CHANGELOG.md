@@ -8,6 +8,7 @@ Format: newest first. Versions describe the browser game unless stated otherwise
 * Mission objectives: destroy fuel depots, hack a terminal in a stealth mission, rescue the prisoner, defend a zone; briefing screens, radio messages, weather and night (rain, fog, storm, flashlight on F). New missions *Rescue the Prisoner*, *Base Defense*; *Base Infiltration* became *Silent Infiltration*, *Airfield* asks to destroy depots. All of it works in co-op.
 * Bosses: *Commander of the Order* (armored soldier: aim for the head or use explosives) ends campaign 1, *Armata* (tank boss with double shells) ends campaign 2.
 * Explosive barrels with chain reactions.
+* The player helicopter works in co-op (Steel Fist and Armata): one pilot at a time, host or client, with weapons.
 * The cabin landmark: enterable (stairs, upper room, fireplace) with an open garage; raised walkable floors and height-aware collisions.
 * Online play outside claude.ai (PeerJS over WebRTC, `129-net-peerjs.js`), GitHub Pages deployment; lobby fixes (duplicate joins, ghost players, back to the lobby after a game, rejoin, host pause stops everybody, host-only start).
 * Touch controls for phones and tablets (`165-touch.js`, `?touch=1` / `?touch=0`), canvas that follows the real window size, click to re-capture the mouse so the camera can turn freely.

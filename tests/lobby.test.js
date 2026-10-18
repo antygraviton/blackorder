@@ -132,5 +132,47 @@ const rows = g => g.E("[...document.querySelectorAll('#mpPlayers tr')].map(r => 
   check(A.E('vehicles.filter(v => v.boss).length') === 1 && Math.abs(A.E('vehicles.find(v => v.boss).g.scale.x') - 1.25) < 1e-9, 'Armata: clients get the boss tank');
   await backToLobby();
 
+  // ---- the player helicopter in co-op (Steel Fist) ----
+  await startMission('Steel Fist');
+  const hp = g => g.E("[Math.round(pheli.g.position.x), Math.round(pheli.g.position.y), Math.round(pheli.g.position.z)].join()");
+  check(H.E('!!pheli') && A.E('!!pheli') && B.E('!!pheli') && hp(H) === hp(A) && hp(H) === hp(B), 'Steel Fist: the helicopter exists on every machine at the same place');
+  const ia = A.E('NET.mi'), ib = B.E('NET.mi');
+  const nearHeli = g => g.E("(function () { const p = pheli.g.position; P.x = p.x + 2; P.z = p.z; P.y = H(P.x, P.z) + 1.7; })()");
+  nearHeli(A); A.E('toggleHeli()'); await cycle(15);
+  check(A.E('mounted') && H.E('NET.heliPilot') === ia, 'client A boards and the host makes A the pilot (pilot ' + H.E('NET.heliPilot') + ')');
+  const y0 = H.E('pheli.g.position.y');
+  A.E('keys.KeyW = true'); await cycle(60); A.E('keys.KeyW = false'); await cycle(10);
+  check(A.E('pheli.g.position.y') > y0 + 3, 'the client pilot climbs (' + y0.toFixed(1) + ' -> ' + A.E('pheli.g.position.y').toFixed(1) + ' m)');
+  check(Math.abs(H.E('pheli.g.position.y') - A.E('pheli.g.position.y')) < 3 && Math.abs(B.E('pheli.g.position.y') - A.E('pheli.g.position.y')) < 3, 'host and the other client see the helicopter where the pilot flies it');
+  check(H.E("Object.values(NET.avatars).find(a => a.ridx === NET.heliPilot).g.visible") === false, 'the pilot is not drawn as a soldier next to the helicopter');
+  nearHeli(B); B.E('toggleHeli()'); await cycle(10);
+  check(B.E('mounted') === false && H.E('NET.heliPilot') === ia, 'a second player cannot board while the helicopter is taken');
+  H.E("window.__hs = 0; window.__sp = 0; { const h0 = hitscanFrom, s0 = spawnProj; hitscanFrom = function (...x) { window.__hs++; return h0.apply(this, x); }; spawnProj = function (...x) { window.__sp++; return s0.apply(this, x); }; }");
+  A.E('heliWeapon = 0; lastShot = -10; heliFire(true)'); await cycle(12);
+  check(H.E('window.__hs') >= 1, 'a client pilot\'s machine gun shots reach the host');
+  A.E('heliWeapon = 1; lastRocket = -10; pheli.pod = 16; heliFire(true)'); await cycle(12);
+  check(H.E('window.__sp') >= 4, 'rocket pod volley of the client pilot is fired on the host (' + H.E('window.__sp') + ' rockets)');
+  A.E("pheli.g.position.y = H(pheli.g.position.x, pheli.g.position.z) + 2; toggleHeli()"); await cycle(15);
+  check(A.E('mounted') === false && H.E('NET.heliPilot') === -1, 'the pilot lands and leaves; the helicopter is free again');
+  nearHeli(B); B.E('toggleHeli()'); await cycle(15);
+  check(B.E('mounted') && H.E('NET.heliPilot') === ib, 'the other client can fly it now');
+  H.E("allyHit(Object.values(NET.avatars).find(a => a.ridx === NET.heliPilot), 1e5)"); await cycle(15);
+  check(H.E('!pheli.alive') && B.E('!pheli.alive') && A.E('!pheli.alive') && B.E('mounted') === false, 'when the pilot\'s helicopter is shot down it crashes for everybody and the pilot bails out');
+  await backToLobby();
+
+  // the host as the pilot
+  await startMission('Steel Fist');
+  nearHeli(H); H.E('toggleHeli()'); await cycle(10);
+  check(H.E('mounted') && H.E('NET.heliPilot') === 0, 'host boards and is the pilot');
+  const yh = H.E('pheli.g.position.y');
+  H.E('keys.KeyW = true'); await cycle(60); H.E('keys.KeyW = false'); await cycle(15);
+  check(H.E('pheli.g.position.y') > yh + 3 && Math.abs(A.E('pheli.g.position.y') - H.E('pheli.g.position.y')) < 3, 'clients see the helicopter the host flies');
+  check(A.E("Object.values(NET.avatars).find(a => a.ridx === 0).g.visible") === false, 'clients do not draw the host as a soldier while it flies');
+  nearHeli(A); A.E('toggleHeli()'); await cycle(10);
+  check(A.E('mounted') === false, 'a client cannot board the helicopter the host is flying');
+  H.E("pheli.g.position.y = H(pheli.g.position.x, pheli.g.position.z) + 2; toggleHeli()"); await cycle(15);
+  check(H.E('mounted') === false && H.E('NET.heliPilot') === -1 && A.E('NET.heliPilot') === -1, 'the host lands and leaves; everybody sees it free');
+  await backToLobby();
+
   process.exit(check.done() ? 0 : 1);
 })();
