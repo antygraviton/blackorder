@@ -66,7 +66,8 @@ async function coop(check) {
   check(B.E('NET.fxSeen') > fx0, 'explosion effect is replicated');
   check(bus.maxPresenceBytes < 4096, `presence stays under the 4 KiB limit (max ${bus.maxPresenceBytes} B)`);
   A.E("enemies.forEach(e=>{if(e.alive)dmg(e,99999,false);});vehicles.forEach(v=>{if(v.alive&&v.type!=='jet')vdmg(v,99999,true);});");
-  step(100); await sleep(900);
+  step(100);
+  for (let i = 0; i < 80 && !(B.E('over') && C.E('over')); i++) { step(10); await sleep(100); }   // wait for the end to arrive (slow CI)
   check(A.E('over') === true, 'host: mission completed');
   check(B.E('over') === true && C.E('over') === true, 'clients: mission end received');
   check(B.$('endT').textContent === 'Mission complete', 'client shows "Mission complete"');
@@ -108,7 +109,8 @@ async function teamMatch(check) {
   check(A.E('pDead') === false && A.E('P.hp') > 0, 'host respawned');
   A.E('allyHit(Object.values(NET.avatars)[0],999)'); step(30);
   check(A.E('tdm.red') === 2, 'client death: bot score 2');
-  A.E('killed=24;'); A.E('dmg(enemies[1],9999,false)'); step(80); await sleep(900);
+  A.E('killed=24;'); A.E('dmg(enemies[1],9999,false)'); step(80);
+  for (let i = 0; i < 80 && !B.E('over'); i++) { step(10); await sleep(100); }   // wait for the end to arrive (slow CI)
   check(A.E('over') && B.E('over'), 'match ended on both machines');
   check(B.$('endT').textContent === 'Victory', 'client sees "Victory"');
   check(B.E('S.wp') >= 200, 'client received the reward (' + B.E('S.wp') + ' WP)');
