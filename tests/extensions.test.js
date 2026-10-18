@@ -168,4 +168,16 @@ check(g.E(`los(new THREE.Vector3(${c.x + c.DX}, ${top + 1.5}, ${c.z + 10}), new 
 g.step(5, 16);
 check(g.E('cabinFx.l.intensity') > 1, 'the fireplace light is on');
 
+// mouse capture: without pointer lock the cursor hits the screen edge and the camera cannot turn a full circle
+begin('The Vanished Village');
+g.E("window.__lk = 0; $('cv').requestPointerLock = () => { window.__lk++; }; locked = false; fallback = true; over = false; run = true");
+g.E("window.dispatchEvent(new MouseEvent('mousedown', { button: 0 }))");
+check(g.E('window.__lk') === 1, 'a click re-requests the pointer lock when the game runs without it');
+g.E("locked = true; window.dispatchEvent(new MouseEvent('mousedown', { button: 0 }))");
+check(g.E('window.__lk') === 1, 'no repeated lock requests while the pointer is locked');
+g.E("locked = false; over = true; window.dispatchEvent(new MouseEvent('mousedown', { button: 0 }))");
+check(g.E('window.__lk') === 1, 'no lock request on the end screen');
+g.E("over = false; locked = true; P.yaw = 0; canAct = () => true; for (let i = 0; i < 40; i++) { const ev = new MouseEvent('mousemove'); Object.defineProperty(ev, 'movementX', { value: -100 }); window.dispatchEvent(ev); }");
+check(Math.abs(g.E('P.yaw')) > 2 * Math.PI, 'with the pointer locked the camera can turn more than a full circle (yaw ' + g.E('P.yaw').toFixed(1) + ')');
+
 process.exit(check.done() ? 0 : 1);

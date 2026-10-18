@@ -54,7 +54,7 @@ function doStart(){
   say(L.txt+(NET.role!=='solo'?' (Multiplayer: '+NET.roster.length+' player'+(NET.roster.length>1?'i':'')+')':(allies.length?' Allies Alpha and Bravo are following you.':'')+(pheli?' Mi-24 helicopter is parked nearby: E.':'')),5);
   $('end').classList.remove('on');$('pause').classList.remove('on');
   hadLock=false;fallback=false;lockMouse();
-  setTimeout(()=>{if(!locked&&run)fallback=true;},700);
+  setTimeout(()=>{if(!locked&&run){fallback=true;if(!touchOn)say('Click the game to capture the mouse, then you can turn freely.',5);}},700);
   run=true;lastT=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
 }
 function lockMouse(){try{const p=$('cv').requestPointerLock();if(p&&p.catch)p.catch(()=>{fallback=true;});}catch(e){fallback=true;}}
@@ -87,7 +87,7 @@ addEventListener('keydown',e=>{keys[e.code]=true;
   if(e.code==='Digit1')sw(0);if(e.code==='Digit2')sw(1);if(e.code==='Digit3')sw(2);if(e.code==='Digit4')sw(3);if(e.code==='Digit5')sw(4);if(e.code==='KeyE')toggleHeli();
 });
 addEventListener('keyup',e=>keys[e.code]=false);
-addEventListener('mousedown',e=>{if(!canAct())return;if(e.button===0){mouseDown=true;fire(true);}if(e.button===2){if(mounted){heliWeapon=(heliWeapon+1)%3;hud();}else aim=true;}});
+addEventListener('mousedown',e=>{if(run&&!locked&&!over&&!touchOn)lockMouse();if(!canAct())return;if(e.button===0){mouseDown=true;fire(true);}if(e.button===2){if(mounted){heliWeapon=(heliWeapon+1)%3;hud();}else aim=true;}});
 addEventListener('mouseup',e=>{if(e.button===0)mouseDown=false;if(e.button===2)aim=false;});
 addEventListener('contextmenu',e=>{if(run)e.preventDefault();});
 addEventListener('mousemove',e=>{if(!canAct())return;const s=.0004+S.sens/100*.0032;const z=aim?.5:1;P.yaw-=e.movementX*s*z;P.pitch=Math.max(-1.4,Math.min(1.4,P.pitch-e.movementY*s*z));swayX=Math.max(-.04,Math.min(.04,swayX-e.movementX*.0004));swayY=Math.max(-.03,Math.min(.03,swayY-e.movementY*.0004));});
