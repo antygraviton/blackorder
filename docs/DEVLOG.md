@@ -6,7 +6,7 @@ Rules for this file: `AGENTS.md` section 10.
 
 ## Current state (keep up to date, overwrite)
 
-* **Version:** 1.1.0 (released 2026-10-18). `npm test` green on `main`.
+* **Version:** 1.2.0 (released 2026-10-18). `npm test` green on `main`.
 * **In progress:** nothing; v1.1 core is done. Remaining draft features (`drafts/v1.1`): Zombie Arena, killstreaks, ally orders, jeep, documents/achievements/Archive. Wanted by the owner and not started: look-and-feel check of the cabin and mobile layout on real devices.
 * **Lean plan:**
   1. ~~Clean the drafts~~ DONE: Czech leftovers translated in `drafts/v1.1`, `failMission(msg)` extended. Radio `r.done` reset moves to step 3 (when radio code lands in `doStart()`); `addKit(...,ammo)` (needs pickup logic in `160-main-loop.js`) and `mkEnemy(...,opt.noGun)` move to the deferred killstreaks/Zombie work.
@@ -144,3 +144,10 @@ Rules for this file: `AGENTS.md` section 10.
 ## 2026-10-18 (cont.) – helicopter in co-op
 * Reported: no helicopter in Steel Fist in multiplayer. It was created only when `NET.role==='solo'`. Now it exists on every machine in campaign 2; design in `docs/MULTIPLAYER.md` ("The player helicopter"): pilot arbitration on the host, position of a client pilot copied from its presence, `s.h` in the snapshot, ghost on the other machines, client weapon shots as `h`/`p`/`t`, damage via `allyHit`, crash for everybody.
 * Verified: `tests/lobby.test.js` 65 checks (client and host as pilot, taken helicopter, shots, landing, second pilot, crash). Not verified with real devices; open: no AI allies in the helicopter, jets and enemy fire do not distinguish the helicopter from the soldier avatar (damage reaches the helicopter via the avatar).
+
+## 2026-10-18 (cont.) – making the campaign more fun: barks and cinematic scenes, release 1.2
+* Owner request: make the campaign more entertaining (NPCs shouting when hit, funny lines from enemies, cinematic shots). Delivered as a first slice; the owner can steer from here.
+* `118-banter.js` + `BANTER` in `10-data.js`: speech bubbles (canvas sprites) above allies, enemies, bosses and the tank with a short synthesized voice; chances, a global 1.1 s and a per-speaker 7 s cooldown, 34 m distance limit; hooks in `dmg`, `allyDmg`, `allyHit`, `hurt`, objective events, boss health tiers, barrels; replicated to clients as `b` fx. `119-cinematics.js`: intro fly-over (frozen world, title card, `CAPS` caption per mission, skip with any key), boss and tank kill-cam in slow motion, bullet time after headshot kills (solo only; `S.cine`, default on, Settings > Game). `canAct` is false during scenes; the loop scales `dt` by `timeScale`.
+* Test hooks: the harness sets `S.cine = 0; banterRate = 0` so other tests are unaffected.
+* Verified: `tests/banter.test.js` (28 checks), `tests/lobby.test.js` (68). **Not verified: how it feels** (bubble size/readability, camera path, humour, voice blips); everything is data or constants (`BANTER`, `CAPS`, the camera numbers in `cineCam`).
+* Ideas for the next slice: per-mission scripted lines and funny radio exchanges, ally banter with each other, enemy panic/surrender, boss entrance scene, post-mission statistics with jokes ("Friendly fire incidents: 0"), kill-cam for the last enemy of a mission, optional camera shake/zoom on explosions, real voice or sound effects.

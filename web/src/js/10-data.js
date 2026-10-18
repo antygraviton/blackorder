@@ -69,7 +69,7 @@ const dmgMul=k=>(attOf(k)==='supp'?.85:1)*(hasPerk('dmg')?1.1:1);
 const silent=k=>attOf(k)==='supp';
 /* ---- new and modified missions ---- */
 const _L=LEVELS.slice();
-const lbase=l=>{const o=Object.assign({},l);['ob','stealth','docs','radio','brief','wx','bossS','bossT','nd','tanks','apcs','helis','jets','desert','runway','cabin'].forEach(k=>delete o[k]);return o;};
+const lbase=l=>{const o=Object.assign({},l);['ob','stealth','docs','radio','brief','wx','bossS','bossT','nd','tanks','apcs','helis','jets','desert','runway','cabin','cap'].forEach(k=>delete o[k]);return o;};
 Object.assign(_L[0],{cabin:true,brief:'HQ: The mountain village has stopped broadcasting. Investigate it, neutralize the patrols and find out who is behind this. Watch out for mines.',radio:[{t:15,m:'HQ: We hear gunfire from the east, be careful.'},{k:6,m:'HQ: Half of the patrols are gone, keep going.'}]});
 Object.assign(_L[1],{n:'Silent Infiltration',txt:'The Order has taken the mine. Slip through the dark to the terminal on the far side of the map and hack it (hold E). Do not raise the alarm.',brief:'The Order has taken the mine. You must not raise the alarm: enemies see you only from close range and hear loud gunshots. A suppressor, a knife and a bow are your friends. Flashlight: key F. Find the terminal on the far side of the map and hack it (hold E).',ob:'hack',stealth:true,wx:'night',radio:[{t:20,m:'Contact: The terminal is on the opposite side of the map.'},{t:90,m:'Contact: Stay away from the lights.'}]});
 Object.assign(_L[2],{brief:'HQ: The Order holds a small town on the border. Evening, fog, mines in the streets. Clear the streets of all patrols.',radio:[{t:20,m:'HQ: Watch the streets, they are mined.'}]});
@@ -81,3 +81,35 @@ const L_DEFEND=Object.assign(lbase(_L[2]),{camp:0,n:'Base Defense',txt:'Defend t
 const L_BOSS=Object.assign(lbase(_L[1]),{camp:0,n:'Commander of the Order',txt:'Defeat the commander of the Black Order. Body shots barely slow him down, aim for the head.',brief:'The commander of the Black Order hides in a mountain fortress. He is heavily armored, body shots barely slow him down. Aim for the head and use grenades. Night.',ob:'boss',bossS:true,wx:'night',en:10,mines:4,kits:5,houses:9,ruins:4,seed:29,reward:700,medals:70,xp:220,acc:.65,hp:75,radio:[{t:20,m:'Contact: The commander is big. Aim for the head!'},{t:80,m:'Contact: Grenades hurt him more than bullets.'}]});
 const L_TANKB=Object.assign(lbase(_L[5]),{camp:1,n:'Armata',txt:'Destroy the Armata tank prototype. It is huge and tough.',brief:'The Armata tank prototype is fighting its way to the border. It is huge and tough, bullets do nothing to it. Use the anti-tank missiles from the helicopter, the RPG and explosives. Night.',ob:'boss',bossT:true,wx:'night',en:6,apcs:0,tanks:1,helis:0,jets:0,mines:6,kits:5,houses:3,ruins:2,seed:93,desert:true,reward:900,medals:90,xp:260,acc:.6,hp:80,radio:[{t:20,m:'Contact: Aim for the weak spot on the sides.'},{t:90,m:'Contact: Use the helicopter, it carries anti-tank missiles.'}]});
 LEVELS.splice(3,0,L_RESCUE,L_DEFEND,L_BOSS);LEVELS.push(L_TANKB);
+
+/* ---- flavour text: barks (speech bubbles) and mission captions (see 118-banter.js, 119-cinematics.js) ----
+   Every key is an array of one-liners; the order of the keys is part of the multiplayer protocol, so add new keys at the end. */
+const BANTER={
+  intro:['Another day, another mess.','Stay close, I forgot my map.','Make it quick, I have a date tonight.','If we die, I call dibs on the shower.','Remember: shoot first, panic later.'],
+  allyHit:['Ow! That was my good arm!','I am hit! Tell my mother I was brave!','Medic! ...Oh. That is me.','Argh! My lunch!','Who is shooting at me? Rude!','Hey, I just washed this vest!'],
+  allyDown:['Tell my cat... she was right...','I regret nothing! ...Mostly.','Should have stayed in logistics...','Not like this... not before payday...'],
+  allyKill:['Got him!','Nothing personal!','One less to worry about.','That one had it coming.','Nice. Do I get a medal?','And stay down!'],
+  allyWarn:['Watch your head, boss!','You are bleeding. A lot.','Try dodging next time!','Cover! Use cover! It is free!','Careful, you are my only ride home!'],
+  freed:['Finally! The food here was terrible.','You came! I had a whole speech prepared.','Free! Can I have a sandwich?','About time! My legs fell asleep.'],
+  depotBoom:['Boom! That is going to leave a mark.','Fuel is expensive. Was.','Somebody is going to be in trouble for that.'],
+  hacked:['Terminal hacked. I did nothing.','Access granted. Their password was "password".','Hacking complete. Please clap.'],
+  enemyAlert:['Contact!','Intruder! Or a very lost tourist.','Sound the alarm! Where is the alarm?','Is that... a player? Seriously?','Enemy spotted! I think. Maybe.','Everybody look busy!'],
+  enemyHit:['Ow! Unfair!','My mother warned me about this job!','I want a transfer!','That was my last cigarette!','Medic! ...Anyone?','I did not sign up for this!'],
+  enemyDown:['Worst. Shift. Ever.','Tell the Commander I tried...','I should have taken the desk job.','Not again...','At least the pay was bad...'],
+  enemyBuddyDown:['Gerhard! NOOO!','They got Hans!','Who will cover my shift now?!','He owed me ten euro!','Not the new guy! He just started!'],
+  barrelOops:['Who put barrels here?!','That barrel was not on the inventory list!','I told them barrels were a bad idea!','Safety inspection! Right now!'],
+  bossSpawn:['You dare enter my fortress?','Fools. You face the Commander of the Order!','Bow before the hat!'],
+  boss75:['A scratch. Nothing more.','Your toys annoy me.','Is that all you have?'],
+  boss50:['Impressive. Now I am annoyed.','Stand still, little soldier!','Do you know how much this uniform costs?'],
+  boss25:['This hat cost a fortune!','Guards! GUARDS! ...Anyone?','You will pay for this!'],
+  boss10:['I... am not... finished!','Mother? Is that you?','Not the hat... not the hat...'],
+  bossDead:['Tell... my tailor... I was... fabulous...','The Order... never forgets... my... hat...','Rosebud...'],
+  tank75:['Armata crew: Minor dents. Carry on.','Armata crew: Did something hit us?'],
+  tank50:['Armata crew: Why is it so hot in here?','Armata crew: Plan B? We have no plan B!'],
+  tank25:['Armata crew: Mayday! We are on fire!','Armata crew: Tell my wife I love the tank!'],
+  tank10:['Armata crew: Abandon ship! ...The hatch is stuck.','Armata crew: Eject! Eject! There is no eject!'],
+  tankDead:['Armata crew: Worth it...','Armata crew: Tell the engineers... the brakes were fine.']
+};
+const BANTER_KEYS=Object.keys(BANTER);
+const CAPS={'The Vanished Village':'Population: suspiciously low.','Silent Infiltration':'Quiet feet. Quieter excuses.','City Under Fire':'Tourist season is cancelled.','Rescue the Prisoner':'He owes you dinner.','Base Defense':'Please make them wipe their boots.','Commander of the Order':'Big man. Bigger hat.','Convoy':'A traffic jam, but with explosions.','Airfield':'Fuel is expensive. Let us help it burn.','Steel Fist':'Everything is bigger up here.','Armata':'Please do not feed the tank.'};
+LEVELS.forEach(l=>{if(CAPS[l.n])l.cap=CAPS[l.n];});

@@ -36,6 +36,8 @@ weapons, characters and vehicles are assembled from primitives, sounds are synth
 | `110-modes-training-survival.js` | Training and Survival, `MODES` table | `startMode`, `spawnTraining`, `updateSurvival`, `survPay`, `addKit` |
 | `120-team-match-death-respawn.js` | Team Match, death/respawn, targeting helpers | `initTdm`, `updateTDM`, `playerDown`, `failMission`, `pickTarget`, `allyHit`, `addMine` |
 | `105-objectives.js` | mission objectives (destroy, hack, rescue, defend, boss), bosses, explosive barrels, stealth alarm, briefing buttons, radio, weather and night | `placeObjectives`, `updateObjectives`, `objText`, `objHit`, `raiseAlarm`, `applyWx`, `initWx`, `updateWx`, `updateRadio`, `beginLoad` |
+| `118-banter.js` | speech-bubble barks (rate limits, voice blips, hooks for damage/boss/objective events), replicated as `b` fx | `bark`, `showBark`, `updateBanter`, `bossBanter`, `allyBark` |
+| `119-cinematics.js` | intro fly-over, boss kill-cam, bullet time (solo only) | `cineStart`, `cineStep`, `cineCam`, `bulletTime`, `updateTimeScale` |
 | `129-net-peerjs.js` | PeerJS implementation of the `room` API for online play outside claude.ai | `loadPeerJs`, `makePeerRoomApi` |
 | `130-multiplayer.js` | lobby, host and client logic, replication | `NET`, `mpPeers`, `mpStartGame`, `hostSnap`, `hostShot`, `clientApply`, `clientTick`, `netTick` |
 | `140-allies-helicopter.js` | AI allies and the player helicopter | `mkAlly`, `updateAllies`, `mkPlayerHeli`, `flyHeli`, `heliFire` |

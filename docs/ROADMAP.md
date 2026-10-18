@@ -24,6 +24,7 @@ Priorities are the owner's wishes in order of the latest conversation. "Draft" m
 | Own tank for the player | Idea |
 | Destructible buildings (only barrels are destructible in the draft) | Idea |
 | Real audio (shots, ambience, music) | Idea; needs sound files, breaks the "no assets" rule unless synthesized |
+| Barks (speech bubbles) and cinematic scenes | Done (v1.2): intro, boss kill-cam, bullet time; more scenes and voiced audio are open |
 | Story scenes / voiced radio | Idea |
 | Longer campaign (the owner wants 5+ hours; today about 20–30 minutes) | Open |
 | Multiplayer: 1v1 … 5v5 against humans (the sketches show up to 5v5) | Open; current limit is 3 humans |

@@ -109,3 +109,13 @@ body.touch #touch{display:block}
 body.touch #mm{width:110px;height:110px}
 body.touch .ammo{right:20px;bottom:auto;top:136px;font-size:28px}
 body.touch .ammo small{font-size:13px}
+/* ---- cinematic scenes (see 119-cinematics.js) ---- */
+#cineBars i{position:absolute;left:0;right:0;height:0;background:#000;transition:height .6s}
+#cineBars i:first-child{top:0}#cineBars i:last-child{bottom:0}
+#cineBars.on i{height:11vh}
+#cineTitle{position:absolute;left:6vw;bottom:13vh;max-width:70vw;opacity:0;transition:opacity .7s;color:var(--bone);text-shadow:0 2px 8px #000}
+#cineTitle.on{opacity:1}
+#cineTitle h1{margin:0;font-size:clamp(28px,6vw,64px);letter-spacing:.04em;text-transform:uppercase}
+#cineTitle p{margin:4px 0 0;font-size:clamp(16px,2.6vw,26px);color:var(--olive)}
+#cineTitle small{display:block;margin-top:10px;font-size:14px;color:var(--dim)}
+body.cine .hud>*:not(#cineBars):not(#cineTitle):not(#cine){visibility:hidden}

@@ -89,6 +89,10 @@ Host only:
 * A client pilot's shots travel as `sh` entries with the codes `h` (machine gun), `p` (one pod rocket), `t` (anti-tank missile); `hostShot` hands them to `heliShot`, which only accepts the current pilot. Damage to the pilot's avatar goes to the helicopter (`allyHit`), and `crashHeliRemote` destroys it for everybody; a helicopter nobody flies sinks to the ground.
 * A client that claims but is not made pilot within 1.5 s is dropped out ("taken by another player").
 
+## Barks and cinematics
+* Barks are decided on the host and shown on clients through the one-shot fx event `['b', kind, index, keyIndex, lineIndex]` (`kind` e = enemy, a = non-remote ally, v = vehicle; `keyIndex` indexes `BANTER_KEYS`, so new banter keys must be appended). Purely cosmetic.
+* Cinematic scenes (intro, kill-cam, bullet time) run only when `NET.role === 'solo'`: nobody's game freezes online.
+
 ## Pause, lobby and rejoin
 * **Host pause stops the game for everybody.** The host stops its simulation and publishes `ps:1` in its presence; clients see the "Host paused" screen (`clientPauseSync`, driven by `onPeers`, because the client loop is stopped) and can continue only after the host resumed. A client's own pause menu does not stop the game.
 * **Only the host starts a game** (`mpStartGame`); clients enter it only through the host's `go` presence, and only if their peer id is in `go.ro`.

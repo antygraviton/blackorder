@@ -12,7 +12,8 @@ function collide(o,r){
 function los(a,b){const d=new THREE.Vector3().subVectors(b,a);const Ln=d.length();ray.set(a,d.normalize());ray.far=Ln;return !ray.intersectObjects(obstMesh,false)[0];}
 function loop(){
   if(!run)return;raf=requestAnimationFrame(loop);
-  const now=performance.now();const dt=Math.min(.05,(now-lastT)/1000);lastT=now;tAll+=dt;frame++;
+  const now=performance.now();let dt=Math.min(.05,(now-lastT)/1000);lastT=now;const rdt=dt;updateTimeScale(rdt);dt*=timeScale;tAll+=dt;frame++;
+  if(cine.on&&cine.freeze){cineStep(rdt);return;}
   /* player */
   const sp=((keys.ShiftLeft||keys.ShiftRight)?7.5*(hasPerk('run')?1.15:1):4.6)*(aim?.6:1)*(pDead?0:1);
   let fx=0,fz=0;
@@ -31,9 +32,10 @@ function loop(){
   const bob=!mounted&&moving&&P.ground?Math.sin(tAll*((keys.ShiftLeft||keys.ShiftRight)?14:9))*.03:0;
   if(mounted&&pheli&&pheli.alive)cam.position.copy(chasePos());else cam.position.set(P.x,P.y+bob,P.z);
   cam.rotation.order='YXZ';cam.rotation.y=P.yaw;cam.rotation.x=P.pitch;
+  if(cine.on)cineKill(rdt);
   const wk=slots[cur],wdef=WEAPONS[wk],z=wdef.zoom||1;
   const scoped=aim&&wdef.scoped;
-  const tf=S.fov/(aim?z*(wdef.scoped?1.8:1.3):1);cam.fov+=(tf-cam.fov)*.2;cam.updateProjectionMatrix();
+  const tf=(1-.1*btK)*S.fov/(aim?z*(wdef.scoped?1.8:1.3):1);cam.fov+=(tf-cam.fov)*.2;cam.updateProjectionMatrix();
   $('scope').style.display=scoped?'block':'none';if(view)view.visible=!scoped&&!mounted;
   /* sun and shadows follow the player */
   const sd=L.sunDir;const sl=Math.hypot(sd[0],sd[1],sd[2]);
@@ -130,7 +132,7 @@ function loop(){
   if(curMode==='survival')updateSurvival(dt);
   if(curMode==='training')trainRefill();
   if(curMode==='tdm')updateTDM(dt);
-  updateRadio(dt);updateObjectives(dt);updateWx(dt);updateCabin();
+  updateRadio(dt);updateObjectives(dt);updateWx(dt);updateCabin();updateBanter(dt);
   updateVehicles(dt);updateAllies(dt);updateHeliIdle(dt);updateProjs(dt);updateFires(dt);updateClouds(dt);
   }else clientTick(dt);
   netTick(dt);

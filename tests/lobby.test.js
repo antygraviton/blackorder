@@ -160,6 +160,17 @@ const rows = g => g.E("[...document.querySelectorAll('#mpPlayers tr')].map(r => 
   check(H.E('!pheli.alive') && B.E('!pheli.alive') && A.E('!pheli.alive') && B.E('mounted') === false, 'when the pilot\'s helicopter is shot down it crashes for everybody and the pilot bails out');
   await backToLobby();
 
+  // barks and cinematics in co-op
+  H.E('S.cine = 1'); A.E('S.cine = 1');
+  await startMission('Commander of the Order');
+  check(H.E('cine.on') === false && A.E('cine.on') === false, 'no cinematic intro freezes anybody in an online game');
+  await cycle(6);   // the clients' first snapshot only marks the old effects as seen
+  H.E("bark(enemies[0], 'enemyHit', true)"); await cycle(12);
+  check(A.E('bubbles.some(b => b.ent === enemies[0])') && B.E('bubbles.some(b => b.ent === enemies[0])'), 'an enemy\'s bark appears on the clients too');
+  check(A.E('BANTER_KEYS.join()') === H.E('BANTER_KEYS.join()'), 'all machines share the same banter keys (protocol order)');
+  H.E('S.cine = 0'); A.E('S.cine = 0');
+  await backToLobby();
+
   // the host as the pilot
   await startMission('Steel Fist');
   nearHeli(H); H.E('toggleHeli()'); await cycle(10);

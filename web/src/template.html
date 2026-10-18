@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Black Order – version 1.1</title>
+<title>Black Order – version 1.2</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Barlow:wght@400;500&display=swap">
 <style>
 @@CSS@@</style>
@@ -17,7 +17,7 @@
     <div class="stats" id="pStats"></div>
   </div>
   <h1 class="title">BLACK<br>ORDER</h1>
-  <p class="sub">Campaign 2015 · version 1.1 (multiplayer)</p>
+  <p class="sub">Campaign 2015 · version 1.2 (multiplayer)</p>
   <div class="menu-list">
     <button class="btn" data-go="play">Play<small>Campaign and quick games</small></button>
     <button class="btn" data-go="multi">Multiplayer<small>Co-op campaign for 3 and team match against bots</small></button>
@@ -80,6 +80,7 @@
   <div id="st-gamet" class="stab" style="display:none">
     <div class="setrow"><label>Field of view (FOV)</label><input type="range" id="setFov" min="60" max="110"></div>
     <div class="setrow"><label>Quality (shadows and detail)</label><select id="setQ" style="background:var(--steel);color:var(--bone);border:1px solid var(--steel2);padding:6px"><option value="1">Low</option><option value="2">Medium</option><option value="3">High</option></select></div>
+    <div class="setrow"><label>Cinematic scenes (intro, boss kill-cam, bullet time)</label><select id="setCine" style="background:var(--steel);color:var(--bone);border:1px solid var(--steel2);padding:6px"><option value="1">On</option><option value="0">Off</option></select></div>
     <div class="setrow"><label>Difficulty</label><select id="setDiff" style="background:var(--steel);color:var(--bone);border:1px solid var(--steel2);padding:6px"><option value="0">Easy</option><option value="1">Normal</option><option value="2">Hard</option><option value="3">Realistic</option></select></div>
     <div class="setrow"><button class="btn small danger" id="resetSave">Delete progress</button></div>
   </div>
@@ -100,6 +101,7 @@
   <canvas id="cv"></canvas>
   <div class="hud" id="hud">
     <div id="cine"></div>
+    <div id="cineBars"><i></i><i></i></div><div id="cineTitle"></div>
     <div id="flashw" style="position:absolute;inset:0;background:#fff;opacity:0"></div>
     <div id="scope"></div>
     <div id="vig"></div>

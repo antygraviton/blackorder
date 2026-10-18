@@ -60,7 +60,8 @@ function dmg(e,v,head,ex){
   if(NET.role==='client'){hitT=.15;$('cross').classList.add('hit');return;}
   if(e.boss&&!head&&!ex)v*=.2;   /* boss armor: body shots barely hurt, headshots and explosions do */
   e.hp-=v;hitT=.15;$('cross').classList.add('hit');e.alerted=true;if(!e.boss)e.flinch=.25;
-  if(e.hp<=0&&e.alive){e.alive=false;e.dt=0;killed++;if(!e.dummy)S.kills++;beep(300,.1,'triangle');
+  if(e.hp>0&&e.alive)banterEnemyHit(e);
+  if(e.hp<=0&&e.alive){e.alive=false;e.dt=0;killed++;if(!e.dummy)S.kills++;beep(300,.1,'triangle');banterEnemyKill(e);if(head&&!e.dummy)bulletTime();
     const p=wp[slots[0]];if(p&&p.res!==undefined)p.res+=Math.ceil(WEAPONS[slots[0]].mag/2);
     if(head)say('Headshot',1);
     if(killed>=total)win();hud();}
@@ -127,6 +128,7 @@ function hurt(v,from){
   }
   v*=DIFF().dmg*(hasPerk('armor')?.85:1);
   if(mounted&&pheli&&pheli.alive){pheli.hp-=v*.7;shake=Math.max(shake,.03);beep(110,.1,'sawtooth',.12);if(pheli.hp<=0)crashHeli();hud();return;}
+  banterPlayerHurt();
   P.hp-=v;splat(1+Math.floor(v/7));beep(110,.15,'sawtooth');shake=Math.max(shake,.03);
   if(P.hp<=0&&!over&&!pDead){if(canRespawn())playerDown();else failMission();}
   hud();

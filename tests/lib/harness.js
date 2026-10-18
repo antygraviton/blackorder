@@ -113,7 +113,7 @@ function createGame(opts = {}) {
 THREE.WebGLRenderer = class { constructor() { this.shadowMap = {}; this.info = {}; } setSize() {} setPixelRatio() {} render() {} };
 window.step = function (n, ms) { for (let k = 0; k < n; k++) { window.__tt += ms || 16; loop(); scene.updateMatrixWorld(true); } };
 window.E = function (c) { return eval(c); };
-S.name = ${JSON.stringify(opts.name || 'PLAYER')};`);
+S.name = ${JSON.stringify(opts.name || 'PLAYER')}; S.cine = 0; banterRate = 0;`);
   return {
     w, errors,
     E: c => w.E(c),

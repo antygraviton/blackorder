@@ -45,6 +45,7 @@ function failMission(msg){
   splat(8);$('endT').textContent=ttl;$('endP').textContent=txt;$('nextBtn').style.display='none';$('scope').style.display='none';$('end').classList.add('on');hud();
 }
 function allyHit(a,d){
+  if(!a.remote&&a.ally&&a.alive){if(a.hp-d<=0)bark(a,'allyDown',true);else if(roll(.4))bark(a,'allyHit');}
   if(a.remote&&a.ridx>0&&a.ridx===NET.heliPilot&&pheli&&pheli.alive){pheli.hp-=d*.7;if(pheli.hp<=0)crashHeliRemote(a);return;}
   a.hp-=d;a.flinch=.25;
   if(a.hp<=0&&a.alive){if(a.remote)remoteDown(a);else{a.alive=false;a.dt=0;say('An ally went down!',2);beep(200,.3,'triangle',.2);}}

@@ -290,6 +290,7 @@ function clientFx(f){
   const V3=(i)=>new THREE.Vector3(f[i]/10,f[i+1]/10,f[i+2]/10);
   switch(f[1]){
     case 'e':explodeVis(V3(2));break;
+    case 'b':{const list=f[2]==='v'?vehicles:f[2]==='a'?allies.filter(a=>!a.remote):enemies;showBark(list[f[3]],BANTER_KEYS[f[4]],f[5]);break;}
     case 'S':addSmoke(V3(2),f[5],f[6]);break;
     case 'F':fireZone(V3(2),0);break;
     case 'L':flashbang(V3(2),15);break;
@@ -393,7 +394,7 @@ function clientTick(dt){
     if(p.t<=0||p.m.position.y<H(p.m.position.x,p.m.position.z)){scene.remove(p.m);vprojs.splice(i,1);}}
   for(let i=vnades.length-1;i>=0;i--){const n=vnades[i];n.v.y-=14*dt;n.m.position.addScaledVector(n.v,dt);const g0=H(n.m.position.x,n.m.position.z)+.06;
     if(n.m.position.y<g0){n.m.position.y=g0;n.v.y*=-.35;n.v.x*=.6;n.v.z*=.6;}n.t-=dt;if(n.t<=0){scene.remove(n.m);vnades.splice(i,1);}}
-  updateFires(dt);updateClouds(dt);updateWx(dt);updateCabin();heliFollow(dt);
+  updateFires(dt);updateClouds(dt);updateWx(dt);updateCabin();updateBanter(dt);heliFollow(dt);
   $('prompt').textContent=pDead?'You died – back in '+Math.ceil(respT)+' s':'';
   if(!pDead)updateHeliIdle(dt);
 }

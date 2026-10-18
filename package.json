@@ -1,6 +1,6 @@
 {
   "name": "black-order",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Black Order: a browser first-person war game (single HTML file, Three.js r128) with co-op multiplayer.",
   "private": true,
   "scripts": {

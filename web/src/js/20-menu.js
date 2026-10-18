@@ -54,7 +54,7 @@ $('setVol').oninput=e=>{S.vol=+e.target.value;save();};
 $('setSens').oninput=e=>{S.sens=+e.target.value;save();};
 $('setFov').oninput=e=>{S.fov=+e.target.value;save();};
 $('setQ').onchange=e=>{S.q=+e.target.value;save();};
-$('resetSave').onclick=()=>{S=JSON.parse(JSON.stringify(DEF));save();$('setVol').value=S.vol;$('setSens').value=S.sens;$('setFov').value=S.fov;$('setQ').value=S.q;$('setDiff').value=S.diff;refresh();};
+$('resetSave').onclick=()=>{S=JSON.parse(JSON.stringify(DEF));save();$('setVol').value=S.vol;$('setSens').value=S.sens;$('setFov').value=S.fov;$('setQ').value=S.q;$('setDiff').value=S.diff;$('setCine').value=S.cine;refresh();};
 let cat='primary';
 document.querySelectorAll('[data-cat]').forEach(t=>t.onclick=()=>{cat=t.dataset.cat;document.querySelectorAll('[data-cat]').forEach(x=>x.classList.toggle('on',x===t));renderStore();});
 function renderPerks(){
@@ -104,3 +104,4 @@ function renderStore(){
   });
 }
 $('setDiff').value=S.diff;$('setDiff').onchange=e=>{S.diff=+e.target.value;save();};
+$('setCine').value=S.cine===undefined?1:S.cine;$('setCine').onchange=e=>{S.cine=+e.target.value;save();};

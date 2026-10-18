@@ -6,6 +6,7 @@ function startMission(idx,skipBrief){
 }
 function doStart(){
   L=applyWx(L);
+  cine.on=false;cine.done=null;document.body.classList.remove('cine');
   $('endMenu').textContent=$('toMenu').textContent=NET.role==='solo'?'To menu':'Back to lobby';
   if(!ren){ren=new THREE.WebGLRenderer({canvas:$('cv'),antialias:S.q>=2});ren.outputEncoding=THREE.sRGBEncoding;ren.toneMapping=THREE.ACESFilmicToneMapping;ren.shadowMap.enabled=true;ren.shadowMap.type=THREE.PCFSoftShadowMap;}
   ren.setPixelRatio(Math.min(window.devicePixelRatio||1,S.q>=3?2:1.4));
@@ -20,6 +21,7 @@ function doStart(){
   cam.position.set(P.x,P.y,P.z);scene.add(cam);fitRenderer();
   flash=new THREE.PointLight(0xffc070,0,9);cam.add(flash);initWx();
   const kin=curMode?0:idxIn(curLevel);
+  bubbles=[];bossTier=0;bossEnding=false;bt=0;banterT=0;allyWarnT=0;
   objs=[];alarm=false;missionT=0;defT=0;defGroup=0;if(L.radio)L.radio.forEach(r=>{r.done=false;});
   if(man){
     man.mi.forEach(([x,z])=>addMine(x/10,z/10));
@@ -58,6 +60,7 @@ function doStart(){
   hadLock=false;fallback=false;lockMouse();
   setTimeout(()=>{if(!locked&&run){fallback=true;if(!touchOn)say('Click the game to capture the mouse, then you can turn freely.',5);}},700);
   run=true;lastT=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
+  if(!curMode&&NET.role==='solo'){if(S.cine)cineStart('intro');setTimeout(()=>{if(run&&!over)allyBark('intro');},S.cine?5200:2000);}
 }
 function lockMouse(){try{const p=$('cv').requestPointerLock();if(p&&p.catch)p.catch(()=>{fallback=true;});}catch(e){fallback=true;}}
 document.addEventListener('pointerlockchange',()=>{
@@ -78,7 +81,7 @@ $('endMenu').onclick=()=>{stopGame();show(NET.room?'multi':'menu');};
 $('again').onclick=()=>{if(curMode)startMode(curMode);else startMission(curLevel,true);};
 $('nextBtn').onclick=()=>{const nx=nextInCamp(curLevel);if(nx>=0)startMission(nx);};
 function stopGame(){if(NET.role!=='solo'){if(NET.room)mpBackToLobby();else netLeave();}if(curMode==='survival'&&!survPaid&&wave>0)survPay();run=false;over=true;try{document.exitPointerLock();}catch(e){}$('pause').classList.remove('on');$('end').classList.remove('on');$('scope').style.display='none';}
-const canAct=()=>run&&(locked||fallback)&&!pDead;
+const canAct=()=>run&&!cine.on&&(locked||fallback)&&!pDead;
 addEventListener('keydown',e=>{keys[e.code]=true;
   if(!run)return;
   if(curMode==='training'&&e.code==='KeyQ'&&!mounted)trainCycle();

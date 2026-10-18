@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Black Order – version 1.1</title>
+<title>Black Order – version 1.2</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Barlow:wght@400;500&display=swap">
 <style>
 :root{
@@ -117,6 +117,16 @@ body.touch #touch{display:block}
 body.touch #mm{width:110px;height:110px}
 body.touch .ammo{right:20px;bottom:auto;top:136px;font-size:28px}
 body.touch .ammo small{font-size:13px}
+/* ---- cinematic scenes (see 119-cinematics.js) ---- */
+#cineBars i{position:absolute;left:0;right:0;height:0;background:#000;transition:height .6s}
+#cineBars i:first-child{top:0}#cineBars i:last-child{bottom:0}
+#cineBars.on i{height:11vh}
+#cineTitle{position:absolute;left:6vw;bottom:13vh;max-width:70vw;opacity:0;transition:opacity .7s;color:var(--bone);text-shadow:0 2px 8px #000}
+#cineTitle.on{opacity:1}
+#cineTitle h1{margin:0;font-size:clamp(28px,6vw,64px);letter-spacing:.04em;text-transform:uppercase}
+#cineTitle p{margin:4px 0 0;font-size:clamp(16px,2.6vw,26px);color:var(--olive)}
+#cineTitle small{display:block;margin-top:10px;font-size:14px;color:var(--dim)}
+body.cine .hud>*:not(#cineBars):not(#cineTitle):not(#cine){visibility:hidden}
 </style>
 </head>
 <body>
@@ -128,7 +138,7 @@ body.touch .ammo small{font-size:13px}
     <div class="stats" id="pStats"></div>
   </div>
   <h1 class="title">BLACK<br>ORDER</h1>
-  <p class="sub">Campaign 2015 · version 1.1 (multiplayer)</p>
+  <p class="sub">Campaign 2015 · version 1.2 (multiplayer)</p>
   <div class="menu-list">
     <button class="btn" data-go="play">Play<small>Campaign and quick games</small></button>
     <button class="btn" data-go="multi">Multiplayer<small>Co-op campaign for 3 and team match against bots</small></button>
@@ -191,6 +201,7 @@ body.touch .ammo small{font-size:13px}
   <div id="st-gamet" class="stab" style="display:none">
     <div class="setrow"><label>Field of view (FOV)</label><input type="range" id="setFov" min="60" max="110"></div>
     <div class="setrow"><label>Quality (shadows and detail)</label><select id="setQ" style="background:var(--steel);color:var(--bone);border:1px solid var(--steel2);padding:6px"><option value="1">Low</option><option value="2">Medium</option><option value="3">High</option></select></div>
+    <div class="setrow"><label>Cinematic scenes (intro, boss kill-cam, bullet time)</label><select id="setCine" style="background:var(--steel);color:var(--bone);border:1px solid var(--steel2);padding:6px"><option value="1">On</option><option value="0">Off</option></select></div>
     <div class="setrow"><label>Difficulty</label><select id="setDiff" style="background:var(--steel);color:var(--bone);border:1px solid var(--steel2);padding:6px"><option value="0">Easy</option><option value="1">Normal</option><option value="2">Hard</option><option value="3">Realistic</option></select></div>
     <div class="setrow"><button class="btn small danger" id="resetSave">Delete progress</button></div>
   </div>
@@ -211,6 +222,7 @@ body.touch .ammo small{font-size:13px}
   <canvas id="cv"></canvas>
   <div class="hud" id="hud">
     <div id="cine"></div>
+    <div id="cineBars"><i></i><i></i></div><div id="cineTitle"></div>
     <div id="flashw" style="position:absolute;inset:0;background:#fff;opacity:0"></div>
     <div id="scope"></div>
     <div id="vig"></div>
@@ -234,7 +246,7 @@ body.touch .ammo small{font-size:13px}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 /* ============ SAVE DATA ============ */
-const DEF={name:'PLAYER',xp:0,wp:0,medals:0,kills:0,missions:0,deaths:0,maxLevel:0,maxLevel2:0,bestWave:0,owned:{hk416:1,ak:1,glock:1,knife:1,m67:1},primary:'hk416',secondary:'glock',melee:'knife',grenade:'m67',vol:60,sens:50,fov:80,q:2,diff:1,perks:[],att:{primary:'',secondary:''},attOwned:{}};
+const DEF={name:'PLAYER',xp:0,wp:0,medals:0,kills:0,missions:0,deaths:0,maxLevel:0,maxLevel2:0,bestWave:0,owned:{hk416:1,ak:1,glock:1,knife:1,m67:1},primary:'hk416',secondary:'glock',melee:'knife',grenade:'m67',vol:60,sens:50,fov:80,q:2,cine:1,diff:1,perks:[],att:{primary:'',secondary:''},attOwned:{}};
 let S=JSON.parse(JSON.stringify(DEF));
 try{const r=localStorage.getItem('blackorder_save')||localStorage.getItem('cernyrad03');if(r)S=Object.assign(S,JSON.parse(r));}catch(e){}
 function save(){try{localStorage.setItem('blackorder_save',JSON.stringify(S));}catch(e){}}
@@ -312,7 +324,7 @@ const dmgMul=k=>(attOf(k)==='supp'?.85:1)*(hasPerk('dmg')?1.1:1);
 const silent=k=>attOf(k)==='supp';
 /* ---- new and modified missions ---- */
 const _L=LEVELS.slice();
-const lbase=l=>{const o=Object.assign({},l);['ob','stealth','docs','radio','brief','wx','bossS','bossT','nd','tanks','apcs','helis','jets','desert','runway','cabin'].forEach(k=>delete o[k]);return o;};
+const lbase=l=>{const o=Object.assign({},l);['ob','stealth','docs','radio','brief','wx','bossS','bossT','nd','tanks','apcs','helis','jets','desert','runway','cabin','cap'].forEach(k=>delete o[k]);return o;};
 Object.assign(_L[0],{cabin:true,brief:'HQ: The mountain village has stopped broadcasting. Investigate it, neutralize the patrols and find out who is behind this. Watch out for mines.',radio:[{t:15,m:'HQ: We hear gunfire from the east, be careful.'},{k:6,m:'HQ: Half of the patrols are gone, keep going.'}]});
 Object.assign(_L[1],{n:'Silent Infiltration',txt:'The Order has taken the mine. Slip through the dark to the terminal on the far side of the map and hack it (hold E). Do not raise the alarm.',brief:'The Order has taken the mine. You must not raise the alarm: enemies see you only from close range and hear loud gunshots. A suppressor, a knife and a bow are your friends. Flashlight: key F. Find the terminal on the far side of the map and hack it (hold E).',ob:'hack',stealth:true,wx:'night',radio:[{t:20,m:'Contact: The terminal is on the opposite side of the map.'},{t:90,m:'Contact: Stay away from the lights.'}]});
 Object.assign(_L[2],{brief:'HQ: The Order holds a small town on the border. Evening, fog, mines in the streets. Clear the streets of all patrols.',radio:[{t:20,m:'HQ: Watch the streets, they are mined.'}]});
@@ -324,6 +336,38 @@ const L_DEFEND=Object.assign(lbase(_L[2]),{camp:0,n:'Base Defense',txt:'Defend t
 const L_BOSS=Object.assign(lbase(_L[1]),{camp:0,n:'Commander of the Order',txt:'Defeat the commander of the Black Order. Body shots barely slow him down, aim for the head.',brief:'The commander of the Black Order hides in a mountain fortress. He is heavily armored, body shots barely slow him down. Aim for the head and use grenades. Night.',ob:'boss',bossS:true,wx:'night',en:10,mines:4,kits:5,houses:9,ruins:4,seed:29,reward:700,medals:70,xp:220,acc:.65,hp:75,radio:[{t:20,m:'Contact: The commander is big. Aim for the head!'},{t:80,m:'Contact: Grenades hurt him more than bullets.'}]});
 const L_TANKB=Object.assign(lbase(_L[5]),{camp:1,n:'Armata',txt:'Destroy the Armata tank prototype. It is huge and tough.',brief:'The Armata tank prototype is fighting its way to the border. It is huge and tough, bullets do nothing to it. Use the anti-tank missiles from the helicopter, the RPG and explosives. Night.',ob:'boss',bossT:true,wx:'night',en:6,apcs:0,tanks:1,helis:0,jets:0,mines:6,kits:5,houses:3,ruins:2,seed:93,desert:true,reward:900,medals:90,xp:260,acc:.6,hp:80,radio:[{t:20,m:'Contact: Aim for the weak spot on the sides.'},{t:90,m:'Contact: Use the helicopter, it carries anti-tank missiles.'}]});
 LEVELS.splice(3,0,L_RESCUE,L_DEFEND,L_BOSS);LEVELS.push(L_TANKB);
+
+/* ---- flavour text: barks (speech bubbles) and mission captions (see 118-banter.js, 119-cinematics.js) ----
+   Every key is an array of one-liners; the order of the keys is part of the multiplayer protocol, so add new keys at the end. */
+const BANTER={
+  intro:['Another day, another mess.','Stay close, I forgot my map.','Make it quick, I have a date tonight.','If we die, I call dibs on the shower.','Remember: shoot first, panic later.'],
+  allyHit:['Ow! That was my good arm!','I am hit! Tell my mother I was brave!','Medic! ...Oh. That is me.','Argh! My lunch!','Who is shooting at me? Rude!','Hey, I just washed this vest!'],
+  allyDown:['Tell my cat... she was right...','I regret nothing! ...Mostly.','Should have stayed in logistics...','Not like this... not before payday...'],
+  allyKill:['Got him!','Nothing personal!','One less to worry about.','That one had it coming.','Nice. Do I get a medal?','And stay down!'],
+  allyWarn:['Watch your head, boss!','You are bleeding. A lot.','Try dodging next time!','Cover! Use cover! It is free!','Careful, you are my only ride home!'],
+  freed:['Finally! The food here was terrible.','You came! I had a whole speech prepared.','Free! Can I have a sandwich?','About time! My legs fell asleep.'],
+  depotBoom:['Boom! That is going to leave a mark.','Fuel is expensive. Was.','Somebody is going to be in trouble for that.'],
+  hacked:['Terminal hacked. I did nothing.','Access granted. Their password was "password".','Hacking complete. Please clap.'],
+  enemyAlert:['Contact!','Intruder! Or a very lost tourist.','Sound the alarm! Where is the alarm?','Is that... a player? Seriously?','Enemy spotted! I think. Maybe.','Everybody look busy!'],
+  enemyHit:['Ow! Unfair!','My mother warned me about this job!','I want a transfer!','That was my last cigarette!','Medic! ...Anyone?','I did not sign up for this!'],
+  enemyDown:['Worst. Shift. Ever.','Tell the Commander I tried...','I should have taken the desk job.','Not again...','At least the pay was bad...'],
+  enemyBuddyDown:['Gerhard! NOOO!','They got Hans!','Who will cover my shift now?!','He owed me ten euro!','Not the new guy! He just started!'],
+  barrelOops:['Who put barrels here?!','That barrel was not on the inventory list!','I told them barrels were a bad idea!','Safety inspection! Right now!'],
+  bossSpawn:['You dare enter my fortress?','Fools. You face the Commander of the Order!','Bow before the hat!'],
+  boss75:['A scratch. Nothing more.','Your toys annoy me.','Is that all you have?'],
+  boss50:['Impressive. Now I am annoyed.','Stand still, little soldier!','Do you know how much this uniform costs?'],
+  boss25:['This hat cost a fortune!','Guards! GUARDS! ...Anyone?','You will pay for this!'],
+  boss10:['I... am not... finished!','Mother? Is that you?','Not the hat... not the hat...'],
+  bossDead:['Tell... my tailor... I was... fabulous...','The Order... never forgets... my... hat...','Rosebud...'],
+  tank75:['Armata crew: Minor dents. Carry on.','Armata crew: Did something hit us?'],
+  tank50:['Armata crew: Why is it so hot in here?','Armata crew: Plan B? We have no plan B!'],
+  tank25:['Armata crew: Mayday! We are on fire!','Armata crew: Tell my wife I love the tank!'],
+  tank10:['Armata crew: Abandon ship! ...The hatch is stuck.','Armata crew: Eject! Eject! There is no eject!'],
+  tankDead:['Armata crew: Worth it...','Armata crew: Tell the engineers... the brakes were fine.']
+};
+const BANTER_KEYS=Object.keys(BANTER);
+const CAPS={'The Vanished Village':'Population: suspiciously low.','Silent Infiltration':'Quiet feet. Quieter excuses.','City Under Fire':'Tourist season is cancelled.','Rescue the Prisoner':'He owes you dinner.','Base Defense':'Please make them wipe their boots.','Commander of the Order':'Big man. Bigger hat.','Convoy':'A traffic jam, but with explosions.','Airfield':'Fuel is expensive. Let us help it burn.','Steel Fist':'Everything is bigger up here.','Armata':'Please do not feed the tank.'};
+LEVELS.forEach(l=>{if(CAPS[l.n])l.cap=CAPS[l.n];});
 /* ============ MENU ============ */
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));if(['menu','play','store'].includes(id))refresh();}
 function refresh(){
@@ -380,7 +424,7 @@ $('setVol').oninput=e=>{S.vol=+e.target.value;save();};
 $('setSens').oninput=e=>{S.sens=+e.target.value;save();};
 $('setFov').oninput=e=>{S.fov=+e.target.value;save();};
 $('setQ').onchange=e=>{S.q=+e.target.value;save();};
-$('resetSave').onclick=()=>{S=JSON.parse(JSON.stringify(DEF));save();$('setVol').value=S.vol;$('setSens').value=S.sens;$('setFov').value=S.fov;$('setQ').value=S.q;$('setDiff').value=S.diff;refresh();};
+$('resetSave').onclick=()=>{S=JSON.parse(JSON.stringify(DEF));save();$('setVol').value=S.vol;$('setSens').value=S.sens;$('setFov').value=S.fov;$('setQ').value=S.q;$('setDiff').value=S.diff;$('setCine').value=S.cine;refresh();};
 let cat='primary';
 document.querySelectorAll('[data-cat]').forEach(t=>t.onclick=()=>{cat=t.dataset.cat;document.querySelectorAll('[data-cat]').forEach(x=>x.classList.toggle('on',x===t));renderStore();});
 function renderPerks(){
@@ -430,6 +474,7 @@ function renderStore(){
   });
 }
 $('setDiff').value=S.diff;$('setDiff').onchange=e=>{S.diff=+e.target.value;save();};
+$('setCine').value=S.cine===undefined?1:S.cine;$('setCine').onchange=e=>{S.cine=+e.target.value;save();};
 /* ============ HELPER FUNCTIONS ============ */
 let SEED=1;
 function rng(seed){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
@@ -1184,6 +1229,7 @@ function startMission(idx,skipBrief){
 }
 function doStart(){
   L=applyWx(L);
+  cine.on=false;cine.done=null;document.body.classList.remove('cine');
   $('endMenu').textContent=$('toMenu').textContent=NET.role==='solo'?'To menu':'Back to lobby';
   if(!ren){ren=new THREE.WebGLRenderer({canvas:$('cv'),antialias:S.q>=2});ren.outputEncoding=THREE.sRGBEncoding;ren.toneMapping=THREE.ACESFilmicToneMapping;ren.shadowMap.enabled=true;ren.shadowMap.type=THREE.PCFSoftShadowMap;}
   ren.setPixelRatio(Math.min(window.devicePixelRatio||1,S.q>=3?2:1.4));
@@ -1198,6 +1244,7 @@ function doStart(){
   cam.position.set(P.x,P.y,P.z);scene.add(cam);fitRenderer();
   flash=new THREE.PointLight(0xffc070,0,9);cam.add(flash);initWx();
   const kin=curMode?0:idxIn(curLevel);
+  bubbles=[];bossTier=0;bossEnding=false;bt=0;banterT=0;allyWarnT=0;
   objs=[];alarm=false;missionT=0;defT=0;defGroup=0;if(L.radio)L.radio.forEach(r=>{r.done=false;});
   if(man){
     man.mi.forEach(([x,z])=>addMine(x/10,z/10));
@@ -1236,6 +1283,7 @@ function doStart(){
   hadLock=false;fallback=false;lockMouse();
   setTimeout(()=>{if(!locked&&run){fallback=true;if(!touchOn)say('Click the game to capture the mouse, then you can turn freely.',5);}},700);
   run=true;lastT=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
+  if(!curMode&&NET.role==='solo'){if(S.cine)cineStart('intro');setTimeout(()=>{if(run&&!over)allyBark('intro');},S.cine?5200:2000);}
 }
 function lockMouse(){try{const p=$('cv').requestPointerLock();if(p&&p.catch)p.catch(()=>{fallback=true;});}catch(e){fallback=true;}}
 document.addEventListener('pointerlockchange',()=>{
@@ -1256,7 +1304,7 @@ $('endMenu').onclick=()=>{stopGame();show(NET.room?'multi':'menu');};
 $('again').onclick=()=>{if(curMode)startMode(curMode);else startMission(curLevel,true);};
 $('nextBtn').onclick=()=>{const nx=nextInCamp(curLevel);if(nx>=0)startMission(nx);};
 function stopGame(){if(NET.role!=='solo'){if(NET.room)mpBackToLobby();else netLeave();}if(curMode==='survival'&&!survPaid&&wave>0)survPay();run=false;over=true;try{document.exitPointerLock();}catch(e){}$('pause').classList.remove('on');$('end').classList.remove('on');$('scope').style.display='none';}
-const canAct=()=>run&&(locked||fallback)&&!pDead;
+const canAct=()=>run&&!cine.on&&(locked||fallback)&&!pDead;
 addEventListener('keydown',e=>{keys[e.code]=true;
   if(!run)return;
   if(curMode==='training'&&e.code==='KeyQ'&&!mounted)trainCycle();
@@ -1346,7 +1394,8 @@ function dmg(e,v,head,ex){
   if(NET.role==='client'){hitT=.15;$('cross').classList.add('hit');return;}
   if(e.boss&&!head&&!ex)v*=.2;   /* boss armor: body shots barely hurt, headshots and explosions do */
   e.hp-=v;hitT=.15;$('cross').classList.add('hit');e.alerted=true;if(!e.boss)e.flinch=.25;
-  if(e.hp<=0&&e.alive){e.alive=false;e.dt=0;killed++;if(!e.dummy)S.kills++;beep(300,.1,'triangle');
+  if(e.hp>0&&e.alive)banterEnemyHit(e);
+  if(e.hp<=0&&e.alive){e.alive=false;e.dt=0;killed++;if(!e.dummy)S.kills++;beep(300,.1,'triangle');banterEnemyKill(e);if(head&&!e.dummy)bulletTime();
     const p=wp[slots[0]];if(p&&p.res!==undefined)p.res+=Math.ceil(WEAPONS[slots[0]].mag/2);
     if(head)say('Headshot',1);
     if(killed>=total)win();hud();}
@@ -1413,6 +1462,7 @@ function hurt(v,from){
   }
   v*=DIFF().dmg*(hasPerk('armor')?.85:1);
   if(mounted&&pheli&&pheli.alive){pheli.hp-=v*.7;shake=Math.max(shake,.03);beep(110,.1,'sawtooth',.12);if(pheli.hp<=0)crashHeli();hud();return;}
+  banterPlayerHurt();
   P.hp-=v;splat(1+Math.floor(v/7));beep(110,.15,'sawtooth');shake=Math.max(shake,.03);
   if(P.hp<=0&&!over&&!pDead){if(canRespawn())playerDown();else failMission();}
   hud();
@@ -1849,7 +1899,7 @@ function objHit(o,d){
 }
 function depotBoom(o){
   o.done=true;const p=new THREE.Vector3(o.x,H(o.x,o.z)+1,o.z);
-  depotVis(o);explode(p,7,90);say('Fuel depot destroyed!',2);
+  depotVis(o);explode(p,7,90);say('Fuel depot destroyed!',2);allyBark('depotBoom');
 }
 function depotVis(o){
   if(o.vis)return;o.vis=true;
@@ -1865,7 +1915,7 @@ function humansNear(x,z,r,needUse){
 }
 function hostageTick(a,dt){
   if(!a.free){
-    if(humansNear(a.x,a.z,3,true)){a.fp=(a.fp||0)+dt/1.5;if(a.fp>=1){a.free=true;say('Prisoner freed! Lead him to the extraction point.',4);beep(700,.3,'sine',.2);}}else a.fp=Math.max(0,(a.fp||0)-dt);
+    if(humansNear(a.x,a.z,3,true)){a.fp=(a.fp||0)+dt/1.5;if(a.fp>=1){a.free=true;say('Prisoner freed! Lead him to the extraction point.',4);beep(700,.3,'sine',.2);bark(a,'freed',true);}}else a.fp=Math.max(0,(a.fp||0)-dt);
     a.legs.forEach(q=>{q.hip.rotation.x*=.8;q.knee.rotation.x*=.8;});return;
   }
   const t=pickTarget(a.x,a.z);if(!t)return;
@@ -1879,12 +1929,12 @@ function updateObjectives(dt){
   if(over)return;
   if(L.stealth&&!alarm&&enemies.some(e=>e.alive&&e.alerted))raiseAlarm('Enemy alerted!');
   const ob=L.ob;if(!ob||ob==='kill')return;
-  if(ob==='boss')bossPct=bossHpPct();
+  if(ob==='boss'){bossPct=bossHpPct();bossBanter();}
   for(const o of objs){
     if(o.t==='term'&&!o.done){
       const near=humansNear(o.x,o.z,3.2,true);
       o.prog=Math.max(0,Math.min(1,o.prog+(near?dt/6:-dt/30)));
-      if(o.prog>=1){o.done=true;say('Terminal hacked!',3);beep(900,.4,'sine',.2);}
+      if(o.prog>=1){o.done=true;say('Terminal hacked!',3);beep(900,.4,'sine',.2);allyBark('hacked');}
     }
     if(o.t==='zone'){
       const inside=humansNear(o.x,o.z,o.r,false);o.inside=inside;
@@ -1902,7 +1952,12 @@ function updateObjectives(dt){
     const ex=objs.find(o=>o.t==='ext');
     if(h&&h.free&&ex&&Math.hypot(h.x-ex.x,h.z-ex.z)<ex.r)win();
   }
-  else if(ob==='boss'){if(bossDead()){flagSet(L.bossT?'boss2':'boss1');win();}}
+  else if(ob==='boss'){if(bossDead()&&!bossEnding){
+    bossEnding=true;flagSet(L.bossT?'boss2':'boss1');
+    const b=enemies.find(e=>e.boss)||vehicles.find(v=>v.boss),p=b.type?b.g.position:new THREE.Vector3(b.x,H(b.x,b.z),b.z);
+    bark(b,b.type?'tankDead':'bossDead',true);
+    if(cineStart(b.type?'killTank':'kill',p.clone()))cine.done=()=>{if(!over)win();};else win();
+  }}
   else if(ob==='defend'){const z=objs.find(o=>o.t==='zone');if(z&&z.prog>=1){enemies.forEach(e=>{if(e.alive)e.alerted=false;});win();}}
 }
 function objText(){
@@ -1944,6 +1999,7 @@ function barrelVis(b){
 }
 function barrelBoom(b){
   barrelVis(b);
+  { let n=null,nd=14; for(const e of enemies){if(!e.alive)continue;const d=Math.hypot(e.x-b.x,e.z-b.z);if(d<nd){nd=d;n=e;}} if(n&&roll(.5))bark(n,'barrelOops'); }
   const p=new THREE.Vector3(b.x,H(b.x,b.z)+.5,b.z);
   explode(p,5,110);fireZone(p,0);
 }
@@ -2009,6 +2065,150 @@ function survPay(){
   return 'You finished '+w+' waves, kills: '+killed+'. Record: '+S.bestWave+' waves. Reward: '+rw+' Weapoints'+(md?', '+md+' medals':'')+', '+(w*10)+' XP.';
 }
 
+/* ============ BANTER: speech bubbles and barks ============ */
+/* Short one-liners above the heads of allies, enemies, bosses and the boss tank (text tables: BANTER in 10-data.js).
+   They are decided on the host or in solo play and replicated to clients as one-shot 'b' fx events; they never change the
+   simulation. `banterRate` scales every chance (0 = silent, used by the tests). */
+let bubbles=[],banterT=0,banterScanT=0,allyWarnT=0,bossTier=0,banterRate=1;
+const roll=p=>Math.random()<p*banterRate;
+const allyBark=type=>{const a=allies.find(x=>!x.remote&&x.alive&&!x.hostage);if(a)bark(a,type);};
+function bubbleSprite(text,tone){
+  const font='bold 28px sans-serif',m=document.createElement('canvas').getContext('2d');m.font=font;
+  const w=Math.min(640,Math.ceil(m.measureText(text).width)+40),h=60,c=document.createElement('canvas');c.width=w;c.height=h;
+  const x=c.getContext('2d');
+  x.fillStyle=tone==='boss'?'rgba(60,40,6,.9)':tone==='ally'?'rgba(14,40,64,.88)':'rgba(56,14,12,.88)';
+  x.strokeStyle=tone==='boss'?'#ffd23a':tone==='ally'?'#6ab7ff':'#ff7a6a';x.lineWidth=3;
+  x.fillRect(2,2,w-4,h-4);x.strokeRect(2,2,w-4,h-4);
+  x.font=font;x.textAlign='center';x.textBaseline='middle';x.fillStyle='#fff';x.fillText(text,w/2,h/2+1);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthTest:false,depthWrite:false}));
+  sp.renderOrder=10;sp.scale.set(w/90,h/90,1);
+  return sp;
+}
+/** Short mumbled "voice": three quick blips, pitch by speaker. */
+function voice(ent){
+  const p=ent.g.position;if(Math.hypot(p.x-P.x,p.z-P.z)>30)return;
+  const base=ent.boss||ent.type?95:(ent.ally?250:150),wave=ent.boss||ent.type?'sawtooth':'square';
+  for(let i=0;i<3;i++)setTimeout(()=>beep(base*(.75+Math.random()*.6),.05,wave,.04),i*65);
+}
+function showBark(ent,type,ix){
+  const list=BANTER[type];if(!list||!ent||!ent.g||!scene)return;
+  const text=list[ix%list.length],tone=ent.boss?'boss':ent.ally?'ally':'foe';
+  const sp=bubbleSprite(text,tone);scene.add(sp);
+  bubbles.push({sp,ent,t:0,life:2.2+text.length*.035,h:ent.type?5.2:ent.boss?(ent.g.scale.y||1)*2.1+1:2.5});
+  while(bubbles.length>4){const o=bubbles.shift();scene.remove(o.sp);o.sp.material.map.dispose();o.sp.material.dispose();}
+  voice(ent);
+}
+/** Make `ent` say a random line of `type`. Not on clients; `force` skips the cooldowns and the distance limit. */
+function bark(ent,type,force){
+  if(NET.role==='client'||!ent||!ent.g||!BANTER[type])return;
+  if(!force){
+    if(banterRate<=0||tAll<banterT||(ent.barkT&&tAll<ent.barkT))return;
+    const p=ent.g.position;if(Math.hypot(p.x-P.x,p.z-P.z)>34)return;
+  }
+  banterT=tAll+1.1;ent.barkT=tAll+7;
+  const ix=Math.floor(Math.random()*BANTER[type].length);
+  showBark(ent,type,ix);
+  if(NET.role==='host'){
+    const kind=ent.type?'v':ent.ally?'a':'e',list=ent.type?vehicles:ent.ally?allies.filter(a=>!a.remote):enemies,i=list.indexOf(ent);
+    if(i>=0)fxPush(['b',kind,i,BANTER_KEYS.indexOf(type),ix]);
+  }
+}
+const nearest=(list,ent,r)=>{let b=null,bd=r;for(const o of list){if(o===ent||!o.alive)continue;const d=Math.hypot(o.x-ent.x,o.z-ent.z);if(d<bd){bd=d;b=o;}}return b;};
+/* hooks called from the damage code */
+function banterEnemyHit(e){if(!e.dummy&&roll(.28))bark(e,'enemyHit');}
+function banterEnemyKill(e){
+  if(e.dummy||e.boss)return;
+  if(roll(.3)){bark(e,'enemyDown');return;}
+  const b=nearest(enemies,e,24);if(b&&roll(.45))bark(b,'enemyBuddyDown');
+}
+function banterPlayerHurt(){if(tAll>allyWarnT&&roll(.3)){allyWarnT=tAll+9;allyBark('allyWarn');}}
+function bossBanter(){
+  const b=enemies.find(e=>e.boss)||vehicles.find(v=>v.boss);if(!b)return;
+  const tiers=[75,50,25,10];
+  while(bossTier<tiers.length&&bossPct<=tiers[bossTier]){bark(b,(b.type?'tank':'boss')+tiers[bossTier],true);bossTier++;}
+}
+function updateBanter(dt){
+  for(let i=bubbles.length-1;i>=0;i--){
+    const b=bubbles[i];b.t+=dt;const p=b.ent.g.position;b.sp.position.set(p.x,p.y+b.h,p.z);
+    b.sp.material.opacity=b.t>b.life-.5?Math.max(0,(b.life-b.t)/.5):1;
+    if(b.t>=b.life){scene.remove(b.sp);b.sp.material.map.dispose();b.sp.material.dispose();bubbles.splice(i,1);}
+  }
+  if(NET.role==='client'||banterRate<=0)return;
+  banterScanT-=dt;if(banterScanT>0)return;banterScanT=.3;
+  for(const e of enemies){if(!e.alive)continue;if(e.alerted&&!e._al){e._al=true;if(roll(.3))bark(e,'enemyAlert');}else if(!e.alerted)e._al=false;}
+}
+/* ============ CINEMATICS: intro fly-over, boss kill-cam, bullet time ============ */
+/* Solo play only (online games never freeze for one player), switched off by Settings > Game > Cinematic scenes (S.cine).
+   Intro: the world is frozen while the camera circles the main objective of the mission (title card with a caption), then
+   glides into the player's view; any key or click skips it. Kill-cam: the last boss dies in slow motion before the mission
+   ends. Bullet time: a headshot kill briefly slows the game down. */
+let cine={on:false,kind:'',t:0,dur:0,freeze:false,focus:null,a0:0,done:null,endP:null,endQ:null},timeScale=1,bt=0,btCD=0,btK=0,bossEnding=false;
+function cineFocus(){
+  const v=(x,z)=>new THREE.Vector3(x,H(x,z),z);
+  if(L.bossS){const b=enemies.find(e=>e.boss);if(b)return v(b.x,b.z);}
+  if(L.bossT){const t=vehicles.find(x=>x.boss);if(t)return v(t.g.position.x,t.g.position.z);}
+  const h=allies.find(a=>a.hostage);if(h)return v(h.x,h.z);
+  const o=objs.find(q=>q.t!=='ext'&&q.t!=='host');if(o)return v(o.x,o.z);
+  if(cabinInfo)return v(cabinInfo.x,cabinInfo.z);
+  const e=enemies.find(q=>q.alive);if(e)return v(e.x,e.z);
+  return v(P.x,P.z-30);
+}
+function cineStart(kind,target){
+  if(!S.cine||NET.role!=='solo')return false;
+  cine.on=true;cine.kind=kind;cine.t=0;cine.a0=Math.random()*6.28;cine.endP=cine.endQ=null;
+  document.body.classList.add('cine');$('cineBars').classList.add('on');
+  const ti=$('cineTitle');ti.textContent='';
+  const mk=(tag,txt)=>{const n=document.createElement(tag);n.textContent=txt;ti.appendChild(n);};
+  if(kind==='intro'){
+    cine.freeze=true;cine.dur=4.6;cine.focus=cineFocus();
+    mk('h1',L.n);if(L.cap)mk('p',L.cap);mk('small','Click or press a key to skip');
+    const b=enemies.find(e=>e.boss)||vehicles.find(v=>v.boss);if(b&&cine.focus)setTimeout(()=>{if(cine.on&&b.alive!==false)showBark(b,b.type?'tank75':'bossSpawn',Math.floor(Math.random()*2));},1200);
+  } else {
+    cine.freeze=false;cine.dur=2.8;cine.focus=target;
+    mk('h1',kind==='killTank'?'TANK DESTROYED':'TARGET ELIMINATED');
+  }
+  ti.classList.add('on');
+  return true;
+}
+function cineEnd(){
+  if(!cine.on)return;
+  cine.on=false;cam.rotation.z=0;
+  document.body.classList.remove('cine');$('cineBars').classList.remove('on');$('cineTitle').classList.remove('on');
+  const f=cine.done;cine.done=null;if(f)f();
+}
+function cineCam(){
+  const f=cine.focus;if(!f||!cam)return;
+  const t=cine.t;
+  if(cine.kind==='intro'){
+    const A=cine.dur-1;
+    if(t<A){
+      const k=t/A,ang=cine.a0+k*1.1,r=26-6*k,x=f.x+Math.cos(ang)*r,z=f.z+Math.sin(ang)*r;
+      cam.position.set(x,Math.max(f.y+15-6*k,H(x,z)+3),z);cam.lookAt(f.x,f.y+1.6,f.z);
+      cine.endP=cam.position.clone();cine.endQ=cam.quaternion.clone();
+    } else if(cine.endP){
+      const k=Math.min(1,(t-A)/(cine.dur-A)),e=k*k*(3-2*k);
+      const pq=new THREE.Quaternion().setFromEuler(new THREE.Euler(P.pitch,P.yaw,0,'YXZ'));
+      cam.position.lerpVectors(cine.endP,new THREE.Vector3(P.x,P.y,P.z),e);cam.quaternion.copy(cine.endQ).slerp(pq,e);
+    }
+  } else {
+    const ang=cine.a0+t*.9,x=f.x+Math.cos(ang)*7,z=f.z+Math.sin(ang)*7;
+    cam.position.set(x,Math.max(f.y+2.6,H(x,z)+1.5),z);cam.lookAt(f.x,f.y+1,f.z);
+  }
+}
+/** One frame of the frozen intro: no simulation, only the camera, weather, fire and bubbles. */
+function cineStep(rdt){
+  cine.t+=rdt;cineCam();updateWx(rdt);updateCabin();updateBanter(rdt);
+  ren.render(scene,cam);
+  if(cine.t>=cine.dur)cineEnd();
+}
+/** Slow-motion kill-cam: called every frame from the main loop; ends by running cine.done. */
+function cineKill(rdt){cine.t+=rdt;cineCam();if(cine.t>=cine.dur)cineEnd();}
+function bulletTime(){if(NET.role!=='solo'||!S.cine||cine.on||tAll<btCD)return;bt=.55;btCD=tAll+8;}
+function updateTimeScale(rdt){
+  if(bt>0){bt-=rdt;btK=Math.sin(Math.max(0,bt)/.55*Math.PI);timeScale=.28;}else{timeScale=1;btK=0;}
+  if(cine.on&&!cine.freeze)timeScale=.3;
+}
+for(const ev of ['keydown','mousedown','touchstart'])addEventListener(ev,()=>{if(cine.on&&cine.freeze&&cine.t>.4)cineEnd();},{passive:true});
 /* ============ TEAM MATCH, DEATH AND RESPAWN ============ */
 function initTdm(){
   tdm={limit:25,time:360,red:0,t:0};
@@ -2056,6 +2256,7 @@ function failMission(msg){
   splat(8);$('endT').textContent=ttl;$('endP').textContent=txt;$('nextBtn').style.display='none';$('scope').style.display='none';$('end').classList.add('on');hud();
 }
 function allyHit(a,d){
+  if(!a.remote&&a.ally&&a.alive){if(a.hp-d<=0)bark(a,'allyDown',true);else if(roll(.4))bark(a,'allyHit');}
   if(a.remote&&a.ridx>0&&a.ridx===NET.heliPilot&&pheli&&pheli.alive){pheli.hp-=d*.7;if(pheli.hp<=0)crashHeliRemote(a);return;}
   a.hp-=d;a.flinch=.25;
   if(a.hp<=0&&a.alive){if(a.remote)remoteDown(a);else{a.alive=false;a.dt=0;say('An ally went down!',2);beep(200,.3,'triangle',.2);}}
@@ -2481,6 +2682,7 @@ function clientFx(f){
   const V3=(i)=>new THREE.Vector3(f[i]/10,f[i+1]/10,f[i+2]/10);
   switch(f[1]){
     case 'e':explodeVis(V3(2));break;
+    case 'b':{const list=f[2]==='v'?vehicles:f[2]==='a'?allies.filter(a=>!a.remote):enemies;showBark(list[f[3]],BANTER_KEYS[f[4]],f[5]);break;}
     case 'S':addSmoke(V3(2),f[5],f[6]);break;
     case 'F':fireZone(V3(2),0);break;
     case 'L':flashbang(V3(2),15);break;
@@ -2584,7 +2786,7 @@ function clientTick(dt){
     if(p.t<=0||p.m.position.y<H(p.m.position.x,p.m.position.z)){scene.remove(p.m);vprojs.splice(i,1);}}
   for(let i=vnades.length-1;i>=0;i--){const n=vnades[i];n.v.y-=14*dt;n.m.position.addScaledVector(n.v,dt);const g0=H(n.m.position.x,n.m.position.z)+.06;
     if(n.m.position.y<g0){n.m.position.y=g0;n.v.y*=-.35;n.v.x*=.6;n.v.z*=.6;}n.t-=dt;if(n.t<=0){scene.remove(n.m);vnades.splice(i,1);}}
-  updateFires(dt);updateClouds(dt);updateWx(dt);updateCabin();heliFollow(dt);
+  updateFires(dt);updateClouds(dt);updateWx(dt);updateCabin();updateBanter(dt);heliFollow(dt);
   $('prompt').textContent=pDead?'You died – back in '+Math.ceil(respT)+' s':'';
   if(!pDead)updateHeliIdle(dt);
 }
@@ -2609,9 +2811,10 @@ function mkAlly(x,z,idx){
   const mk=new THREE.Mesh(new THREE.OctahedronGeometry(.13),new THREE.MeshBasicMaterial({color:0x4aa8ff}));mk.position.y=2.4;a.g.add(mk);a.marker=mk;
   return a;
 }
-function allyDmg(e,v,head){
+function allyDmg(e,v,head,shooter){
   e.hp-=v*(head?2.5:1);e.alerted=true;e.flinch=.25;
-  if(e.hp<=0&&e.alive){e.alive=false;e.dt=0;killed++;S.kills++;beep(300,.1,'triangle',.1);if(killed>=total)win();hud();}
+  if(e.hp>0&&e.alive)banterEnemyHit(e);
+  if(e.hp<=0&&e.alive){e.alive=false;e.dt=0;killed++;S.kills++;beep(300,.1,'triangle',.1);if(shooter&&roll(.45))bark(shooter,'allyKill');else banterEnemyKill(e);if(killed>=total)win();hud();}
 }
 function updateAllies(dt){
   for(const a of allies){
@@ -2643,7 +2846,7 @@ function updateAllies(dt){
     a.cd-=dt;
     if((tg||vt)&&a.cd<=0){
       a.cd=.5+Math.random()*.5;a.mf.visible=true;a.mfT=.06;beep(190,.05,'square',.04);
-      if(tg){if(Math.random()<.6)allyDmg(tg,12+Math.random()*8,Math.random()<.12);}
+      if(tg){if(Math.random()<.6)allyDmg(tg,12+Math.random()*8,Math.random()<.12,a);}
       else if(vt){vt.hp-=10*vt.pm;if(vt.hp<=0)vkill(vt);}
     }
     if(walking){a.walk+=dt*8;const s1=Math.sin(a.walk);a.legs[0].hip.rotation.x=s1*.7;a.legs[1].hip.rotation.x=-s1*.7;a.legs[0].knee.rotation.x=Math.max(0,-s1)*.9;a.legs[1].knee.rotation.x=Math.max(0,s1)*.9;}
@@ -2895,7 +3098,8 @@ function collide(o,r){
 function los(a,b){const d=new THREE.Vector3().subVectors(b,a);const Ln=d.length();ray.set(a,d.normalize());ray.far=Ln;return !ray.intersectObjects(obstMesh,false)[0];}
 function loop(){
   if(!run)return;raf=requestAnimationFrame(loop);
-  const now=performance.now();const dt=Math.min(.05,(now-lastT)/1000);lastT=now;tAll+=dt;frame++;
+  const now=performance.now();let dt=Math.min(.05,(now-lastT)/1000);lastT=now;const rdt=dt;updateTimeScale(rdt);dt*=timeScale;tAll+=dt;frame++;
+  if(cine.on&&cine.freeze){cineStep(rdt);return;}
   /* player */
   const sp=((keys.ShiftLeft||keys.ShiftRight)?7.5*(hasPerk('run')?1.15:1):4.6)*(aim?.6:1)*(pDead?0:1);
   let fx=0,fz=0;
@@ -2914,9 +3118,10 @@ function loop(){
   const bob=!mounted&&moving&&P.ground?Math.sin(tAll*((keys.ShiftLeft||keys.ShiftRight)?14:9))*.03:0;
   if(mounted&&pheli&&pheli.alive)cam.position.copy(chasePos());else cam.position.set(P.x,P.y+bob,P.z);
   cam.rotation.order='YXZ';cam.rotation.y=P.yaw;cam.rotation.x=P.pitch;
+  if(cine.on)cineKill(rdt);
   const wk=slots[cur],wdef=WEAPONS[wk],z=wdef.zoom||1;
   const scoped=aim&&wdef.scoped;
-  const tf=S.fov/(aim?z*(wdef.scoped?1.8:1.3):1);cam.fov+=(tf-cam.fov)*.2;cam.updateProjectionMatrix();
+  const tf=(1-.1*btK)*S.fov/(aim?z*(wdef.scoped?1.8:1.3):1);cam.fov+=(tf-cam.fov)*.2;cam.updateProjectionMatrix();
   $('scope').style.display=scoped?'block':'none';if(view)view.visible=!scoped&&!mounted;
   /* sun and shadows follow the player */
   const sd=L.sunDir;const sl=Math.hypot(sd[0],sd[1],sd[2]);
@@ -3013,7 +3218,7 @@ function loop(){
   if(curMode==='survival')updateSurvival(dt);
   if(curMode==='training')trainRefill();
   if(curMode==='tdm')updateTDM(dt);
-  updateRadio(dt);updateObjectives(dt);updateWx(dt);updateCabin();
+  updateRadio(dt);updateObjectives(dt);updateWx(dt);updateCabin();updateBanter(dt);
   updateVehicles(dt);updateAllies(dt);updateHeliIdle(dt);updateProjs(dt);updateFires(dt);updateClouds(dt);
   }else clientTick(dt);
   netTick(dt);

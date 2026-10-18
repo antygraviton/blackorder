@@ -5,9 +5,10 @@ function mkAlly(x,z,idx){
   const mk=new THREE.Mesh(new THREE.OctahedronGeometry(.13),new THREE.MeshBasicMaterial({color:0x4aa8ff}));mk.position.y=2.4;a.g.add(mk);a.marker=mk;
   return a;
 }
-function allyDmg(e,v,head){
+function allyDmg(e,v,head,shooter){
   e.hp-=v*(head?2.5:1);e.alerted=true;e.flinch=.25;
-  if(e.hp<=0&&e.alive){e.alive=false;e.dt=0;killed++;S.kills++;beep(300,.1,'triangle',.1);if(killed>=total)win();hud();}
+  if(e.hp>0&&e.alive)banterEnemyHit(e);
+  if(e.hp<=0&&e.alive){e.alive=false;e.dt=0;killed++;S.kills++;beep(300,.1,'triangle',.1);if(shooter&&roll(.45))bark(shooter,'allyKill');else banterEnemyKill(e);if(killed>=total)win();hud();}
 }
 function updateAllies(dt){
   for(const a of allies){
@@ -39,7 +40,7 @@ function updateAllies(dt){
     a.cd-=dt;
     if((tg||vt)&&a.cd<=0){
       a.cd=.5+Math.random()*.5;a.mf.visible=true;a.mfT=.06;beep(190,.05,'square',.04);
-      if(tg){if(Math.random()<.6)allyDmg(tg,12+Math.random()*8,Math.random()<.12);}
+      if(tg){if(Math.random()<.6)allyDmg(tg,12+Math.random()*8,Math.random()<.12,a);}
       else if(vt){vt.hp-=10*vt.pm;if(vt.hp<=0)vkill(vt);}
     }
     if(walking){a.walk+=dt*8;const s1=Math.sin(a.walk);a.legs[0].hip.rotation.x=s1*.7;a.legs[1].hip.rotation.x=-s1*.7;a.legs[0].knee.rotation.x=Math.max(0,-s1)*.9;a.legs[1].knee.rotation.x=Math.max(0,s1)*.9;}

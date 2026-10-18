@@ -2,6 +2,12 @@
 
 Format: newest first. Versions describe the browser game unless stated otherwise.
 
+## [1.2.0] – 2026-10-18 – banter, cinematic scenes, co-op helicopter
+**Added**
+* Barks: speech bubbles with a short mumbled "voice" above allies (hit, kill, down, warning the player, freed prisoner, hacked terminal, destroyed depot), enemies (alert, hit, dying, buddy down, barrels) and the bosses (taunts at 75/50/25/10 % health, last words, the Armata crew). Visible to all players in co-op. Text tables: `BANTER` in `10-data.js`.
+* Cinematic scenes (solo play, Settings > Game > Cinematic scenes): an intro fly-over to the main objective with a title card and a funny caption per mission (any key skips it), a slow-motion kill-cam when a boss dies, and bullet time after a headshot kill.
+* The player helicopter works in co-op (Steel Fist and Armata): one pilot at a time, host or client, with weapons.
+
 ## [1.1.0] – 2026-10-18 – new missions, online play anywhere, touch controls
 **Added**
 * Difficulty levels (Settings > Game), perks and weapon attachments (Store tabs).

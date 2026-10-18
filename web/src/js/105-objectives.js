@@ -78,7 +78,7 @@ function objHit(o,d){
 }
 function depotBoom(o){
   o.done=true;const p=new THREE.Vector3(o.x,H(o.x,o.z)+1,o.z);
-  depotVis(o);explode(p,7,90);say('Fuel depot destroyed!',2);
+  depotVis(o);explode(p,7,90);say('Fuel depot destroyed!',2);allyBark('depotBoom');
 }
 function depotVis(o){
   if(o.vis)return;o.vis=true;
@@ -94,7 +94,7 @@ function humansNear(x,z,r,needUse){
 }
 function hostageTick(a,dt){
   if(!a.free){
-    if(humansNear(a.x,a.z,3,true)){a.fp=(a.fp||0)+dt/1.5;if(a.fp>=1){a.free=true;say('Prisoner freed! Lead him to the extraction point.',4);beep(700,.3,'sine',.2);}}else a.fp=Math.max(0,(a.fp||0)-dt);
+    if(humansNear(a.x,a.z,3,true)){a.fp=(a.fp||0)+dt/1.5;if(a.fp>=1){a.free=true;say('Prisoner freed! Lead him to the extraction point.',4);beep(700,.3,'sine',.2);bark(a,'freed',true);}}else a.fp=Math.max(0,(a.fp||0)-dt);
     a.legs.forEach(q=>{q.hip.rotation.x*=.8;q.knee.rotation.x*=.8;});return;
   }
   const t=pickTarget(a.x,a.z);if(!t)return;
@@ -108,12 +108,12 @@ function updateObjectives(dt){
   if(over)return;
   if(L.stealth&&!alarm&&enemies.some(e=>e.alive&&e.alerted))raiseAlarm('Enemy alerted!');
   const ob=L.ob;if(!ob||ob==='kill')return;
-  if(ob==='boss')bossPct=bossHpPct();
+  if(ob==='boss'){bossPct=bossHpPct();bossBanter();}
   for(const o of objs){
     if(o.t==='term'&&!o.done){
       const near=humansNear(o.x,o.z,3.2,true);
       o.prog=Math.max(0,Math.min(1,o.prog+(near?dt/6:-dt/30)));
-      if(o.prog>=1){o.done=true;say('Terminal hacked!',3);beep(900,.4,'sine',.2);}
+      if(o.prog>=1){o.done=true;say('Terminal hacked!',3);beep(900,.4,'sine',.2);allyBark('hacked');}
     }
     if(o.t==='zone'){
       const inside=humansNear(o.x,o.z,o.r,false);o.inside=inside;
@@ -131,7 +131,12 @@ function updateObjectives(dt){
     const ex=objs.find(o=>o.t==='ext');
     if(h&&h.free&&ex&&Math.hypot(h.x-ex.x,h.z-ex.z)<ex.r)win();
   }
-  else if(ob==='boss'){if(bossDead()){flagSet(L.bossT?'boss2':'boss1');win();}}
+  else if(ob==='boss'){if(bossDead()&&!bossEnding){
+    bossEnding=true;flagSet(L.bossT?'boss2':'boss1');
+    const b=enemies.find(e=>e.boss)||vehicles.find(v=>v.boss),p=b.type?b.g.position:new THREE.Vector3(b.x,H(b.x,b.z),b.z);
+    bark(b,b.type?'tankDead':'bossDead',true);
+    if(cineStart(b.type?'killTank':'kill',p.clone()))cine.done=()=>{if(!over)win();};else win();
+  }}
   else if(ob==='defend'){const z=objs.find(o=>o.t==='zone');if(z&&z.prog>=1){enemies.forEach(e=>{if(e.alive)e.alerted=false;});win();}}
 }
 function objText(){
@@ -173,6 +178,7 @@ function barrelVis(b){
 }
 function barrelBoom(b){
   barrelVis(b);
+  { let n=null,nd=14; for(const e of enemies){if(!e.alive)continue;const d=Math.hypot(e.x-b.x,e.z-b.z);if(d<nd){nd=d;n=e;}} if(n&&roll(.5))bark(n,'barrelOops'); }
   const p=new THREE.Vector3(b.x,H(b.x,b.z)+.5,b.z);
   explode(p,5,110);fireZone(p,0);
 }
