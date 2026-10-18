@@ -29,6 +29,7 @@ weapons, characters and vehicles are assembled from primitives, sounds are synth
 | `50-weapon-models.js` | weapon and glove meshes, first-person view model | `gunModel`, `glove`, `viewModel` |
 | `60-enemies.js` | soldier model with simple IK arms | `mkEnemy`, `ikArm` |
 | `70-world.js` | world state declarations, audio, level geometry | `beep`, `boom`, `build`, `mkTerrain`, `house`, `spot`, `addBlock`, `inObst` |
+| `75-cabin.js` | the cabin landmark (log-clad upper room on a plastered base and open garage, outside stairs, brick chimney with fireplace) and `groundAt` for raised walkable floors | `cabin`, `cabinMats`, `groundAt`, `updateCabin` |
 | `80-effects.js` | blood, dust, messages, HUD refresh, view model | `splat`, `bloodBurst`, `dustBurst`, `say`, `hud`, `buildView` |
 | `90-mission-start.js` | mission start, pointer lock, pause, weapon switching, reload | `startMission`, `doStart`, `sw`, `reload` |
 | `100-shooting.js` | firing, damage, explosions, projectiles, fire, smoke, vehicles | `fire`, `dmg`, `vdmg`, `explode`, `hurt`, `win`, `spawnProj`, `mkVehicle`, `updateVehicles` |

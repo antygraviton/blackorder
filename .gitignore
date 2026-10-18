@@ -12,3 +12,7 @@ engines/unreal/build_log.txt
 # Godot
 engines/godot/.godot/
 engines/godot/export/
+
+# private reference photos (never commit, the repository is public)
+temp/
+reference/

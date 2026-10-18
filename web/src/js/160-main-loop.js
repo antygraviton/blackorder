@@ -1,7 +1,9 @@
 /* ============ MAIN LOOP ============ */
 function collide(o,r){
+  const fy=o===P?P.y-1.7:H(o.x,o.z);
   for(const b of obst){
     if(b.ph)continue;
+    if(b.y1!==undefined&&(fy>=b.y1||fy+1.8<=b.y0))continue;
     const cx=Math.max(b.a,Math.min(o.x,b.b)),cz=Math.max(b.c,Math.min(o.z,b.d));
     const dx=o.x-cx,dz=o.z-cz,dd=dx*dx+dz*dz;
     if(dd<r*r){ if(dd<1e-6){o.x=b.a-r;continue;} const d=Math.sqrt(dd);o.x=cx+dx/d*r;o.z=cz+dz/d*r; }
@@ -21,7 +23,7 @@ function loop(){
   else{
   P.x+=(fx*cs+fz*sn)*sp*dt;P.z+=(-fx*sn+fz*cs)*sp*dt;
   collide(P,.45);
-  const gy=H(P.x,P.z)+1.7;
+  const gy=groundAt(P.x,P.z,P.y-1.7)+1.7;
   if(keys.Space&&P.ground&&!pDead){P.vy=5.2;P.ground=false;}
   if(P.ground){P.y+=(gy-P.y)*Math.min(1,dt*18);}
   else{P.vy-=14*dt;P.y+=P.vy*dt;if(P.y<=gy){P.y=gy;P.vy=0;P.ground=true;}}
@@ -127,7 +129,7 @@ function loop(){
   if(curMode==='survival')updateSurvival(dt);
   if(curMode==='training')trainRefill();
   if(curMode==='tdm')updateTDM(dt);
-  updateRadio(dt);updateObjectives(dt);updateWx(dt);
+  updateRadio(dt);updateObjectives(dt);updateWx(dt);updateCabin();
   updateVehicles(dt);updateAllies(dt);updateHeliIdle(dt);updateProjs(dt);updateFires(dt);updateClouds(dt);
   }else clientTick(dt);
   netTick(dt);

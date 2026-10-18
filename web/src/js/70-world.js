@@ -1,7 +1,7 @@
 /* ============ WORLD ============ */
 let ren,scene,cam,sun,run=false,over=false,locked=false,hadLock=false,fallback=false,raf=0,L,curLevel=0;
 const keys={};
-let P,enemies=[],obst=[],obstMesh=[],nades=[],mines=[],kits=[],parts=[],smokes=[],wp={},slots=[],cur=0,view=null,flash,mflash,flashT=0,mflT=0;
+let P,enemies=[],obst=[],floors=[],obstMesh=[],nades=[],mines=[],kits=[],parts=[],smokes=[],wp={},slots=[],cur=0,view=null,flash,mflash,flashT=0,mflT=0;
 let msgT=0,killed=0,total=0,lastShot=0,mouseDown=false,aim=false,reloadT=0,reloadMax=1.6,hitT=0,shake=0,kick=0,lastT=0,tAll=0,swayX=0,swayY=0,frame=0;
 let AC=null;
 let vehicles=[],projs=[],fires=[],clouds=[],flashA=0,allies=[],pheli=null,mounted=false,lastRocket=0,heliWeapon=0,curMode=null,wave=0,survPaid=false,surv=null,pDead=false,respT=0,tdm=null,vprojs=[],vnades=[];
@@ -164,7 +164,7 @@ function build(){
   const sz=S.q>=3?2048:1024;sun.shadow.mapSize.set(sz,sz);const sc=sun.shadow.camera;sc.left=-55;sc.right=55;sc.top=55;sc.bottom=-55;sc.near=1;sc.far=260;sun.shadow.bias=-.0004;sun.shadow.normalBias=.06;
   scene.add(sun,sun.target);
   mkSky();mkTerrain();
-  obst=[];obstMesh=[];mines=[];kits=[];enemies=[];nades=[];parts=[];smokes=[];vehicles=[];projs=[];fires=[];clouds=[];flashA=0;allies=[];pheli=null;mounted=false;
+  obst=[];floors=[];cabinInfo=null;cabinFx=null;obstMesh=[];mines=[];kits=[];enemies=[];nades=[];parts=[];smokes=[];vehicles=[];projs=[];fires=[];clouds=[];flashA=0;allies=[];pheli=null;mounted=false;
   /* instanced sets */
   FX={
     postW:Inst(new THREE.CylinderGeometry(.07,.08,1.9,6),MT.wood,400,true),
@@ -188,6 +188,7 @@ function build(){
   if(L.runway)runway();
   /* houses */
   const fp=[];let placed=0;
+  if(L.cabin){const c=cabin();if(c)fp.push(c);}
   for(let t=0;t<600&&placed<L.houses;t++){
     const w=8+Math.floor(R()*5),d=7+Math.floor(R()*4),x=(R()-.5)*136,z=(R()-.5)*120;
     if(Math.abs(x)<w/2+7)continue;if(Math.hypot(x,z-70)<24)continue;if(fp.some(f=>Math.abs(f[0]-x)<(f[2]+w)/2+6&&Math.abs(f[1]-z)<(f[3]+d)/2+6))continue;

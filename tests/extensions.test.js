@@ -130,4 +130,42 @@ check(g.E("L.radio.some(r => r.t && r.done)"), 'timed radio message is played');
 begin('The Vanished Village');
 check(g.E("L.radio.every(r => !r.done)"), 'radio messages are reset when the mission restarts');
 
+// ---- the cabin: stairs, upper room, garage, fireplace ----
+begin('The Vanished Village');
+const cab = g.E('cabinInfo');
+check(cab && g.E('floors.length') === 12 && g.E('!!cabinFx'), 'Vanished Village has the cabin (upper floor, garage, landing, 9 steps, fire)');
+begin('The Vanished Village');
+check(Math.abs(g.E('cabinInfo.x') - cab.x) < 1e-9 && Math.abs(g.E('cabinInfo.z') - cab.z) < 1e-9, 'the cabin is built at the same place every time (deterministic)');
+begin('Base Defense');
+check(g.E('cabinInfo') === null && g.E('floors.length') === 0 && g.E('MODES.training.cabin') === undefined, 'missions and modes without the cabin flag have no cabin');
+
+const place = (x, z, yaw) => g.E(`(function () { P.x = ${x}; P.z = ${z}; P.yaw = ${yaw || 0}; P.y = H(P.x, P.z) + 1.7; P.vy = 0; P.ground = true; step(3); })()`);
+const hold = (key, frames) => { g.E(`keys.${key} = true`); g.step(frames, 16); g.E(`keys.${key} = false`); };
+const feet = () => g.E('P.y - 1.7');
+
+begin('The Vanished Village');
+const c = g.E('cabinInfo'), top = c.gy + c.FH;
+// up the stairs, through the door, into the room
+place(c.x + c.DX, c.z + c.Du / 2 + 5, 0);
+hold('KeyW', 220);
+check(Math.abs(feet() - top) < .15, 'walking north up the stairs and through the door ends on the upper floor (feet ' + feet().toFixed(2) + ' vs ' + top.toFixed(2) + ')');
+check(g.E('P.z') < c.z + c.Du / 2 - .2 && g.E('P.z') > c.z - c.Du / 2 && Math.abs(g.E('P.x') - c.x) < c.Lu / 2, 'the player is inside the room');
+// walls and chimney block the player upstairs
+place(c.x + c.Lu / 2 - 1.5, c.z + 1.8, 0); g.E(`P.y = ${top} + 1.7`); hold('KeyD', 80);
+check(g.E('P.x') < c.x + c.Lu / 2 - .2 && Math.abs(feet() - top) < .15, 'the east wall stops the player upstairs');
+place(c.x - 2.5, c.z, 0); g.E(`P.y = ${top} + 1.7`); hold('KeyD', 80);
+check(g.E('P.x') < c.x - .7, 'the chimney with the fireplace is solid (x ' + (g.E('P.x') - c.x).toFixed(2) + ')');
+// the garage is open: walk under the building
+place(c.x + 2.5, c.z, 0); hold('KeyW', 160);
+check(g.E('P.z') < c.z - c.Du / 2 - .3 && feet() < c.gy + 1, 'the open garage can be walked through under the building');
+// the closed base blocks
+place(c.x - 2.2, c.z + 5, 0); hold('KeyW', 120);
+check(g.E('P.z') > c.z + 2.5, 'the plastered base blocks the way at ground level');
+// sight and bullets: walls and floor are solid, the door is open
+check(g.E(`los(new THREE.Vector3(${c.x + 4}, ${top + 1.5}, ${c.z + 10}), new THREE.Vector3(${c.x + 4}, ${top + 1.5}, ${c.z + 1}))`) === false, 'sight does not pass through the south wall');
+check(g.E(`los(new THREE.Vector3(${c.x + 2}, ${c.gy + 1}, ${c.z}), new THREE.Vector3(${c.x + 2}, ${top + 1.5}, ${c.z}))`) === false, 'sight does not pass through the floor into the garage');
+check(g.E(`los(new THREE.Vector3(${c.x + c.DX}, ${top + 1.5}, ${c.z + 10}), new THREE.Vector3(${c.x + c.DX}, ${top + 1.5}, ${c.z + 1})) `) === true, 'the doorway is open');
+g.step(5, 16);
+check(g.E('cabinFx.l.intensity') > 1, 'the fireplace light is on');
+
 process.exit(check.done() ? 0 : 1);

@@ -312,14 +312,14 @@ const dmgMul=k=>(attOf(k)==='supp'?.85:1)*(hasPerk('dmg')?1.1:1);
 const silent=k=>attOf(k)==='supp';
 /* ---- new and modified missions ---- */
 const _L=LEVELS.slice();
-const lbase=l=>{const o=Object.assign({},l);['ob','stealth','docs','radio','brief','wx','bossS','bossT','nd','tanks','apcs','helis','jets','desert','runway'].forEach(k=>delete o[k]);return o;};
-Object.assign(_L[0],{brief:'HQ: The mountain village has stopped broadcasting. Investigate it, neutralize the patrols and find out who is behind this. Watch out for mines.',radio:[{t:15,m:'HQ: We hear gunfire from the east, be careful.'},{k:6,m:'HQ: Half of the patrols are gone, keep going.'}]});
+const lbase=l=>{const o=Object.assign({},l);['ob','stealth','docs','radio','brief','wx','bossS','bossT','nd','tanks','apcs','helis','jets','desert','runway','cabin'].forEach(k=>delete o[k]);return o;};
+Object.assign(_L[0],{cabin:true,brief:'HQ: The mountain village has stopped broadcasting. Investigate it, neutralize the patrols and find out who is behind this. Watch out for mines.',radio:[{t:15,m:'HQ: We hear gunfire from the east, be careful.'},{k:6,m:'HQ: Half of the patrols are gone, keep going.'}]});
 Object.assign(_L[1],{n:'Silent Infiltration',txt:'The Order has taken the mine. Slip through the dark to the terminal on the far side of the map and hack it (hold E). Do not raise the alarm.',brief:'The Order has taken the mine. You must not raise the alarm: enemies see you only from close range and hear loud gunshots. A suppressor, a knife and a bow are your friends. Flashlight: key F. Find the terminal on the far side of the map and hack it (hold E).',ob:'hack',stealth:true,wx:'night',radio:[{t:20,m:'Contact: The terminal is on the opposite side of the map.'},{t:90,m:'Contact: Stay away from the lights.'}]});
 Object.assign(_L[2],{brief:'HQ: The Order holds a small town on the border. Evening, fog, mines in the streets. Clear the streets of all patrols.',radio:[{t:20,m:'HQ: Watch the streets, they are mined.'}]});
 Object.assign(_L[3],{brief:'HQ: An Order armored convoy is driving through the desert toward the border town. Ambush it. Ordinary bullets are not enough against armor: use the RPG (key 5), grenades or napalm.',radio:[{t:20,m:'Contact: The tank is last in the convoy.'}]});
 Object.assign(_L[4],{n:'Airfield',txt:'The Order stores fuel at the airfield. Destroy all four fuel depots (gunfire or explosions). Watch out for helicopters and the jet.',brief:'The Order has taken the airfield and stores fuel there. Destroy all four fuel depots with gunfire or explosions. Watch out for helicopters and jet strikes. It is raining.',ob:'destroy',nd:4,wx:'rain',radio:[{t:30,m:'Contact: The depots are the red fuel tanks.'}]});
 Object.assign(_L[5],{wx:'storm',brief:'The command post of the Order division. Armor, helicopters and jets all at once. When the last machine falls, the Order loses its strength on the border. A storm is raging.',radio:[{t:20,m:'HQ: Good luck, you have the whole sky against you.'}]});
-const L_RESCUE=Object.assign(lbase(_L[0]),{camp:0,n:'Rescue the Prisoner',txt:'Find the prisoner (E), free him and bring him to the extraction point at the start. Do not let him die.',brief:'The Order has captured an officer of our ally. Find him in the settlement (hold E next to him), free him and lead him to the extraction point at the start of the map. If he dies, the mission fails. It is raining.',ob:'rescue',wx:'rain',en:14,mines:6,kits:4,houses:12,ruins:3,seed:41,reward:320,medals:30,xp:110,acc:.6,hp:65,radio:[{t:25,m:'Contact: The prisoner is somewhere in the middle of the settlement.'},{t:120,m:'Contact: Extraction waits at the start of the map.'}]});
+const L_RESCUE=Object.assign(lbase(_L[0]),{cabin:true,camp:0,n:'Rescue the Prisoner',txt:'Find the prisoner (E), free him and bring him to the extraction point at the start. Do not let him die.',brief:'The Order has captured an officer of our ally. Find him in the settlement (hold E next to him), free him and lead him to the extraction point at the start of the map. If he dies, the mission fails. It is raining.',ob:'rescue',wx:'rain',en:14,mines:6,kits:4,houses:12,ruins:3,seed:41,reward:320,medals:30,xp:110,acc:.6,hp:65,radio:[{t:25,m:'Contact: The prisoner is somewhere in the middle of the settlement.'},{t:120,m:'Contact: Extraction waits at the start of the map.'}]});
 const L_DEFEND=Object.assign(lbase(_L[2]),{camp:0,n:'Base Defense',txt:'Defend the marked zone for 2.5 minutes. The attackers come in waves.',brief:'We captured their command transmitter. The Order will launch a counterattack. Defend the marked zone (blue circle) for 2.5 minutes. Attackers come in waves every twenty seconds. Fog.',ob:'defend',wx:'fog',en:24,mines:0,kits:5,houses:8,ruins:5,seed:47,reward:420,medals:40,xp:130,acc:.65,hp:70,radio:[{t:30,m:'HQ: Waves arrive every 20 seconds.'},{t:100,m:'HQ: Hold on a little longer!'}]});
 LEVELS.splice(3,0,L_RESCUE,L_DEFEND);
 /* ============ MENU ============ */
@@ -776,7 +776,7 @@ function mkEnemy(x,z){
 /* ============ WORLD ============ */
 let ren,scene,cam,sun,run=false,over=false,locked=false,hadLock=false,fallback=false,raf=0,L,curLevel=0;
 const keys={};
-let P,enemies=[],obst=[],obstMesh=[],nades=[],mines=[],kits=[],parts=[],smokes=[],wp={},slots=[],cur=0,view=null,flash,mflash,flashT=0,mflT=0;
+let P,enemies=[],obst=[],floors=[],obstMesh=[],nades=[],mines=[],kits=[],parts=[],smokes=[],wp={},slots=[],cur=0,view=null,flash,mflash,flashT=0,mflT=0;
 let msgT=0,killed=0,total=0,lastShot=0,mouseDown=false,aim=false,reloadT=0,reloadMax=1.6,hitT=0,shake=0,kick=0,lastT=0,tAll=0,swayX=0,swayY=0,frame=0;
 let AC=null;
 let vehicles=[],projs=[],fires=[],clouds=[],flashA=0,allies=[],pheli=null,mounted=false,lastRocket=0,heliWeapon=0,curMode=null,wave=0,survPaid=false,surv=null,pDead=false,respT=0,tdm=null,vprojs=[],vnades=[];
@@ -939,7 +939,7 @@ function build(){
   const sz=S.q>=3?2048:1024;sun.shadow.mapSize.set(sz,sz);const sc=sun.shadow.camera;sc.left=-55;sc.right=55;sc.top=55;sc.bottom=-55;sc.near=1;sc.far=260;sun.shadow.bias=-.0004;sun.shadow.normalBias=.06;
   scene.add(sun,sun.target);
   mkSky();mkTerrain();
-  obst=[];obstMesh=[];mines=[];kits=[];enemies=[];nades=[];parts=[];smokes=[];vehicles=[];projs=[];fires=[];clouds=[];flashA=0;allies=[];pheli=null;mounted=false;
+  obst=[];floors=[];cabinInfo=null;cabinFx=null;obstMesh=[];mines=[];kits=[];enemies=[];nades=[];parts=[];smokes=[];vehicles=[];projs=[];fires=[];clouds=[];flashA=0;allies=[];pheli=null;mounted=false;
   /* instanced sets */
   FX={
     postW:Inst(new THREE.CylinderGeometry(.07,.08,1.9,6),MT.wood,400,true),
@@ -963,6 +963,7 @@ function build(){
   if(L.runway)runway();
   /* houses */
   const fp=[];let placed=0;
+  if(L.cabin){const c=cabin();if(c)fp.push(c);}
   for(let t=0;t<600&&placed<L.houses;t++){
     const w=8+Math.floor(R()*5),d=7+Math.floor(R()*4),x=(R()-.5)*136,z=(R()-.5)*120;
     if(Math.abs(x)<w/2+7)continue;if(Math.hypot(x,z-70)<24)continue;if(fp.some(f=>Math.abs(f[0]-x)<(f[2]+w)/2+6&&Math.abs(f[1]-z)<(f[3]+d)/2+6))continue;
@@ -1004,6 +1005,127 @@ function build(){
   Object.values(FX).forEach(ifin);
 }
 
+/* ============ CABIN ============ */
+/* A landmark building modelled on a real mountain cabin: a long log-clad upper volume with a flat roof stands on a
+   smaller plastered base, the rest of the ground floor is an open garage under two wooden posts. A staircase on the
+   south side leads to the door; upstairs is one big room with a brick chimney and a large fireplace in the middle.
+   World generation is deterministic (seeded), so every machine builds the same cabin.
+   Walkable raised surfaces live in `floors` (absolute y of the top); obstacles may carry a height range (y0..y1) so that
+   walls only block entities whose feet are inside it (see collide() and groundAt()). */
+let cabinInfo=null,cabinFx=null;
+function groundAt(x,z,feet){
+  let g=H(x,z);
+  for(const f of floors)if(x>f.a&&x<f.b&&z>f.c&&z<f.d&&f.top<=feet+.55&&f.top>g)g=f.top;
+  return g;
+}
+function cabinMats(){
+  if(MT.logs)return;
+  TX.logs=mkTex(256,256,(x,w,h)=>{
+    for(let i=0;i<4;i++){const y=i*64,g=x.createLinearGradient(0,y,0,y+64);g.addColorStop(0,'#2e1d10');g.addColorStop(.35,'#6f4c2c');g.addColorStop(.65,'#5e3f24');g.addColorStop(1,'#2a1a0e');x.fillStyle=g;x.fillRect(0,y,w,64);}
+    for(let i=0;i<500;i++){x.strokeStyle='rgba('+(Math.random()<.5?'20,12,6':'150,110,70')+','+(.05+Math.random()*.1)+')';x.beginPath();const yy=Math.random()*h,xx=Math.random()*w;x.moveTo(xx,yy);x.lineTo(xx+20+Math.random()*60,yy);x.stroke();}
+  });
+  TX.boards=mkTex(256,256,(x,w,h)=>{
+    x.fillStyle='#3b2a1d';x.fillRect(0,0,w,h);
+    for(let i=0;i<8;i++){x.fillStyle='rgba(0,0,0,.45)';x.fillRect(i*32,0,2,h);x.fillStyle='rgba(120,90,60,'+(.04+Math.random()*.08)+')';x.fillRect(i*32+2,0,30,h);}
+    for(let i=0;i<300;i++){x.fillStyle='rgba(0,0,0,'+Math.random()*.12+')';x.fillRect(Math.random()*w,Math.random()*h,1,10+Math.random()*30);}
+  });
+  MT.logs=stdM(TX.logs,{roughness:.9});MT.boards=stdM(TX.boards,{roughness:.9});
+  MT.frame=stdM(null,{color:lin(0x4a2f1c),roughness:.7});MT.rug=stdM(null,{color:lin(0x6b2c20),roughness:1});
+  MT.copper=stdM(null,{color:lin(0x9a4a2a),roughness:.45,metalness:.6});
+  MT.curtain=new THREE.MeshBasicMaterial({color:0xe6e2d4});MT.glassblock=new THREE.MeshBasicMaterial({color:0xaec2bd});
+  MT.flame=new THREE.MeshBasicMaterial({color:0xff9a2a,transparent:true,opacity:.9});MT.flame2=new THREE.MeshBasicMaterial({color:0xffe070,transparent:true,opacity:.9});
+}
+/** Builds the cabin at a flat spot and returns its footprint [x,z,w,d] for the house placement, or null. */
+function cabin(){
+  cabinMats();
+  const rr=rng(L.seed*131+7),Lu=10,Du=6.4,FH=2.5,HW=2.6,T=.25,DX=1.6,RUN=3.9;
+  let best=null;
+  for(let t=0;t<120;t++){
+    const x=(rr()-.5)*110,z=(rr()-.5)*90-5;
+    if(Math.abs(x)>58||Math.abs(z)>52||Math.hypot(x,z-70)<30)continue;
+    let hi=-1e9,lo=1e9;
+    for(const a of [-1,0,1])for(const b of [-Du/2,0,Du/2,Du/2+RUN]){const h=H(x+a*Lu/2,z+b);hi=Math.max(hi,h);lo=Math.min(lo,h);}
+    if(!best||hi-lo<best.s)best={x,z,s:hi-lo,lo};
+    if(hi-lo<.5)break;
+  }
+  if(!best)return null;
+  const cx=best.x,cz=best.z,gy=best.lo+.05;
+  const g=new THREE.Group();g.position.set(cx,gy,cz);scene.add(g);
+  const add=(geo,mt,px,py,pz,cast)=>{const m=new THREE.Mesh(geo,mt);m.position.set(px,py,pz);m.castShadow=cast!==false;m.receiveShadow=true;g.add(m);return m;};
+  const box=(w,h,d,mt,px,py,pz,tile,cast)=>add(tbox(w,h,d,tile||1),mt,px,py+h/2,pz,cast);        /* py = bottom edge */
+  /* a solid part: visible box, bullet/sight proxy, and a collider that only acts between heights y0 and y1 */
+  const solid=(w,h,d,mt,px,py,pz,tile,y0,y1)=>{box(w,h,d,mt,px,py,pz,tile);addBlock(cx+px,cz+pz,w,d,gy+py,h,true);const o=obst[obst.length-1];o.y0=gy+y0;o.y1=gy+y1;};
+  const proxy=(w,h,d,px,py,pz)=>{addBlock(cx+px,cz+pz,w,d,gy+py,h,true);obst[obst.length-1].ph=true;};
+  const deco=(w,h,d,mt,px,py,pz)=>add(new THREE.BoxGeometry(w,h,d),mt,px,py,pz,false);
+  const wy0=FH-.2,wy1=FH+HW+.5;
+  /* ground floor: plastered base (west half) and open garage (east half) on two posts */
+  solid(4.6,FH+.3,Du-1,MT.plaster,-2.2,-.3,0,3,-9,FH-.1);
+  box(4.4,.3,Du-1,MT.concrete,2.3,-.3,0,2.5,false);
+  floors.push({a:cx+.1,b:cx+4.5,c:cz-(Du-1)/2,d:cz+(Du-1)/2,top:gy});
+  for(const pz of [-Du/2+.5,Du/2-.5]){
+    add(new THREE.CylinderGeometry(.17,.17,FH+.3,10),MT.logs,Lu/2-.6,(FH+.3)/2-.3,pz);
+    addBlock(cx+Lu/2-.6,cz+pz,.4,.4,gy-.3,FH+.3,true);const o=obst[obst.length-1];o.y0=gy-9;o.y1=gy+FH-.1;
+  }
+  deco(1.2,1.0,.06,MT.glassblock,-2.2,1.3,Du/2-.47);deco(1.4,1.2,.05,MT.frame,-2.2,1.3,Du/2-.5);   /* glass-block window on the base */
+  deco(.06,1.9,.9,MT.woodDoor,.13,.95,0);                                                          /* door from the garage */
+  /* upper floor slab and flat roof */
+  box(Lu,T,Du,MT.wood,0,FH-T,0,2);proxy(Lu,T,Du,0,FH-T,0);
+  floors.push({a:cx-Lu/2+.1,b:cx+Lu/2-.1,c:cz-Du/2+.1,d:cz+Du/2-.1,top:gy+FH});
+  box(Lu+1.6,.22,Du+1.6,MT.boards,0,FH+HW,0,2);proxy(Lu+1.6,.22,Du+1.6,0,FH+HW,0);
+  /* walls: logs on the long sides, shingles on the short ends; the door gap is in the south wall at x = DX */
+  const sw1=DX-.55+Lu/2,sw2=Lu/2-(DX+.55);
+  solid(Lu,HW,T,MT.logs,0,FH,-Du/2+T/2,.8,wy0,wy1);
+  solid(sw1,HW,T,MT.logs,-Lu/2+sw1/2,FH,Du/2-T/2,.8,wy0,wy1);
+  solid(sw2,HW,T,MT.logs,Lu/2-sw2/2,FH,Du/2-T/2,.8,wy0,wy1);
+  solid(1.1,HW-2,T,MT.logs,DX,FH+2,Du/2-T/2,.8,FH+2,wy1);
+  solid(T,HW,Du-2*T,MT.roof,-Lu/2+T/2,FH,0,2.4,wy0,wy1);
+  solid(T,HW,Du-2*T,MT.roof,Lu/2-T/2,FH,0,2.4,wy0,wy1);
+  for(const s of [-1,1]){
+    deco(Lu+.2,.55,.1,MT.boards,0,FH+HW-.275,s*(Du/2+.05));deco(.1,.55,Du+.2,MT.boards,s*(Lu/2+.05),FH+HW-.275,0);
+    deco(.1,2.0,.3,MT.frame,DX+s*.58,FH+1,Du/2-T/2);
+  }
+  /* windows: decals on both faces of the wall */
+  const winZ=(px,sz,w,h,y)=>{for(const [zf,o] of [[sz*Du/2,1],[sz*(Du/2-T),-1]]){
+    const z=zf+sz*o*.02;deco(w+.16,h+.16,.04,MT.frame,px,y+h/2,z);deco(w,h,.05,MT.curtain,px,y+h/2,zf+sz*o*.03);deco(.05,h,.06,MT.frame,px,y+h/2,zf+sz*o*.045);}
+    deco(w+.3,.07,.18,MT.frame,px,y-.03,sz*Du/2+sz*.09);};
+  const winX=(sx,pz,w,h,y)=>{for(const [xf,o] of [[sx*Lu/2,1],[sx*(Lu/2-T),-1]]){
+    const x=xf+sx*o*.02;deco(.04,h+.16,w+.16,MT.frame,x,y+h/2,pz);deco(.05,h,w,MT.curtain,xf+sx*o*.03,y+h/2,pz);deco(.06,h,.05,MT.frame,xf+sx*o*.045,y+h/2,pz);}};
+  for(const px of [-4,-2.6,-1.2,.2,3.4])winZ(px,1,1.2,1.2,FH+.9);
+  for(const px of [-2.5,2.5])winZ(px,-1,1,1.1,FH+1);
+  winX(-1,0,1,1.1,FH+1);winX(1,0,1,1.1,FH+1);
+  deco(.1,HW+FH-.1,.1,MT.copper,-3,(HW+FH-.1)/2+.05,-Du/2-.14);                                    /* drain pipe */
+  /* chimney with a large fireplace in the middle of the room */
+  solid(1.6,HW+1.4,1.2,MT.brick,0,FH,0,2.5,wy0,wy1);
+  deco(1.0,.8,.06,MT.dark,0,FH+.55,.62);box(1.9,.2,.8,MT.brick,0,FH,1.0,1,false);
+  const logG=new THREE.CylinderGeometry(.09,.09,.8,8);
+  for(const [px,pz,rz] of [[-.1,.75,Math.PI/2],[.1,.9,Math.PI/2+.3]]){const m=add(logG,MT.logs,px,FH+.3,pz,false);m.rotation.z=rz;}
+  const flames=[[-.22,.8,.2,.55,MT.flame],[.2,.85,.17,.45,MT.flame],[0,.78,.12,.7,MT.flame2]].map(([px,pz,r,h,mt])=>add(new THREE.ConeGeometry(r,h,7),mt,px,FH+.25+h/2,pz,false));
+  const fire=new THREE.PointLight(0xff8a3a,1.6,13);fire.position.set(0,FH+.9,1.2);g.add(fire);
+  const lamp=new THREE.PointLight(0xffe3b0,.45,9);lamp.position.set(0,FH+HW-.4,-.5);g.add(lamp);
+  cabinFx={l:fire,f:flames};
+  /* furniture around the fireplace */
+  box(2.4,.02,1.6,MT.rug,0,FH,2.0,1,false);
+  solid(1.5,.45,.4,MT.wood,-1.7,FH,2.2,1,wy0,FH+1);solid(1.5,.45,.4,MT.wood,1.7,FH,2.2,1,wy0,FH+1);
+  solid(1.4,.75,.8,MT.wood,-3.6,FH,-1.7,1,wy0,FH+1);
+  /* staircase from the south up to the door */
+  box(1.4,.2,1.15,MT.wood,DX,FH-.2,Du/2+.425,1);
+  floors.push({a:cx+DX-.7,b:cx+DX+.7,c:cz+Du/2-.15,d:cz+Du/2+1.0,top:gy+FH});
+  for(let i=1;i<=9;i++){
+    const top=FH-.25*i,zs=Du/2+1.0+(i-1)*.32;
+    box(1.4,top+.3,.32,MT.wood,DX,-.3,zs+.16,1);
+    floors.push({a:cx+DX-.7,b:cx+DX+.7,c:cz+zs,d:cz+zs+.32,top:gy+top});
+  }
+  const dz=9*.32,dy=(FH+.9)-(.25+.9),len=Math.hypot(dz,dy);
+  for(const s of [-1,1]){const r=deco(.06,.06,len,MT.frame,DX+s*.72,(FH+.9+.25+.9)/2,Du/2+1.0+dz/2);r.rotation.x=Math.atan2(dy,dz);}
+  obst.push({a:cx-Lu/2,b:cx+Lu/2,c:cz-Du/2,d:cz+Du/2,ph:true});                                   /* minimap footprint */
+  cabinInfo={x:cx,z:cz,gy,Lu,Du,FH,DX};
+  return [cx,cz+RUN/2,Lu+2,Du+RUN+2];
+}
+function updateCabin(){
+  if(!cabinFx)return;
+  cabinFx.l.intensity=1.5+Math.sin(tAll*11)*.25+Math.random()*.2;
+  cabinFx.f.forEach((m,i)=>{m.scale.y=.85+Math.sin(tAll*(9+i*3)+i)*.2;m.scale.x=m.scale.z=.9+Math.sin(tAll*7+i)*.1;});
+}
 /* ============ EFFECTS ============ */
 function splat(n){
   const b=$('blood');
@@ -2643,8 +2765,10 @@ function drawMap(){
 
 /* ============ MAIN LOOP ============ */
 function collide(o,r){
+  const fy=o===P?P.y-1.7:H(o.x,o.z);
   for(const b of obst){
     if(b.ph)continue;
+    if(b.y1!==undefined&&(fy>=b.y1||fy+1.8<=b.y0))continue;
     const cx=Math.max(b.a,Math.min(o.x,b.b)),cz=Math.max(b.c,Math.min(o.z,b.d));
     const dx=o.x-cx,dz=o.z-cz,dd=dx*dx+dz*dz;
     if(dd<r*r){ if(dd<1e-6){o.x=b.a-r;continue;} const d=Math.sqrt(dd);o.x=cx+dx/d*r;o.z=cz+dz/d*r; }
@@ -2664,7 +2788,7 @@ function loop(){
   else{
   P.x+=(fx*cs+fz*sn)*sp*dt;P.z+=(-fx*sn+fz*cs)*sp*dt;
   collide(P,.45);
-  const gy=H(P.x,P.z)+1.7;
+  const gy=groundAt(P.x,P.z,P.y-1.7)+1.7;
   if(keys.Space&&P.ground&&!pDead){P.vy=5.2;P.ground=false;}
   if(P.ground){P.y+=(gy-P.y)*Math.min(1,dt*18);}
   else{P.vy-=14*dt;P.y+=P.vy*dt;if(P.y<=gy){P.y=gy;P.vy=0;P.ground=true;}}
@@ -2770,7 +2894,7 @@ function loop(){
   if(curMode==='survival')updateSurvival(dt);
   if(curMode==='training')trainRefill();
   if(curMode==='tdm')updateTDM(dt);
-  updateRadio(dt);updateObjectives(dt);updateWx(dt);
+  updateRadio(dt);updateObjectives(dt);updateWx(dt);updateCabin();
   updateVehicles(dt);updateAllies(dt);updateHeliIdle(dt);updateProjs(dt);updateFires(dt);updateClouds(dt);
   }else clientTick(dt);
   netTick(dt);
