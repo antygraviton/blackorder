@@ -1,6 +1,7 @@
 # AGENTS.md – instructions for AI coding agents
 
 This file is for any coding agent (Claude Code, Codex, Cursor, …). Read it fully before changing anything.
+**Then read the "Current state" section at the top of `docs/DEVLOG.md`**: it says what is in progress, what is next and which decisions are open.
 Project summary: **Black Order**, a single-file browser FPS (Three.js r128) with host-authoritative co-op multiplayer.
 Owner's working language was Czech, but **everything in this repository must be English** (code, comments, UI text, docs, commit messages).
 
@@ -76,4 +77,24 @@ Never edit `web/dist/black-order.html` by hand: it is generated from `web/src/`.
 
 ## 8. Definition of done
 
-Code + tests + docs updated (`CHANGELOG.md`, relevant `docs/*.md`) + `web/dist` rebuilt + English-only check passes.
+Code + tests + docs updated (`CHANGELOG.md`, relevant `docs/*.md`) + `web/dist` rebuilt + English-only check passes + `docs/DEVLOG.md` updated (section 10).
+
+## 9. Working economically (limited token budget)
+
+The owner works on a low subscription tier; unfinished work from a session that ran out of budget is expensive. Therefore:
+
+* Do not read whole large files; locate code with `grep -n` and read only the needed line ranges.
+* No exploratory sub-agents unless the owner asks for them.
+* Batch related edits; avoid many tiny edit/test cycles.
+* While iterating, run only the affected test files (`node tests/<name>.test.js` after `npm run build`). Run the full `npm test` once before each commit.
+* Prefer deferring a feature over half-integrating it. If the budget may run out, first leave the tree in a working state and update the devlog (section 10).
+* Keep answers short.
+
+## 10. Development log and handoff
+
+`docs/DEVLOG.md` is how a newly attached agent or instance gets oriented. It has two parts:
+
+1. **Current state** (at the top, always kept up to date, overwrite it): version, what is in progress, the next concrete step, open decisions/questions for the owner, known broken things. Keep it under about 20 lines.
+2. **Session entries** (dated, newest at the bottom): what changed, what was verified, what is open.
+
+Update both at the end of every working session **and** before stopping for any reason (finished, blocked, budget running out). A half-done step must be described precisely enough (files, functions, what remains) that another agent can continue without re-reading the code.

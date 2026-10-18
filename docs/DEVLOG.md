@@ -2,6 +2,21 @@
 
 Chronological record of the development sessions. Add a dated entry for every working session: what changed, what was verified, what is open.
 Dates are the calendar days of the original sessions (2026). Early sessions were reconstructed from the conversation history and file timestamps.
+Rules for this file: `AGENTS.md` section 10.
+
+## Current state (keep up to date, overwrite)
+
+* **Version:** 1.0. `npm test` green on `main`.
+* **In progress:** integrating the v1.1 drafts (lean plan, 3–4 commits). Nothing integrated yet.
+* **Lean plan:**
+  1. Clean the drafts: leftover Czech words without diacritics (`Duch`, `Sundat`, `Vybrat`, `Koupit`, `Nasadit`, `Nasazeno`, `Nalezeno`, `Korespondence`, `POPLACH`, `' z '`), reset `r.done` of radio messages in `doStart()`, extend signatures `failMission(msg)`, `addKit(x,z,ammo)`, `mkEnemy(x,z,opt)`.
+  2. Data, difficulty, perks, attachments (`ext_data.js` -> `10-data.js`, `DEF` in `00-save-data.js`, Store tabs from `ext_ui.js`).
+  3. Objectives, new missions, briefing, radio, weather (`ext_game.js` -> one `105-extensions.js`).
+  4. Bosses and barrels. Then a short `tests/extensions.test.js`, version bump, docs.
+* **Deferred:** multiplayer replication (new objective missions solo-only, hidden in the lobby), jeep, Zombie Arena, killstreaks, ally orders, documents/Archive.
+* **Next step:** plan step 1.
+* **Owner decisions:** keep the draft balance numbers; commit straight to `main`. Bosses are only partly drafted: `makeBoss`/`markBossTank`/`bossDead`/`bossHpPct` exist but nothing calls them; spawning in `doStart()`, armor in `dmg()`, stun/flinch immunity and double tank shells must be written.
+* **Uncommitted:** rule changes in `AGENTS.md`/`CLAUDE.md`/this file and the new `package-lock.json`; commit them first.
 
 ---
 
@@ -48,3 +63,9 @@ Dates are the calendar days of the original sessions (2026). Early sessions were
 * What was verified (and how)
 * Open questions / next steps
 ```
+
+## 2026-10-18 – v1.1 integration planning, working rules
+* Reviewed `drafts/v1.1` against the current modules. Found leftover Czech words without diacritics (not caught by `i18n.test.js`), radio messages that never replay after a restart, and signature mismatches (`failMission`, `addKit`, `mkEnemy`); `hitscanFrom` lives in `130-multiplayer.js`.
+* Agreed a lean integration plan (see "Current state"); multiplayer replication and secondary features are deferred.
+* Added rules for working on a limited token budget (`AGENTS.md` section 9) and for keeping this log as a handoff document (section 10, "Current state" section above).
+* Verified: `tests/i18n.test.js` after the doc changes. No game code changed.
