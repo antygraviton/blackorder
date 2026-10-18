@@ -81,4 +81,10 @@ check(g.E('wp[slots[3]].n') === n0 - 1, 'grenade button throws a grenade (' + n0
 touch('tPause', 'touchstart', pt(1, 1, tid++)); touch('tPause', 'touchend', pt(1, 1, tid - 1));
 check(g.E("document.getElementById('pause').classList.contains('on')"), 'pause button opens the pause menu');
 
+// the drawing buffer follows the real size of #game, not a stale innerWidth
+g.E("Object.defineProperty($('game'), 'clientWidth', { configurable: true, value: 800 }); Object.defineProperty($('game'), 'clientHeight', { configurable: true, value: 400 }); fitRenderer()");
+check(Math.abs(g.E('cam.aspect') - 2) < 1e-9, 'fitRenderer takes the camera aspect from the #game element (2.0)');
+g.E("Object.defineProperty($('game'), 'clientWidth', { configurable: true, value: 400 }); fitRenderer()");
+check(Math.abs(g.E('cam.aspect') - 1) < 1e-9, 'fitRenderer follows later size changes');
+
 process.exit(check.done() ? 0 : 1);

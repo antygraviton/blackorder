@@ -8,7 +8,7 @@ function doStart(){
   L=applyWx(L);
   if(!ren){ren=new THREE.WebGLRenderer({canvas:$('cv'),antialias:S.q>=2});ren.outputEncoding=THREE.sRGBEncoding;ren.toneMapping=THREE.ACESFilmicToneMapping;ren.shadowMap.enabled=true;ren.shadowMap.type=THREE.PCFSoftShadowMap;}
   ren.setPixelRatio(Math.min(window.devicePixelRatio||1,S.q>=3?2:1.4));
-  ren.setSize(innerWidth,innerHeight);
+  ren.setSize(innerWidth,innerHeight,false);
   initTex();initMats();
   build();
   const man=NET.role==='client'?NET.go:null;
@@ -16,7 +16,7 @@ function doStart(){
   P={x:sx,y:H(sx,70)+1.7,z:70,vy:0,yaw:0,pitch:0,hp:100,ground:true};
   pDead=false;respT=0;tdm=null;vprojs=[];vnades=[];
   cam=new THREE.PerspectiveCamera(S.fov,innerWidth/innerHeight,.03,1800);
-  cam.position.set(P.x,P.y,P.z);scene.add(cam);
+  cam.position.set(P.x,P.y,P.z);scene.add(cam);fitRenderer();
   flash=new THREE.PointLight(0xffc070,0,9);cam.add(flash);initWx();
   const kin=curMode?0:idxIn(curLevel);
   objs=[];alarm=false;missionT=0;defT=0;defGroup=0;if(L.radio)L.radio.forEach(r=>{r.done=false;});
@@ -85,7 +85,16 @@ addEventListener('mousedown',e=>{if(!canAct())return;if(e.button===0){mouseDown=
 addEventListener('mouseup',e=>{if(e.button===0)mouseDown=false;if(e.button===2)aim=false;});
 addEventListener('contextmenu',e=>{if(run)e.preventDefault();});
 addEventListener('mousemove',e=>{if(!canAct())return;const s=.0004+S.sens/100*.0032;const z=aim?.5:1;P.yaw-=e.movementX*s*z;P.pitch=Math.max(-1.4,Math.min(1.4,P.pitch-e.movementY*s*z));swayX=Math.max(-.04,Math.min(.04,swayX-e.movementX*.0004));swayY=Math.max(-.03,Math.min(.03,swayY-e.movementY*.0004));});
-addEventListener('resize',()=>{if(ren&&cam){ren.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();}});
+/* The canvas is sized by CSS (100% of #game); only the drawing buffer follows its real size. innerWidth can be stale
+   right after a phone rotates or goes fullscreen, so also listen to orientationchange and observe the element. */
+function fitRenderer(){
+  if(!ren||!cam)return;
+  const g=$('game'),w=g.clientWidth||innerWidth,h=g.clientHeight||innerHeight;
+  ren.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();
+}
+addEventListener('resize',fitRenderer);
+addEventListener('orientationchange',()=>{fitRenderer();setTimeout(fitRenderer,300);});
+if(window.ResizeObserver)new ResizeObserver(fitRenderer).observe($('game'));
 function sw(i){if(mounted||i===cur||!wp[slots[i]])return;cur=i;reloadT=0;buildView();}
 function reload(){if(mounted)return;const k=slots[cur],w=WEAPONS[k],s=wp[k];if(!w.mag||reloadT>0||s.mag===magOf(k)||s.res<=0)return;reloadMax=(w.rel||1.6)*(hasPerk('fast')?.75:1);reloadT=reloadMax;beep(200,.15);hud();}
 
