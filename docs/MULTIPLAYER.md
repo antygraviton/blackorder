@@ -77,6 +77,12 @@ Host only:
 5. Keep presence under 4 KiB (the mock room in `tests/lib/harness.js` throws above that).
 6. Extend `tests/multiplayer.test.js`.
 
+## Pause, lobby and rejoin
+* **Host pause stops the game for everybody.** The host stops its simulation and publishes `ps:1` in its presence; clients see the "Host paused" screen (`clientPauseSync`, driven by `onPeers`, because the client loop is stopped) and can continue only after the host resumed. A client's own pause menu does not stop the game.
+* **Only the host starts a game** (`mpStartGame`); clients enter it only through the host's `go` presence, and only if their peer id is in `go.ro`.
+* **Back to the lobby:** death, mission end and the pause menu's "Back to lobby" keep the room (`mpBackToLobby`); `NET.goDone` stops a client re-entering the game it just left. If the host goes back to the lobby (`go` cleared), all clients are taken there too.
+* **Rejoin:** while the host's snapshot shows a running game (`s.st[2]` = 0) a client that left sees "Rejoin the game" (`#mpRejoin`). Otherwise the lobby says "Waiting for the host to start the game…" (or that a game is running without you / is over).
+
 ## Known limitations
 
 * No anti-cheat; positions and shots are trusted.

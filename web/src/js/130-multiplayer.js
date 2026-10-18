@@ -56,7 +56,17 @@ function lobbyName(ro,peers,i){
   const mine=nm(ro[i]);let k=1;for(let j=0;j<i;j++)if(nm(ro[j])===mine)k++;
   return (mine+(k>1?' ('+k+')':'')).replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';');
 }
+/** Client in a running game: follow the host's pause flag, and leave when the host closes the game. */
+function clientPauseSync(host){
+  const paused=!!(host&&host.presence.ps);
+  if(paused&&!NET.hostPaused){
+    NET.hostPaused=true;run=false;try{document.exitPointerLock();}catch(e){}
+    $('pause').classList.remove('on');$('hostPauseGo').disabled=true;$('hostPauseP').textContent='The host paused the game. Please wait…';$('hostPause').classList.add('on');
+  } else if(!paused&&NET.hostPaused){$('hostPauseGo').disabled=false;$('hostPauseP').textContent='The host resumed the game.';}
+  if(host&&!host.presence.go&&Date.now()-NET.goStart>1500){stopGame();show('multi');}
+}
 function mpPeers(ch){
+  if(NET.role==='client'&&NET.room){clientPauseSync(ch.peers.find(p=>p.presence&&p.presence.r==='h'));return;}
   if(NET.role!=='solo'||!NET.room)return;
   const peers=ch.peers,me=peers.find(p=>p.sameTab);if(me)NET.myPeer=me.peer;
   const hostP=peers.find(p=>p.presence&&p.presence.r==='h');
@@ -78,8 +88,13 @@ function mpPeers(ch){
     if(!hostP){if(Date.now()-NET.joinedAt>4000)$('mpClientText').textContent='No host found for this code.';return;}
     if(ro.length&&ro.indexOf(NET.myPeer)<0&&Date.now()-NET.joinedAt>2500){mpLeave('The game is full (max. 3 players).');return;}
     const md=hostP.presence.md==='tdm'?'Team Match vs Bots':'Co-op campaign'+(hostP.presence.lv!==undefined&&LEVELS[hostP.presence.lv]?' – '+LEVELS[hostP.presence.lv].n:'');
-    $('mpClientText').textContent='Host selected: '+md+'. Wait for the host to start the game.';
-    const g=hostP.presence.go;if(g&&g.id!==NET.goDone&&(!NET.go||NET.go.id!==g.id))mpGo(g);
+    const g=hostP.presence.go,inGame=!!(g&&g.ro&&g.ro.indexOf(NET.myPeer)>=0);
+    const s=hostP.presence.s,live=!!(g&&s&&s.st&&!s.st[2]);
+    $('mpRejoin').style.display=(inGame&&g.id===NET.goDone&&live)?'':'none';
+    if(g&&inGame&&g.id!==NET.goDone&&(!NET.go||NET.go.id!==g.id)){mpGo(g);return;}
+    $('mpClientText').textContent=!g?'Host selected: '+md+'. Waiting for the host to start the game…'
+      :!inGame?'A game is running without you. Wait until the host returns to the lobby.'
+      :live?'You left the running game. Press "Rejoin the game" to continue.':'The game is over. Waiting for the host to return to the lobby…';
   }
 }
 function mpStartGame(){
@@ -101,7 +116,7 @@ function mpStartGame(){
 }
 function mpGo(g){
   NET.go=g;NET.role='client';NET.roster=g.ro;NET.mi=Math.max(0,g.ro.indexOf(NET.myPeer));NET.avatars={};
-  NET.fxSeen=0;NET.msgSeen=0;NET.seqSeen=-1;NET.snap=null;NET.first=true;NET.sent=[];NET.shotN=0;NET.t=1;NET.hostLost=0;NET.endInfo=null;
+  NET.fxSeen=0;NET.msgSeen=0;NET.seqSeen=-1;NET.snap=null;NET.first=true;NET.sent=[];NET.shotN=0;NET.t=1;NET.hostLost=0;NET.endInfo=null;NET.goStart=Date.now();NET.hostPaused=false;
   if(g.md==='tdm'){curMode='tdm';curLevel=0;L=MODES.tdm;}else{curMode=null;curLevel=g.lv;L=LEVELS[g.lv];}
   show('game');$('loading').style.display='grid';
   setTimeout(()=>{try{doStart();}catch(e){console.error(e);$('loading').textContent='Loading error: '+e.message;return;}$('loading').style.display='none';},40);
@@ -111,7 +126,8 @@ function mpBackToLobby(){
   NET.goDone=NET.go?NET.go.id:NET.goDone;
   for(const a of allies)if(a.remote&&a.g&&scene)scene.remove(a.g);
   NET.avatars={};NET.role='solo';NET.go=null;NET.roster=[];NET.fx=[];NET.sent=[];NET.snap=null;NET.ro=null;NET.joinedAt=Date.now();
-  Promise.resolve(NET.room.presence({go:null,s:null,sh:null,p:null})).catch(()=>{});
+  NET.hostPaused=false;$('hostPause').classList.remove('on');
+  Promise.resolve(NET.room.presence({go:null,s:null,sh:null,p:null,ps:null})).catch(()=>{});
   mpUI(true);
 }
 function netLeave(){
@@ -122,6 +138,12 @@ function netLeave(){
 $('multiBack').onclick=()=>{if(NET.room)mpLeave();show('menu');};
 $('mpCreate').onclick=async()=>{S.name=($('mpName').value||S.name).trim().slice(0,14)||'PLAYER';save();await mpEnter(newCode(),true);};
 $('joinBtn').onclick=async()=>{const c=$('joinCode').value.trim().toUpperCase();if(c.length<4){mpMsg('Enter the code from the host.');return;}S.name=($('mpName').value||S.name).trim().slice(0,14)||'PLAYER';save();await mpEnter(c,false);};
+$('mpRejoin').onclick=()=>{
+  const hp=NET.room&&NET.room.peers().find(p=>p.presence&&p.presence.r==='h'),g=hp&&hp.presence.go;
+  if(g&&g.ro&&g.ro.indexOf(NET.myPeer)>=0){NET.goDone=0;mpGo(g);}
+};
+$('hostPauseGo').onclick=()=>{NET.hostPaused=false;$('hostPause').classList.remove('on');lockMouse();run=true;lastT=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);};
+$('hostPauseLeave').onclick=()=>{stopGame();show('multi');};
 $('mpLeaveBtn').onclick=()=>mpLeave();$('mpLeaveBtn2').onclick=()=>mpLeave();
 $('mpStartBtn').onclick=()=>mpStartGame();
 $('mpMission').onchange=e=>{NET.lobbyLv=+e.target.value;if(NET.room)NET.room.presence({lv:NET.lobbyLv});};

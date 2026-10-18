@@ -60,7 +60,7 @@
         <div id="mpMissionWrap" class="setrow"><label>Mission</label><select id="mpMission" style="background:var(--steel);color:var(--bone);border:1px solid var(--steel2);padding:6px;max-width:260px"></select></div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px"><button class="btn small" id="mpStartBtn">Start game</button><button class="btn small danger" id="mpLeaveBtn">Leave</button></div>
       </div>
-      <div class="card" id="mpClientInfo"><h3>Waiting room</h3><p id="mpClientText">Wait for the host to start the game.</p><button class="btn small danger" id="mpLeaveBtn2">Leave</button></div>
+      <div class="card" id="mpClientInfo"><h3>Waiting room</h3><p id="mpClientText">Wait for the host to start the game.</p><button class="btn small" id="mpRejoin" style="display:none">Rejoin the game</button> <button class="btn small danger" id="mpLeaveBtn2">Leave</button></div>
     </div>
     <p class="tag" id="mpLobbyMsg"></p>
   </div>
@@ -116,6 +116,7 @@
   <div id="loading">Loading map…</div>
   <div class="overlay" id="brief"><div><h2 id="briefT"></h2><p id="briefP"></p><div class="menu-list"><button class="btn" id="briefGo">Start mission</button><button class="btn" id="briefBack">Back</button></div></div></div>
   <div class="overlay" id="pause"><div><h2>Pause</h2><p>Click Resume to return to the game.</p><div class="menu-list"><button class="btn" id="resume">Resume</button><button class="btn danger" id="toMenu">To menu</button></div></div></div>
+  <div class="overlay" id="hostPause"><div><h2>Host paused</h2><p id="hostPauseP">The host paused the game. Please wait…</p><div class="menu-list"><button class="btn" id="hostPauseGo" disabled>Continue</button><button class="btn danger" id="hostPauseLeave">Back to lobby</button></div></div></div>
   <div class="overlay" id="end"><div><h2 id="endT"></h2><p id="endP"></p><div class="menu-list"><button class="btn" id="nextBtn">Next mission</button><button class="btn" id="again">Play again</button><button class="btn" id="endMenu">To menu</button></div></div></div>
 </section>
 

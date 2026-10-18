@@ -47,5 +47,35 @@ const rows = g => g.E("[...document.querySelectorAll('#mpPlayers tr')].map(r => 
   H.E("mpStartGame()"); await sleep(800);
   check(A.E('NET.role') === 'client' && H.E('NET.go.id') !== idBefore, 'the host can start the next game and clients join it');
 
+  // the host's pause stops the game for everybody
+  H.step(30, 16); await sleep(100);
+  H.E('pauseGame()'); await sleep(150);
+  check(H.E('run') === false, 'host pause: the host simulation stops');
+  for (const [n, g] of [['A', A], ['B', B]]) {
+    check(g.E('NET.hostPaused') === true && g.E('run') === false && g.E("$('hostPause').classList.contains('on')"), 'host pause: client ' + n + ' is stopped and sees the "Host paused" screen');
+    check(g.E("$('hostPauseGo').disabled") === true, 'host pause: client ' + n + ' cannot continue while the host is paused');
+  }
+  H.click('resume'); await sleep(150);
+  check(H.E('run') === true && A.E("$('hostPauseGo').disabled") === false, 'host resume: the host runs again and clients may continue');
+  A.click('hostPauseGo');
+  check(A.E('run') === true && !A.E("$('hostPause').classList.contains('on')"), 'client continues after the host resumed');
+
+  // a player who left a running game can rejoin it
+  B.click('toMenu'); H.step(30, 16); await sleep(300);
+  check(B.E('NET.role') === 'solo' && B.E("document.getElementById('multi').classList.contains('on')"), 'client left the running game into the lobby');
+  check(B.E("$('mpRejoin').style.display") !== 'none' && /Rejoin/.test(B.E("$('mpClientText').textContent")), 'lobby offers "Rejoin the game" while the game is running');
+  B.click('mpRejoin'); await sleep(300);
+  check(B.E('NET.role') === 'client', 'the client rejoined the running game');
+
+  // when the host goes back to the lobby, clients are taken there too and cannot start anything themselves
+  await sleep(1700);
+  H.click('toMenu'); await sleep(300);
+  for (const [n, g] of [['A', A], ['B', B]]) {
+    check(g.E('NET.role') === 'solo' && g.E("document.getElementById('multi').classList.contains('on')"), 'host closed the game: client ' + n + ' is back in the lobby');
+  }
+  check(/Waiting for the host to start the game/.test(A.E("$('mpClientText').textContent")), 'lobby text: "Waiting for the host to start the game"');
+  A.E('mpStartGame()'); await sleep(300);
+  check(A.E('NET.role') === 'solo' && H.E('NET.role') === 'solo', 'a client cannot start the game, only the host can');
+
   process.exit(check.done() ? 0 : 1);
 })();

@@ -64,8 +64,13 @@ document.addEventListener('pointerlockchange',()=>{
   if(!locked&&hadLock&&run&&!over)pauseGame();
 });
 document.addEventListener('pointerlockerror',()=>{fallback=true;});
-function pauseGame(){if(NET.role==='solo')run=false;$('pause').classList.add('on');}
-$('resume').onclick=()=>{$('pause').classList.remove('on');lockMouse();run=true;lastT=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);};
+function pauseGame(){
+  if(NET.role==='solo'||NET.role==='host')run=false;
+  if(NET.role==='host'&&NET.room)Promise.resolve(NET.room.presence({ps:1})).catch(()=>{});
+  $('pause').querySelector('p').textContent=NET.role==='host'?'The game is paused for all players. Click Resume to continue.':'Click Resume to return to the game.';
+  $('pause').classList.add('on');
+}
+$('resume').onclick=()=>{$('pause').classList.remove('on');if(NET.role==='host'&&NET.room)Promise.resolve(NET.room.presence({ps:null})).catch(()=>{});lockMouse();run=true;lastT=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);};
 $('toMenu').onclick=()=>{stopGame();show(NET.room?'multi':'menu');};
 $('endMenu').onclick=()=>{stopGame();show(NET.room?'multi':'menu');};
 $('again').onclick=()=>{if(curMode)startMode(curMode);else startMission(curLevel,true);};
