@@ -47,7 +47,7 @@ function fire(first){
       if(hit.object.userData.enemy){const e=enemies.find(x=>x.g===hit.object.userData.enemy);
         if(e){const head=hit.object.userData.tag==='head';bloodBurst(hit.point,head?10:6);dmg(e,w.dmg*dmgMul(k)*(head?2.5:1),head);}}
       else if(hit.object.userData.vehicle){vdmg(hit.object.userData.vehicle,w.dmg*dmgMul(k),false);if(i<2)dustBurst(hit.point,0xc0c0b0);}
-      else{if(hit.object.userData.obj)objHit(hit.object.userData.obj,w.dmg*dmgMul(k));if(i<3)dustBurst(hit.point,0x9a9186);}
+      else{if(hit.object.userData.obj)objHit(hit.object.userData.obj,w.dmg*dmgMul(k));if(hit.object.userData.barrel)barrelHit(hit.object.userData.barrel,w.dmg*dmgMul(k));if(i<3)dustBurst(hit.point,0x9a9186);}
     } else if(gh&&i<3)dustBurst(gh,0x7a6a4c);
   }
   if(C)netShot('g',k,cam.position,camDir());
@@ -56,9 +56,10 @@ function fire(first){
   if(s.mag<=0)reload();
   hud();
 }
-function dmg(e,v,head){
+function dmg(e,v,head,ex){
   if(NET.role==='client'){hitT=.15;$('cross').classList.add('hit');return;}
-  e.hp-=v;hitT=.15;$('cross').classList.add('hit');e.alerted=true;e.flinch=.25;
+  if(e.boss&&!head&&!ex)v*=.2;   /* boss armor: body shots barely hurt, headshots and explosions do */
+  e.hp-=v;hitT=.15;$('cross').classList.add('hit');e.alerted=true;if(!e.boss)e.flinch=.25;
   if(e.hp<=0&&e.alive){e.alive=false;e.dt=0;killed++;if(!e.dummy)S.kills++;beep(300,.1,'triangle');
     const p=wp[slots[0]];if(p&&p.res!==undefined)p.res+=Math.ceil(WEAPONS[slots[0]].mag/2);
     if(head)say('Headshot',1);
@@ -111,9 +112,10 @@ function explode(p,r,dm){
   const f=new THREE.Mesh(new THREE.SphereGeometry(2.5,12,12),new THREE.MeshBasicMaterial({color:0xffb347,transparent:true,opacity:.8}));f.position.copy(p);scene.add(f);
   setTimeout(()=>scene.remove(f),160);
   for(let i=0;i<14;i++)dustBurst(p,0x5a4a38);
-  for(const e of enemies){if(!e.alive)continue;const d=Math.hypot(e.x-p.x,e.z-p.z);if(d<r){bloodBurst(new THREE.Vector3(e.x,1.2,e.z),8);dmg(e,dm*(1-d/(r+1)),false);}}
+  for(const e of enemies){if(!e.alive)continue;const d=Math.hypot(e.x-p.x,e.z-p.z);if(d<r){bloodBurst(new THREE.Vector3(e.x,1.2,e.z),8);dmg(e,dm*(1-d/(r+1)),false,true);}}
   for(const v of vehicles){if(!v.alive||!v.g.visible)continue;const d=Math.max(0,v.g.position.distanceTo(p)-3);if(d<r)vdmg(v,dm*1.6*(1-d/(r+1)),true);}
   for(const a of allies){if(!a.remote||!a.alive)continue;const da=Math.hypot(a.x-p.x,a.z-p.z);if(da<r)allyHit(a,dm*.5*(1-da/(r+1)));}
+  for(const b of barrels){if(b.dead)continue;const bd=Math.hypot(b.x-p.x,b.z-p.z);if(bd<r+1)barrelHit(b,dm*(1-bd/(r+2)));}
   for(const o of objs){if(o.t!=='depot'||o.done)continue;const od=Math.hypot(o.x-p.x,o.z-p.z);if(od<r+1.5)objHit(o,dm*(1-od/(r+2.5)));}
   const d=Math.hypot(P.x-p.x,P.z-p.z,(mounted?P.y-p.y:0));if(d<r)hurt(dm*.6*(1-d/(r+1)));
 }
@@ -430,7 +432,8 @@ function updateVehicles(dt){
       const from=new THREE.Vector3(pos.x,pos.y+2.8,pos.z);
       const see=!pDead&&dist<(isT?95:75)&&los(from,eye)&&!smokeBlocks(from,eye);
       v.cd-=dt;
-      if(isT){if(see&&v.cd<=0){v.cd=5+Math.random()*2.5;fireShell(v,tg);}}
+      if(v.shell2>0){v.shell2-=dt;if(v.shell2<=0&&see)fireShell(v,tg);}
+      if(isT){if(see&&v.cd<=0){v.cd=5+Math.random()*2.5;fireShell(v,tg);if(v.boss)v.shell2=.6;}}
       else if(v.burst>0){v.bt-=dt;if(v.bt<=0){v.bt=.1;v.burst--;if(see)vShoot(v,dist,.4,150,5,8,tg);}}
       else if(see&&v.cd<=0){v.burst=8;v.cd=2.5+Math.random()*1.5;}
     } else if(v.type==='heli'){

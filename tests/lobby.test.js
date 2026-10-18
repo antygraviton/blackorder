@@ -115,5 +115,22 @@ const rows = g => g.E("[...document.querySelectorAll('#mpPlayers tr')].map(r => 
   A.E('keys.KeyE = false');
   await backToLobby();
 
+  // ---- boss and barrels in co-op ----
+  await startMission('Commander of the Order');
+  check(A.E('enemies.filter(e => e.boss).length') === 1 && B.E('enemies.filter(e => e.boss).length') === 1 && A.E('enemies.findIndex(e => e.boss)') === H.E('enemies.findIndex(e => e.boss)'), 'Commander: clients get the same boss enemy as the host');
+  check(Math.abs(A.E('enemies.find(e => e.boss).g.scale.x') - 1.5) < 1e-9, 'Commander: the boss looks big on the clients too');
+  H.E('dmg(enemies.find(e => e.boss), 600, true)'); await cycle(12);
+  check(H.E('bossPct') < 100 && A.E('bossPct') === H.E('bossPct') && /Boss: \d+ %/.test(A.E("$('obj').textContent")), 'Commander: clients show the boss health (' + A.E('bossPct') + ' %)');
+  check(A.E('barrels.length') === H.E('barrels.length') && A.E('barrels.length') > 0, 'barrels exist on every machine');
+  H.E('barrelHit(barrels[0], 100)'); await cycle(12);
+  check(A.E('barrels[0].dead') && B.E('barrels[0].dead'), 'a barrel destroyed on the host is destroyed for the clients');
+  H.E('dmg(enemies.find(e => e.boss), 1e6, true)'); await cycle(60);
+  check(H.E('over') && A.E('over') && B.E('over'), 'Commander: the mission ends for everybody when the boss dies');
+  await backToLobby();
+
+  await startMission('Armata');
+  check(A.E('vehicles.filter(v => v.boss).length') === 1 && Math.abs(A.E('vehicles.find(v => v.boss).g.scale.x') - 1.25) < 1e-9, 'Armata: clients get the boss tank');
+  await backToLobby();
+
   process.exit(check.done() ? 0 : 1);
 })();

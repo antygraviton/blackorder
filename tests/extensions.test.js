@@ -70,7 +70,8 @@ const begin = name => g.E(`(function () {
 const hitAll = '(objs.forEach(o => objHit(o, 1e4)), step(5), over)';
 
 check(g.E("MODES.training.ob === undefined && MODES.survival.wx === undefined && MODES.tdm.radio === undefined"), 'game modes do not inherit objective, weather or radio fields');
-check(g.E('LEVELS.filter(l => l.camp === 0).length') === 5, 'campaign 1 has the two new missions (5 total)');
+check(g.E('LEVELS.filter(l => l.camp === 0).length') === 6 && g.E('LEVELS.filter(l => l.camp === 1).length') === 4, 'campaigns have 6 and 4 missions (new: Rescue, Base Defense, Commander of the Order, Armata)');
+check(g.E('LEVELS.filter(l => l.camp === 0).pop().n') === 'Commander of the Order' && g.E('LEVELS.filter(l => l.camp === 1).pop().n') === 'Armata', 'each campaign ends with its boss mission');
 
 // destroy depots (Airfield, rain)
 begin('Airfield');
@@ -179,5 +180,52 @@ g.E("locked = false; over = true; window.dispatchEvent(new MouseEvent('mousedown
 check(g.E('window.__lk') === 1, 'no lock request on the end screen');
 g.E("over = false; locked = true; P.yaw = 0; canAct = () => true; for (let i = 0; i < 40; i++) { const ev = new MouseEvent('mousemove'); Object.defineProperty(ev, 'movementX', { value: -100 }); window.dispatchEvent(ev); }");
 check(Math.abs(g.E('P.yaw')) > 2 * Math.PI, 'with the pointer locked the camera can turn more than a full circle (yaw ' + g.E('P.yaw').toFixed(1) + ')');
+
+// ---- explosive barrels ----
+begin('The Vanished Village');
+check(g.E('barrels.length') >= 6 && g.E('barrels.every(b => !b.dead)'), 'barrels are registered (' + g.E('barrels.length') + ')');
+g.E("(function () { const a = barrels[0], b = barrels[1]; b.x = a.x + 2; b.z = a.z; const e = enemies[0]; e.x = a.x - 1.5; e.z = a.z; e.hp = 100; e.alive = true; window.__e0 = e.hp; barrelHit(a, 100); })()");
+check(g.E('barrels[0].dead && barrels[1].dead'), 'a barrel explosion sets off a neighbouring barrel (chain reaction)');
+check(g.E('enemies[0].hp') < g.E('window.__e0'), 'a barrel explosion hurts a nearby enemy');
+let shot = false;
+for (let i = 2; i < 6 && !shot; i++) {
+  g.E(`(function () { const b = barrels[${i}]; if (b.dead) return; const o = new THREE.Vector3(b.x + 5, b.px.position.y, b.z), d = new THREE.Vector3(-1, 0, 0); hitscanFrom(o, d, { dmg: 50, spread: 0, pellets: 1 }); })()`);
+  shot = g.E(`barrels[${i}].dead`);
+}
+check(shot, 'a bullet destroys a barrel');
+check(g.E('!obstMesh.includes(barrels[0].px) && !obst.includes(barrels[0].co)'), 'a destroyed barrel is no longer an obstacle');
+
+// ---- the commander (soldier boss) ----
+begin('Commander of the Order');
+check(g.E('enemies.filter(e => e.boss).length') === 1 && g.E('total') > 1e8, 'Commander: one boss, kills are not the goal');
+const bossHp = g.E('enemies.find(e => e.boss).hp');
+check(bossHp === g.E('Math.round(1500 * DIFF().hp)'), 'Commander: 1500 hit points x difficulty (' + bossHp + ')');
+g.E("(function () { const b = enemies.find(e => e.boss); window.__h = b.hp; dmg(b, 100, false); window.__body = window.__h - b.hp; window.__h = b.hp; dmg(b, 100, true); window.__head = window.__h - b.hp; window.__h = b.hp; dmg(b, 100, false, true); window.__ex = window.__h - b.hp; })()");
+check(Math.abs(g.E('window.__body') - 20) < 1e-6 && g.E('window.__head') === 100 && g.E('window.__ex') === 100, 'Commander: body shots do 20%, headshots and explosions full damage');
+check(g.E('enemies.find(e => e.boss).flinch') === 0 && g.E("(function () { const e = enemies.find(x => !x.boss); dmg(e, 1, false); return e.flinch; })()") === .25, 'Commander does not flinch, other soldiers do');
+g.E("enemies.find(e => e.boss).stun = 3"); g.step(3, 16);
+check(g.E('enemies.find(e => e.boss).stun') === 0, 'Commander cannot be stunned');
+g.step(3, 16);
+check(g.E('bossPct') < 100 && /Boss: \d+ %/.test(g.E("$('obj').textContent")), 'Commander: the HUD shows the boss health (' + g.E('bossPct') + ' %)');
+g.E("dmg(enemies.find(e => e.boss), 1e6, true)"); g.step(5, 16);
+check(g.E('over') && g.E("S.flag && S.flag.boss1") === 1, 'Commander: killing the boss completes the mission');
+
+// ---- Armata (tank boss) ----
+begin('Armata');
+check(g.E('vehicles.filter(v => v.boss).length') === 1 && g.E('total') > 1e8, 'Armata: one boss tank');
+const ratio = g.E("(function () { const b = vehicles.find(v => v.boss), n = mkVehicle('tank', 0, 0, idxIn(curLevel)); const r = b.hp / n.hp; scene.remove(n.g); return r; })()");
+check(Math.abs(ratio - 3.5) < .01 && Math.abs(g.E('vehicles.find(v => v.boss).g.scale.x') - 1.25) < 1e-9, 'Armata: 3.5x hit points and 1.25x size (' + ratio.toFixed(2) + ')');
+g.E("window.__fs = 0; fireShell = () => { window.__fs++; }");
+let doubled = false;
+for (let k = 0; k < 8 && !doubled; k++) {
+  doubled = g.E(`(function () {
+    const v = vehicles.find(x => x.boss), a = ${k} * .785;
+    P.x = v.g.position.x + Math.cos(a) * 25; P.z = v.g.position.z + Math.sin(a) * 25; P.y = H(P.x, P.z) + 1.7; pDead = false; P.hp = 100;
+    window.__fs = 0; v.cd = 0; v.shell2 = 0; step(70, 16); return window.__fs >= 2;
+  })()`);
+}
+check(doubled, 'Armata fires two shells per volley');
+g.E("vdmg(vehicles.find(v => v.boss), 1e7, true)"); g.step(5, 16);
+check(g.E('over') && g.E("S.flag && S.flag.boss2") === 1, 'Armata: destroying the tank completes the mission');
 
 process.exit(check.done() ? 0 : 1);

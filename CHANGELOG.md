@@ -2,12 +2,17 @@
 
 Format: newest first. Versions describe the browser game unless stated otherwise.
 
-## [Unreleased] – v1.1 extension (being integrated, see `docs/DEVLOG.md`)
-**Integrated so far:** mission objectives work in co-op (replicated), a click re-captures the mouse so the camera can turn freely, the cabin landmark (enterable: stairs, upper room, fireplace, open garage) in Vanished Village and Rescue the Prisoner, raised walkable floors (`floors`, `groundAt`) and height-aware collisions (`obst[].y0/y1`), touch controls for phones and tablets (`165-touch.js`; `?touch=1` forces them on, `?touch=0` off), mission objectives (destroy depots, hack terminal with stealth, rescue the prisoner, defend the zone), 2 new missions, briefing screen, radio messages, weather and night (rain, fog, storm, flashlight on F), objective markers on the minimap; online play outside claude.ai via a PeerJS adapter (`129-net-peerjs.js`), GitHub Pages deploy workflow; difficulty levels (Settings > Game), perks and weapon attachments (Store tabs), `failMission(msg)`; tests in `tests/extensions.test.js`.
+## [1.1.0] – 2026-10-18 – new missions, online play anywhere, touch controls
+**Added**
+* Difficulty levels (Settings > Game), perks and weapon attachments (Store tabs).
+* Mission objectives: destroy fuel depots, hack a terminal in a stealth mission, rescue the prisoner, defend a zone; briefing screens, radio messages, weather and night (rain, fog, storm, flashlight on F). New missions *Rescue the Prisoner*, *Base Defense*; *Base Infiltration* became *Silent Infiltration*, *Airfield* asks to destroy depots. All of it works in co-op.
+* Bosses: *Commander of the Order* (armored soldier: aim for the head or use explosives) ends campaign 1, *Armata* (tank boss with double shells) ends campaign 2.
+* Explosive barrels with chain reactions.
+* The cabin landmark: enterable (stairs, upper room, fireplace) with an open garage; raised walkable floors and height-aware collisions.
+* Online play outside claude.ai (PeerJS over WebRTC, `129-net-peerjs.js`), GitHub Pages deployment; lobby fixes (duplicate joins, ghost players, back to the lobby after a game, rejoin, host pause stops everybody, host-only start).
+* Touch controls for phones and tablets (`165-touch.js`, `?touch=1` / `?touch=0`), canvas that follows the real window size, click to re-capture the mouse so the camera can turn freely.
 
-**Still in drafts** (see `drafts/v1.1/INTEGRATION.md`): briefings and radio messages, mission objectives (rescue, defend, silent infiltration, destroy depots), boss missions,
-Zombie Arena, killstreaks (UAV, ammo drop, air strike), perks, weapon attachments, difficulty levels, weather and night, player jeep, ally commands, explosive barrels,
-collectible documents, achievements and records.
+**Still in drafts** (`drafts/v1.1`): Zombie Arena, killstreaks, ally orders, the player jeep, collectible documents, achievements and the Archive.
 
 ## [1.0.0] – 2026-10-18 – English repository
 * Whole project converted to English; modular source (`web/src`), build script, tests, docs, agent instructions.

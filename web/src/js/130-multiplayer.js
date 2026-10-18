@@ -108,7 +108,7 @@ function mpStartGame(){
   setTimeout(()=>{
     try{doStart();}catch(e){console.error(e);$('loading').textContent='Loading error: '+e.message;return;}
     NET.go={id:Date.now(),md,lv:curLevel,ro,np:NET.npc,
-      en:enemies.map(e=>[qn(e.x),qn(e.z)]),v:vehicles.map(v=>[v.type,qn(v.g.position.x),qn(v.g.position.z)]),
+      en:enemies.map(e=>[qn(e.x),qn(e.z),e.boss?1:0]),v:vehicles.map(v=>[v.type,qn(v.g.position.x),qn(v.g.position.z),v.boss?1:0]),
       mi:mines.map(m=>[qn(m.x),qn(m.z)]),ki:kits.map(k=>[qn(k.x),qn(k.z)])};
     NET.room.presence({go:NET.go});
     $('loading').style.display='none';
@@ -201,7 +201,8 @@ function hostSnap(){
     a:allies.filter(a=>!a.remote).map(a=>[qn(a.x),qn(a.z),Math.round(a.g.rotation.y*100),a.alive?1:0]),
     pl,st:[killed,total>1e8?0:total,over?1:0,tdm?Math.round(tdm.t):0,tdm?tdm.red:0],
     mn:mines.map(m=>m.live?'1':'0').join(''),ki:kits.map(k=>k.used?'1':'0').join(''),fx:NET.fx};
-  if(L.ob&&L.ob!=='kill'){const h=allies.find(a=>a.hostage);s.ob=[alarm?1:0,h&&h.free?1:0,objs.map(o=>[Math.round(o.prog*1000),o.done?1:0])];}
+  if(L.ob&&L.ob!=='kill'){const h=allies.find(a=>a.hostage);s.ob=[alarm?1:0,h&&h.free?1:0,objs.map(o=>[Math.round(o.prog*1000),o.done?1:0]),bossPct];}
+  if(barrels.length)s.br=barrels.map(b=>b.dead?'1':'0').join('');
   if(NET.lastMsg)s.m=NET.lastMsg;
   if(NET.endInfo)s.o=NET.endInfo;
   return s;
@@ -254,6 +255,7 @@ function hitscanFrom(o,dir,w){
       if(hit.object.userData.enemy){const e=enemies.find(x=>x.g===hit.object.userData.enemy);if(e){const head=hit.object.userData.tag==='head';bloodBurst(hit.point,head?10:6);dmg(e,w.dmg*(head?2.5:1),head);}}
       else if(hit.object.userData.vehicle)vdmg(hit.object.userData.vehicle,w.dmg,false);
       else if(hit.object.userData.obj)objHit(hit.object.userData.obj,w.dmg);
+      else if(hit.object.userData.barrel)barrelHit(hit.object.userData.barrel,w.dmg);
     }
   }
 }
@@ -305,8 +307,10 @@ function clientApply(s){
   }
   for(const f of (s.fx||[])){if(f[0]<=NET.fxSeen)continue;NET.fxSeen=f[0];clientFx(f);}
   if(s.m&&s.m[0]>NET.msgSeen){NET.msgSeen=s.m[0];say(s.m[1],s.m[2]);}
+  if(s.br)for(let i=0;i<barrels.length;i++)if(s.br[i]==='1'&&!barrels[i].dead)barrelVis(barrels[i]);
   if(s.ob){
     alarm=!!s.ob[0];const h=allies.find(a=>a.hostage);if(h)h.free=!!s.ob[1];
+    if(s.ob[3]!==undefined)bossPct=s.ob[3];
     s.ob[2].forEach((d,i)=>{const o=objs[i];if(!o)return;o.prog=d[0]/1000;if(d[1]&&!o.done){o.done=true;if(o.t==='depot')depotVis(o);}});
   }
   if(s.o&&!over)clientEnd(s.o);

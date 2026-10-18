@@ -95,6 +95,7 @@ function loop(){
       continue;
     }
     if(e.dummy)continue;
+    if(e.boss)e.stun=0;
     if(e.stun>0){e.stun-=dt;e.alerted=true;if(e.mfT>0){e.mfT-=dt;if(e.mfT<=0)e.mf.visible=false;}e.legs.forEach(q=>{q.hip.rotation.x*=.8;q.knee.rotation.x*=.8;});continue;}
     let dx=P.x-e.x,dz=P.z-e.z,dist=Math.hypot(dx,dz);
     const gH=H(e.x,e.z);

@@ -1,7 +1,7 @@
 /* ============ WORLD ============ */
 let ren,scene,cam,sun,run=false,over=false,locked=false,hadLock=false,fallback=false,raf=0,L,curLevel=0;
 const keys={};
-let P,enemies=[],obst=[],floors=[],obstMesh=[],nades=[],mines=[],kits=[],parts=[],smokes=[],wp={},slots=[],cur=0,view=null,flash,mflash,flashT=0,mflT=0;
+let P,enemies=[],obst=[],floors=[],barrels=[],obstMesh=[],nades=[],mines=[],kits=[],parts=[],smokes=[],wp={},slots=[],cur=0,view=null,flash,mflash,flashT=0,mflT=0;
 let msgT=0,killed=0,total=0,lastShot=0,mouseDown=false,aim=false,reloadT=0,reloadMax=1.6,hitT=0,shake=0,kick=0,lastT=0,tAll=0,swayX=0,swayY=0,frame=0;
 let AC=null;
 let vehicles=[],projs=[],fires=[],clouds=[],flashA=0,allies=[],pheli=null,mounted=false,lastRocket=0,heliWeapon=0,curMode=null,wave=0,survPaid=false,surv=null,pDead=false,respT=0,tdm=null,vprojs=[],vnades=[];
@@ -126,7 +126,8 @@ function sandbags(x,z,ang){
   addBlock(x,z,w,d,gy,1.0,true);
 }
 function barrel(x,z){const gy=H(x,z);const c=[0x7a2a1c,0x2a4a6a,0x4a5a2a][Math.floor(R()*3)];
-  const m=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.9,12),stdM(null,{color:lin(c),roughness:.5,metalness:.6}));m.position.set(x,gy+.45,z);m.castShadow=true;scene.add(m);addBlock(x,z,.6,.6,gy,.9,true);}
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.9,12),stdM(null,{color:lin(c),roughness:.5,metalness:.6}));m.position.set(x,gy+.45,z);m.castShadow=true;scene.add(m);addBlock(x,z,.6,.6,gy,.9,true);
+  const px=obstMesh[obstMesh.length-1],co=obst[obst.length-1],b={x,z,hp:30,m,px,co,dead:false};px.userData.barrel=b;barrels.push(b);}
 function burnedCar(x,z){
   const gy=H(x,z),g=new THREE.Group();g.position.set(x,gy,z);g.rotation.y=R()<.5?0:Math.PI/2;scene.add(g);
   const add=(geo,mt,px,py,pz)=>{const m=new THREE.Mesh(geo,mt);m.position.set(px,py,pz);m.castShadow=true;g.add(m);return m;};
@@ -164,7 +165,7 @@ function build(){
   const sz=S.q>=3?2048:1024;sun.shadow.mapSize.set(sz,sz);const sc=sun.shadow.camera;sc.left=-55;sc.right=55;sc.top=55;sc.bottom=-55;sc.near=1;sc.far=260;sun.shadow.bias=-.0004;sun.shadow.normalBias=.06;
   scene.add(sun,sun.target);
   mkSky();mkTerrain();
-  obst=[];floors=[];cabinInfo=null;cabinFx=null;obstMesh=[];mines=[];kits=[];enemies=[];nades=[];parts=[];smokes=[];vehicles=[];projs=[];fires=[];clouds=[];flashA=0;allies=[];pheli=null;mounted=false;
+  obst=[];floors=[];barrels=[];cabinInfo=null;cabinFx=null;obstMesh=[];mines=[];kits=[];enemies=[];nades=[];parts=[];smokes=[];vehicles=[];projs=[];fires=[];clouds=[];flashA=0;allies=[];pheli=null;mounted=false;
   /* instanced sets */
   FX={
     postW:Inst(new THREE.CylinderGeometry(.07,.08,1.9,6),MT.wood,400,true),

@@ -166,7 +166,7 @@ function heliFire(first){
     if(hit&&(!gh||hit.distance<gh.distanceTo(mz))){
       if(hit.object.userData.enemy){const e=enemies.find(x=>x.g===hit.object.userData.enemy);if(e){const head=hit.object.userData.tag==='head';bloodBurst(hit.point,head?10:6);dmg(e,16*(head?2:1),head);}}
       else if(hit.object.userData.vehicle){vdmg(hit.object.userData.vehicle,16,false);dustBurst(hit.point,0xc0c0b0);}
-      else{if(hit.object.userData.obj)objHit(hit.object.userData.obj,16);dustBurst(hit.point,0x9a9186);}
+      else{if(hit.object.userData.obj)objHit(hit.object.userData.obj,16);if(hit.object.userData.barrel)barrelHit(hit.object.userData.barrel,16);dustBurst(hit.point,0x9a9186);}
     } else if(gh)dustBurst(gh,0x7a6a4c);
   } else if(heliWeapon===1){
     if(now-lastRocket<.8)return;

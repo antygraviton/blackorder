@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Black Order – version 1.0</title>
+<title>Black Order – version 1.1</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Barlow:wght@400;500&display=swap">
 <style>
 :root{
@@ -128,7 +128,7 @@ body.touch .ammo small{font-size:13px}
     <div class="stats" id="pStats"></div>
   </div>
   <h1 class="title">BLACK<br>ORDER</h1>
-  <p class="sub">Campaign 2015 · version 1.0 (multiplayer)</p>
+  <p class="sub">Campaign 2015 · version 1.1 (multiplayer)</p>
   <div class="menu-list">
     <button class="btn" data-go="play">Play<small>Campaign and quick games</small></button>
     <button class="btn" data-go="multi">Multiplayer<small>Co-op campaign for 3 and team match against bots</small></button>
@@ -321,7 +321,9 @@ Object.assign(_L[4],{n:'Airfield',txt:'The Order stores fuel at the airfield. De
 Object.assign(_L[5],{wx:'storm',brief:'The command post of the Order division. Armor, helicopters and jets all at once. When the last machine falls, the Order loses its strength on the border. A storm is raging.',radio:[{t:20,m:'HQ: Good luck, you have the whole sky against you.'}]});
 const L_RESCUE=Object.assign(lbase(_L[0]),{cabin:true,camp:0,n:'Rescue the Prisoner',txt:'Find the prisoner (E), free him and bring him to the extraction point at the start. Do not let him die.',brief:'The Order has captured an officer of our ally. Find him in the settlement (hold E next to him), free him and lead him to the extraction point at the start of the map. If he dies, the mission fails. It is raining.',ob:'rescue',wx:'rain',en:14,mines:6,kits:4,houses:12,ruins:3,seed:41,reward:320,medals:30,xp:110,acc:.6,hp:65,radio:[{t:25,m:'Contact: The prisoner is somewhere in the middle of the settlement.'},{t:120,m:'Contact: Extraction waits at the start of the map.'}]});
 const L_DEFEND=Object.assign(lbase(_L[2]),{camp:0,n:'Base Defense',txt:'Defend the marked zone for 2.5 minutes. The attackers come in waves.',brief:'We captured their command transmitter. The Order will launch a counterattack. Defend the marked zone (blue circle) for 2.5 minutes. Attackers come in waves every twenty seconds. Fog.',ob:'defend',wx:'fog',en:24,mines:0,kits:5,houses:8,ruins:5,seed:47,reward:420,medals:40,xp:130,acc:.65,hp:70,radio:[{t:30,m:'HQ: Waves arrive every 20 seconds.'},{t:100,m:'HQ: Hold on a little longer!'}]});
-LEVELS.splice(3,0,L_RESCUE,L_DEFEND);
+const L_BOSS=Object.assign(lbase(_L[1]),{camp:0,n:'Commander of the Order',txt:'Defeat the commander of the Black Order. Body shots barely slow him down, aim for the head.',brief:'The commander of the Black Order hides in a mountain fortress. He is heavily armored, body shots barely slow him down. Aim for the head and use grenades. Night.',ob:'boss',bossS:true,wx:'night',en:10,mines:4,kits:5,houses:9,ruins:4,seed:29,reward:700,medals:70,xp:220,acc:.65,hp:75,radio:[{t:20,m:'Contact: The commander is big. Aim for the head!'},{t:80,m:'Contact: Grenades hurt him more than bullets.'}]});
+const L_TANKB=Object.assign(lbase(_L[5]),{camp:1,n:'Armata',txt:'Destroy the Armata tank prototype. It is huge and tough.',brief:'The Armata tank prototype is fighting its way to the border. It is huge and tough, bullets do nothing to it. Use the anti-tank missiles from the helicopter, the RPG and explosives. Night.',ob:'boss',bossT:true,wx:'night',en:6,apcs:0,tanks:1,helis:0,jets:0,mines:6,kits:5,houses:3,ruins:2,seed:93,desert:true,reward:900,medals:90,xp:260,acc:.6,hp:80,radio:[{t:20,m:'Contact: Aim for the weak spot on the sides.'},{t:90,m:'Contact: Use the helicopter, it carries anti-tank missiles.'}]});
+LEVELS.splice(3,0,L_RESCUE,L_DEFEND,L_BOSS);LEVELS.push(L_TANKB);
 /* ============ MENU ============ */
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));if(['menu','play','store'].includes(id))refresh();}
 function refresh(){
@@ -776,7 +778,7 @@ function mkEnemy(x,z){
 /* ============ WORLD ============ */
 let ren,scene,cam,sun,run=false,over=false,locked=false,hadLock=false,fallback=false,raf=0,L,curLevel=0;
 const keys={};
-let P,enemies=[],obst=[],floors=[],obstMesh=[],nades=[],mines=[],kits=[],parts=[],smokes=[],wp={},slots=[],cur=0,view=null,flash,mflash,flashT=0,mflT=0;
+let P,enemies=[],obst=[],floors=[],barrels=[],obstMesh=[],nades=[],mines=[],kits=[],parts=[],smokes=[],wp={},slots=[],cur=0,view=null,flash,mflash,flashT=0,mflT=0;
 let msgT=0,killed=0,total=0,lastShot=0,mouseDown=false,aim=false,reloadT=0,reloadMax=1.6,hitT=0,shake=0,kick=0,lastT=0,tAll=0,swayX=0,swayY=0,frame=0;
 let AC=null;
 let vehicles=[],projs=[],fires=[],clouds=[],flashA=0,allies=[],pheli=null,mounted=false,lastRocket=0,heliWeapon=0,curMode=null,wave=0,survPaid=false,surv=null,pDead=false,respT=0,tdm=null,vprojs=[],vnades=[];
@@ -901,7 +903,8 @@ function sandbags(x,z,ang){
   addBlock(x,z,w,d,gy,1.0,true);
 }
 function barrel(x,z){const gy=H(x,z);const c=[0x7a2a1c,0x2a4a6a,0x4a5a2a][Math.floor(R()*3)];
-  const m=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.9,12),stdM(null,{color:lin(c),roughness:.5,metalness:.6}));m.position.set(x,gy+.45,z);m.castShadow=true;scene.add(m);addBlock(x,z,.6,.6,gy,.9,true);}
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.9,12),stdM(null,{color:lin(c),roughness:.5,metalness:.6}));m.position.set(x,gy+.45,z);m.castShadow=true;scene.add(m);addBlock(x,z,.6,.6,gy,.9,true);
+  const px=obstMesh[obstMesh.length-1],co=obst[obst.length-1],b={x,z,hp:30,m,px,co,dead:false};px.userData.barrel=b;barrels.push(b);}
 function burnedCar(x,z){
   const gy=H(x,z),g=new THREE.Group();g.position.set(x,gy,z);g.rotation.y=R()<.5?0:Math.PI/2;scene.add(g);
   const add=(geo,mt,px,py,pz)=>{const m=new THREE.Mesh(geo,mt);m.position.set(px,py,pz);m.castShadow=true;g.add(m);return m;};
@@ -939,7 +942,7 @@ function build(){
   const sz=S.q>=3?2048:1024;sun.shadow.mapSize.set(sz,sz);const sc=sun.shadow.camera;sc.left=-55;sc.right=55;sc.top=55;sc.bottom=-55;sc.near=1;sc.far=260;sun.shadow.bias=-.0004;sun.shadow.normalBias=.06;
   scene.add(sun,sun.target);
   mkSky();mkTerrain();
-  obst=[];floors=[];cabinInfo=null;cabinFx=null;obstMesh=[];mines=[];kits=[];enemies=[];nades=[];parts=[];smokes=[];vehicles=[];projs=[];fires=[];clouds=[];flashA=0;allies=[];pheli=null;mounted=false;
+  obst=[];floors=[];barrels=[];cabinInfo=null;cabinFx=null;obstMesh=[];mines=[];kits=[];enemies=[];nades=[];parts=[];smokes=[];vehicles=[];projs=[];fires=[];clouds=[];flashA=0;allies=[];pheli=null;mounted=false;
   /* instanced sets */
   FX={
     postW:Inst(new THREE.CylinderGeometry(.07,.08,1.9,6),MT.wood,400,true),
@@ -1199,8 +1202,8 @@ function doStart(){
   if(man){
     man.mi.forEach(([x,z])=>addMine(x/10,z/10));
     man.ki.forEach(([x,z])=>addKit(x/10,z/10));
-    man.en.forEach(([x,z])=>enemies.push(mkEnemy(x/10,z/10)));
-    man.v.forEach(([t,x,z])=>vehicles.push(mkVehicle(t,x/10,z/10,0)));
+    man.en.forEach(([x,z,b])=>{const e=mkEnemy(x/10,z/10);if(b)makeBoss(e);enemies.push(e);});
+    man.v.forEach(([t,x,z,b])=>{const v=mkVehicle(t,x/10,z/10,0);if(b)markBossTank(v);vehicles.push(v);});
     allies=[];for(let i=0;i<man.np;i++)allies.push(mkAlly(i?3:-3,66,i));
     if(man.md==='tdm')tdm={limit:25,time:360,red:0,t:0};
   } else {
@@ -1211,6 +1214,8 @@ function doStart(){
     for(let i=0;i<(L.tanks||0);i++){const [x,z]=spot(Math.random,50,8,70);vehicles.push(mkVehicle('tank',x,z,kin));}
     for(let i=0;i<(L.helis||0);i++){const a=Math.random()*6.283;vehicles.push(mkVehicle('heli',Math.cos(a)*90,Math.sin(a)*90+30,kin));}
     for(let i=0;i<(L.jets||0);i++)vehicles.push(mkVehicle('jet',0,0,kin));
+    if(L.bossS&&enemies.length)makeBoss(enemies[0]);
+    if(L.bossT){const bt=vehicles.find(v=>v.type==='tank');if(bt)markBossTank(bt);}
     const nNpc=NET.role==='host'?NET.npc:2;
     allies=[];if(curMode!=='training')for(let i=0;i<nNpc;i++)allies.push(mkAlly(i?3:-3,66,i));
     if(curMode==='training')spawnTraining();
@@ -1328,7 +1333,7 @@ function fire(first){
       if(hit.object.userData.enemy){const e=enemies.find(x=>x.g===hit.object.userData.enemy);
         if(e){const head=hit.object.userData.tag==='head';bloodBurst(hit.point,head?10:6);dmg(e,w.dmg*dmgMul(k)*(head?2.5:1),head);}}
       else if(hit.object.userData.vehicle){vdmg(hit.object.userData.vehicle,w.dmg*dmgMul(k),false);if(i<2)dustBurst(hit.point,0xc0c0b0);}
-      else{if(hit.object.userData.obj)objHit(hit.object.userData.obj,w.dmg*dmgMul(k));if(i<3)dustBurst(hit.point,0x9a9186);}
+      else{if(hit.object.userData.obj)objHit(hit.object.userData.obj,w.dmg*dmgMul(k));if(hit.object.userData.barrel)barrelHit(hit.object.userData.barrel,w.dmg*dmgMul(k));if(i<3)dustBurst(hit.point,0x9a9186);}
     } else if(gh&&i<3)dustBurst(gh,0x7a6a4c);
   }
   if(C)netShot('g',k,cam.position,camDir());
@@ -1337,9 +1342,10 @@ function fire(first){
   if(s.mag<=0)reload();
   hud();
 }
-function dmg(e,v,head){
+function dmg(e,v,head,ex){
   if(NET.role==='client'){hitT=.15;$('cross').classList.add('hit');return;}
-  e.hp-=v;hitT=.15;$('cross').classList.add('hit');e.alerted=true;e.flinch=.25;
+  if(e.boss&&!head&&!ex)v*=.2;   /* boss armor: body shots barely hurt, headshots and explosions do */
+  e.hp-=v;hitT=.15;$('cross').classList.add('hit');e.alerted=true;if(!e.boss)e.flinch=.25;
   if(e.hp<=0&&e.alive){e.alive=false;e.dt=0;killed++;if(!e.dummy)S.kills++;beep(300,.1,'triangle');
     const p=wp[slots[0]];if(p&&p.res!==undefined)p.res+=Math.ceil(WEAPONS[slots[0]].mag/2);
     if(head)say('Headshot',1);
@@ -1392,9 +1398,10 @@ function explode(p,r,dm){
   const f=new THREE.Mesh(new THREE.SphereGeometry(2.5,12,12),new THREE.MeshBasicMaterial({color:0xffb347,transparent:true,opacity:.8}));f.position.copy(p);scene.add(f);
   setTimeout(()=>scene.remove(f),160);
   for(let i=0;i<14;i++)dustBurst(p,0x5a4a38);
-  for(const e of enemies){if(!e.alive)continue;const d=Math.hypot(e.x-p.x,e.z-p.z);if(d<r){bloodBurst(new THREE.Vector3(e.x,1.2,e.z),8);dmg(e,dm*(1-d/(r+1)),false);}}
+  for(const e of enemies){if(!e.alive)continue;const d=Math.hypot(e.x-p.x,e.z-p.z);if(d<r){bloodBurst(new THREE.Vector3(e.x,1.2,e.z),8);dmg(e,dm*(1-d/(r+1)),false,true);}}
   for(const v of vehicles){if(!v.alive||!v.g.visible)continue;const d=Math.max(0,v.g.position.distanceTo(p)-3);if(d<r)vdmg(v,dm*1.6*(1-d/(r+1)),true);}
   for(const a of allies){if(!a.remote||!a.alive)continue;const da=Math.hypot(a.x-p.x,a.z-p.z);if(da<r)allyHit(a,dm*.5*(1-da/(r+1)));}
+  for(const b of barrels){if(b.dead)continue;const bd=Math.hypot(b.x-p.x,b.z-p.z);if(bd<r+1)barrelHit(b,dm*(1-bd/(r+2)));}
   for(const o of objs){if(o.t!=='depot'||o.done)continue;const od=Math.hypot(o.x-p.x,o.z-p.z);if(od<r+1.5)objHit(o,dm*(1-od/(r+2.5)));}
   const d=Math.hypot(P.x-p.x,P.z-p.z,(mounted?P.y-p.y:0));if(d<r)hurt(dm*.6*(1-d/(r+1)));
 }
@@ -1711,7 +1718,8 @@ function updateVehicles(dt){
       const from=new THREE.Vector3(pos.x,pos.y+2.8,pos.z);
       const see=!pDead&&dist<(isT?95:75)&&los(from,eye)&&!smokeBlocks(from,eye);
       v.cd-=dt;
-      if(isT){if(see&&v.cd<=0){v.cd=5+Math.random()*2.5;fireShell(v,tg);}}
+      if(v.shell2>0){v.shell2-=dt;if(v.shell2<=0&&see)fireShell(v,tg);}
+      if(isT){if(see&&v.cd<=0){v.cd=5+Math.random()*2.5;fireShell(v,tg);if(v.boss)v.shell2=.6;}}
       else if(v.burst>0){v.bt-=dt;if(v.bt<=0){v.bt=.1;v.burst--;if(see)vShoot(v,dist,.4,150,5,8,tg);}}
       else if(see&&v.cd<=0){v.burst=8;v.cd=2.5+Math.random()*1.5;}
     } else if(v.type==='heli'){
@@ -1871,6 +1879,7 @@ function updateObjectives(dt){
   if(over)return;
   if(L.stealth&&!alarm&&enemies.some(e=>e.alive&&e.alerted))raiseAlarm('Enemy alerted!');
   const ob=L.ob;if(!ob||ob==='kill')return;
+  if(ob==='boss')bossPct=bossHpPct();
   for(const o of objs){
     if(o.t==='term'&&!o.done){
       const near=humansNear(o.x,o.z,3.2,true);
@@ -1893,6 +1902,7 @@ function updateObjectives(dt){
     const ex=objs.find(o=>o.t==='ext');
     if(h&&h.free&&ex&&Math.hypot(h.x-ex.x,h.z-ex.z)<ex.r)win();
   }
+  else if(ob==='boss'){if(bossDead()){flagSet(L.bossT?'boss2':'boss1');win();}}
   else if(ob==='defend'){const z=objs.find(o=>o.t==='zone');if(z&&z.prog>=1){enemies.forEach(e=>{if(e.alive)e.alerted=false;});win();}}
 }
 function objText(){
@@ -1900,6 +1910,7 @@ function objText(){
   if(L.ob==='hack'){const o=objs.find(x=>x.t==='term');return ['Hack the terminal: '+Math.round((o?o.prog:0)*100)+' %'+(alarm?' · ALARM':''),'Hold E at the terminal · stealth '+(alarm?'broken':'intact')];}
   if(L.ob==='rescue'){const h=allies.find(a=>a.hostage);return [!h?'Rescue the prisoner':(h.free?'Lead the prisoner to extraction (green circle)':'Find the prisoner and free him (hold E)'),h&&!h.alive?'The prisoner died':'The prisoner must survive'];}
   if(L.ob==='defend'){const z=objs.find(o=>o.t==='zone');const s=Math.max(0,Math.round(150*(1-(z?z.prog:0))));return ['Defend the zone: '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0'),(z&&humansNear(z.x,z.z,z.r,false))?'You are in the zone':'Return to the blue circle'];}
+  if(L.ob==='boss')return ['Boss: '+bossPct+' %',L.bossT?'Hit the sides and rear, use missiles and explosives':'Body shots barely hurt him: aim for the head, use grenades'];
   return ['',''];
 }
 function raiseAlarm(msg){
@@ -1907,6 +1918,35 @@ function raiseAlarm(msg){
   for(const e of enemies)if(e.alive)e.alerted=true;
 }
 $('briefGo').onclick=beginLoad;$('briefBack').onclick=()=>{$('brief').classList.remove('on');show('play');};
+/* ---- bosses ---- */
+let bossPct=100;
+function makeBoss(e){
+  e.boss=true;e.g.scale.setScalar(1.5);e.hp=Math.round(1500*DIFF().hp);e.mhp=e.hp;
+  e.g.traverse(o=>{if(o.isMesh&&o.material&&o.material.color&&o.userData.tag!=='head'){o.material=o.material.clone();o.material.color.multiplyScalar(.55);o.material.color.r+=.12;}});
+  return e;
+}
+function markBossTank(v){v.boss=true;v.hp=Math.round(v.hp*3.5);v.mhp=v.hp;v.g.scale.setScalar(1.25);v.rad*=1.25;return v;}
+function bossDead(){
+  const e=enemies.find(x=>x.boss);if(e)return !e.alive;
+  const v=vehicles.find(x=>x.boss);if(v)return !v.alive;
+  return false;
+}
+function bossHpPct(){
+  const e=enemies.find(x=>x.boss);if(e)return Math.max(0,Math.round(e.hp/e.mhp*100));
+  const v=vehicles.find(x=>x.boss);if(v)return v.alive?Math.max(1,Math.round(v.hp/(v.mhp||v.hp)*100)):0;
+  return 0;
+}
+/* ---- explosive barrels ---- */
+function barrelHit(b,d){if(b.dead||NET.role==='client')return;b.hp-=d;if(b.hp<=0)barrelBoom(b);}
+function barrelVis(b){
+  if(b.dead)return;b.dead=true;scene.remove(b.m);
+  const i=obstMesh.indexOf(b.px);if(i>=0)obstMesh.splice(i,1);const j=obst.indexOf(b.co);if(j>=0)obst.splice(j,1);
+}
+function barrelBoom(b){
+  barrelVis(b);
+  const p=new THREE.Vector3(b.x,H(b.x,b.z)+.5,b.z);
+  explode(p,5,110);fireZone(p,0);
+}
 /* ============ MODES: TRAINING AND SURVIVAL ============ */
 const MODES={
   training:Object.assign({},lbase(LEVELS[0]),{n:'Training',txt:'Shooting range: targets and vehicles respawn, ammo is unlimited and you cannot die. Q switches the weapon in the current slot (slots 1–4).',en:0,mines:0,kits:0,houses:2,ruins:0,seed:5,reward:0,medals:0,xp:0}),
@@ -2258,7 +2298,7 @@ function mpStartGame(){
   setTimeout(()=>{
     try{doStart();}catch(e){console.error(e);$('loading').textContent='Loading error: '+e.message;return;}
     NET.go={id:Date.now(),md,lv:curLevel,ro,np:NET.npc,
-      en:enemies.map(e=>[qn(e.x),qn(e.z)]),v:vehicles.map(v=>[v.type,qn(v.g.position.x),qn(v.g.position.z)]),
+      en:enemies.map(e=>[qn(e.x),qn(e.z),e.boss?1:0]),v:vehicles.map(v=>[v.type,qn(v.g.position.x),qn(v.g.position.z),v.boss?1:0]),
       mi:mines.map(m=>[qn(m.x),qn(m.z)]),ki:kits.map(k=>[qn(k.x),qn(k.z)])};
     NET.room.presence({go:NET.go});
     $('loading').style.display='none';
@@ -2351,7 +2391,8 @@ function hostSnap(){
     a:allies.filter(a=>!a.remote).map(a=>[qn(a.x),qn(a.z),Math.round(a.g.rotation.y*100),a.alive?1:0]),
     pl,st:[killed,total>1e8?0:total,over?1:0,tdm?Math.round(tdm.t):0,tdm?tdm.red:0],
     mn:mines.map(m=>m.live?'1':'0').join(''),ki:kits.map(k=>k.used?'1':'0').join(''),fx:NET.fx};
-  if(L.ob&&L.ob!=='kill'){const h=allies.find(a=>a.hostage);s.ob=[alarm?1:0,h&&h.free?1:0,objs.map(o=>[Math.round(o.prog*1000),o.done?1:0])];}
+  if(L.ob&&L.ob!=='kill'){const h=allies.find(a=>a.hostage);s.ob=[alarm?1:0,h&&h.free?1:0,objs.map(o=>[Math.round(o.prog*1000),o.done?1:0]),bossPct];}
+  if(barrels.length)s.br=barrels.map(b=>b.dead?'1':'0').join('');
   if(NET.lastMsg)s.m=NET.lastMsg;
   if(NET.endInfo)s.o=NET.endInfo;
   return s;
@@ -2404,6 +2445,7 @@ function hitscanFrom(o,dir,w){
       if(hit.object.userData.enemy){const e=enemies.find(x=>x.g===hit.object.userData.enemy);if(e){const head=hit.object.userData.tag==='head';bloodBurst(hit.point,head?10:6);dmg(e,w.dmg*(head?2.5:1),head);}}
       else if(hit.object.userData.vehicle)vdmg(hit.object.userData.vehicle,w.dmg,false);
       else if(hit.object.userData.obj)objHit(hit.object.userData.obj,w.dmg);
+      else if(hit.object.userData.barrel)barrelHit(hit.object.userData.barrel,w.dmg);
     }
   }
 }
@@ -2455,8 +2497,10 @@ function clientApply(s){
   }
   for(const f of (s.fx||[])){if(f[0]<=NET.fxSeen)continue;NET.fxSeen=f[0];clientFx(f);}
   if(s.m&&s.m[0]>NET.msgSeen){NET.msgSeen=s.m[0];say(s.m[1],s.m[2]);}
+  if(s.br)for(let i=0;i<barrels.length;i++)if(s.br[i]==='1'&&!barrels[i].dead)barrelVis(barrels[i]);
   if(s.ob){
     alarm=!!s.ob[0];const h=allies.find(a=>a.hostage);if(h)h.free=!!s.ob[1];
+    if(s.ob[3]!==undefined)bossPct=s.ob[3];
     s.ob[2].forEach((d,i)=>{const o=objs[i];if(!o)return;o.prog=d[0]/1000;if(d[1]&&!o.done){o.done=true;if(o.t==='depot')depotVis(o);}});
   }
   if(s.o&&!over)clientEnd(s.o);
@@ -2719,7 +2763,7 @@ function heliFire(first){
     if(hit&&(!gh||hit.distance<gh.distanceTo(mz))){
       if(hit.object.userData.enemy){const e=enemies.find(x=>x.g===hit.object.userData.enemy);if(e){const head=hit.object.userData.tag==='head';bloodBurst(hit.point,head?10:6);dmg(e,16*(head?2:1),head);}}
       else if(hit.object.userData.vehicle){vdmg(hit.object.userData.vehicle,16,false);dustBurst(hit.point,0xc0c0b0);}
-      else{if(hit.object.userData.obj)objHit(hit.object.userData.obj,16);dustBurst(hit.point,0x9a9186);}
+      else{if(hit.object.userData.obj)objHit(hit.object.userData.obj,16);if(hit.object.userData.barrel)barrelHit(hit.object.userData.barrel,16);dustBurst(hit.point,0x9a9186);}
     } else if(gh)dustBurst(gh,0x7a6a4c);
   } else if(heliWeapon===1){
     if(now-lastRocket<.8)return;
@@ -2865,6 +2909,7 @@ function loop(){
       continue;
     }
     if(e.dummy)continue;
+    if(e.boss)e.stun=0;
     if(e.stun>0){e.stun-=dt;e.alerted=true;if(e.mfT>0){e.mfT-=dt;if(e.mfT<=0)e.mf.visible=false;}e.legs.forEach(q=>{q.hip.rotation.x*=.8;q.knee.rotation.x*=.8;});continue;}
     let dx=P.x-e.x,dz=P.z-e.z,dist=Math.hypot(dx,dz);
     const gH=H(e.x,e.z);

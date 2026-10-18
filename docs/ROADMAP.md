@@ -10,15 +10,15 @@ Priorities are the owner's wishes in order of the latest conversation. "Draft" m
 ## P1 – features requested or brainstormed
 | Feature | State |
 |---|---|
-| Mission objectives other than "kill everything": rescue, defend zone, silent infiltration/hack, destroy depots | Draft |
-| Briefings and radio messages | Draft |
-| Boss missions (soldier commander, Armata tank) | Draft |
+| Mission objectives other than "kill everything": rescue, defend zone, silent infiltration/hack, destroy depots | Done (v1.1) |
+| Briefings and radio messages | Done (v1.1) |
+| Boss missions (soldier commander, Armata tank) | Done (v1.1) |
 | Zombie Arena (night, undead waves, tyrant boss every 5th wave) | Draft |
 | Killstreaks (UAV, ammo drop, air strike) | Draft |
-| Perks (level-gated) and weapon attachments (suppressor, extended magazine, laser) | Draft |
-| Difficulty levels (easy … realistic) | Draft |
-| Weather and day/night (fog, rain, storm, night with flashlight) | Draft |
-| Player jeep, ally commands (follow / hold / attack), explosive barrels | Draft |
+| Perks (level-gated) and weapon attachments (suppressor, extended magazine, laser) | Done (v1.1) |
+| Difficulty levels (easy … realistic) | Done (v1.1) |
+| Weather and day/night (fog, rain, storm, night with flashlight) | Done (v1.1) |
+| Player jeep, ally commands (follow / hold / attack), explosive barrels | Barrels done (v1.1); jeep and ally commands are drafts |
 | Collectible lore documents, achievements, records | Draft |
 | Base defense with buildable defenses | Idea |
 | Own tank for the player | Idea |

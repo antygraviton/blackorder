@@ -24,8 +24,8 @@ function doStart(){
   if(man){
     man.mi.forEach(([x,z])=>addMine(x/10,z/10));
     man.ki.forEach(([x,z])=>addKit(x/10,z/10));
-    man.en.forEach(([x,z])=>enemies.push(mkEnemy(x/10,z/10)));
-    man.v.forEach(([t,x,z])=>vehicles.push(mkVehicle(t,x/10,z/10,0)));
+    man.en.forEach(([x,z,b])=>{const e=mkEnemy(x/10,z/10);if(b)makeBoss(e);enemies.push(e);});
+    man.v.forEach(([t,x,z,b])=>{const v=mkVehicle(t,x/10,z/10,0);if(b)markBossTank(v);vehicles.push(v);});
     allies=[];for(let i=0;i<man.np;i++)allies.push(mkAlly(i?3:-3,66,i));
     if(man.md==='tdm')tdm={limit:25,time:360,red:0,t:0};
   } else {
@@ -36,6 +36,8 @@ function doStart(){
     for(let i=0;i<(L.tanks||0);i++){const [x,z]=spot(Math.random,50,8,70);vehicles.push(mkVehicle('tank',x,z,kin));}
     for(let i=0;i<(L.helis||0);i++){const a=Math.random()*6.283;vehicles.push(mkVehicle('heli',Math.cos(a)*90,Math.sin(a)*90+30,kin));}
     for(let i=0;i<(L.jets||0);i++)vehicles.push(mkVehicle('jet',0,0,kin));
+    if(L.bossS&&enemies.length)makeBoss(enemies[0]);
+    if(L.bossT){const bt=vehicles.find(v=>v.type==='tank');if(bt)markBossTank(bt);}
     const nNpc=NET.role==='host'?NET.npc:2;
     allies=[];if(curMode!=='training')for(let i=0;i<nNpc;i++)allies.push(mkAlly(i?3:-3,66,i));
     if(curMode==='training')spawnTraining();

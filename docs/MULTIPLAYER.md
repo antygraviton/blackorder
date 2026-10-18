@@ -81,6 +81,7 @@ Host only:
 * Every machine rebuilds the same objects: `placeObjectives()` uses a seeded RNG (`L.seed*53`) and runs on the host and on clients, after the same world generation, so depots, terminal, prisoner, extraction point and zone are at the same places. The prisoner is the last non-remote ally, so the `a` array of the snapshot covers it.
 * The host publishes `s.ob = [alarm, prisonerFree, [[progress*1000, done], ...]]` (one entry per objective, same order). Clients apply it in `clientApply`; a depot that becomes `done` plays `depotVis`. The explosion itself comes through the normal `fx` events. Mission end, radio/briefing messages and failure messages reuse `s.o` and `s.m`.
 * Clients send `u:1` in their presence while E is held; the host reads it into the remote avatar (`a.use`), which is what `humansNear(..., needUse)` checks for hacking and freeing the prisoner. Stealth alarm, waves, win and fail are host-only.
+* Bosses and barrels: the manifest (`go`) marks boss enemies/vehicles with a third/fourth element (`en`, `v`), clients call `makeBoss`/`markBossTank` on their ghosts (scale and colour); the boss health percent travels in `s.ob[3]`; destroyed barrels are the string `s.br` ('1' = dead), applied with `barrelVis`. Armor, stun immunity and double shells are host logic.
 * Known gaps: a client's suppressor and damage perks are not applied to its shots on the host (`hostShot`), so a suppressed client shot still alerts enemies; radio messages are replicated as "last message" only.
 
 ## Pause, lobby and rejoin

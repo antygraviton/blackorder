@@ -6,8 +6,8 @@ Rules for this file: `AGENTS.md` section 10.
 
 ## Current state (keep up to date, overwrite)
 
-* **Version:** 1.0. `npm test` green on `main`.
-* **In progress:** integrating the v1.1 drafts (lean plan, 3–4 commits). Nothing integrated yet.
+* **Version:** 1.1.0 (released 2026-10-18). `npm test` green on `main`.
+* **In progress:** nothing; v1.1 core is done. Remaining draft features (`drafts/v1.1`): Zombie Arena, killstreaks, ally orders, jeep, documents/achievements/Archive. Wanted by the owner and not started: look-and-feel check of the cabin and mobile layout on real devices.
 * **Lean plan:**
   1. ~~Clean the drafts~~ DONE: Czech leftovers translated in `drafts/v1.1`, `failMission(msg)` extended. Radio `r.done` reset moves to step 3 (when radio code lands in `doStart()`); `addKit(...,ammo)` (needs pickup logic in `160-main-loop.js`) and `mkEnemy(...,opt.noGun)` move to the deferred killstreaks/Zombie work.
   2. ~~Data, difficulty~~ DONE (perks, attachments, difficulty; code lives in `10-data.js` and `20-menu.js`, hooks in fire/hurt/reload/enemy AI). Still in `drafts/ext_data.js`: `DOCS`, `ACH`, mission edits, `lbase`; in `ext_ui.js`: Archive (`renderExtras`).
@@ -16,7 +16,7 @@ Rules for this file: `AGENTS.md` section 10.
 * **Deferred:** jeep, Zombie Arena, killstreaks, ally orders, documents/Archive.
 * **Hosting/online:** PeerJS adapter integrated (D13) and Pages workflow added (`.github/workflows/pages.yml`); needs a public repo (or paid plan) and Settings > Pages > Source = GitHub Actions. Real two-browser test still open.
 * **Flaky tests were stabilised** (2026-10-18): co-op/Team Match ends in `multiplayer.test.js` and the Team Match checks in `modes.test.js` now wait for conditions (polling) instead of fixed sleeps/frame counts and no longer rely on one particular random bot. If a test still fails once, re-run that file alone before suspecting the code.
-* **Next step:** plan step 4: bosses (`makeBoss`, `markBossTank`, `bossDead`, `bossHpPct`, `L_BOSS`, `L_TANKB` in drafts; spawn in `doStart()`, `ob==='boss'` branches in `updateObjectives`/`objText`, armor in `dmg()`, flinch/stun immunity, double tank shells) and explosive barrels (`barrel()` in `70-world.js`, `barrelHit` in fire/hitscanFrom/heliFire, chain in `explode()`), then version bump 1.1 (see AGENTS.md rule 8) and docs. Then the mobile touch layer (`165-touch.js`, sets `keys.*`, rotates `P.yaw/P.pitch`; input listeners are in `90-mission-start.js`).
+* **Next step:** ask the owner what to do next (candidates: owner feedback from playtests, remaining drafts, more missions, replace the cabin interior stairs, localisation, performance on weak phones).
 * **Owner decisions:** keep the draft balance numbers; commit straight to `main`. Bosses are only partly drafted: `makeBoss`/`markBossTank`/`bossDead`/`bossHpPct` exist but nothing calls them; spawning in `doStart()`, armor in `dmg()`, stun/flinch immunity and double tank shells must be written.
 * **Tip:** macOS `sed -i` needs `sed -i ''`; prefer small python3 replace scripts with `assert` on the anchor.
 
@@ -134,3 +134,9 @@ Rules for this file: `AGENTS.md` section 10.
 * Verified: `tests/lobby.test.js` (42 checks): same depots/prisoner on all machines, depot destroyed for clients, HUD progress on clients, mission ends for everybody, prisoner freed, a client holding E hacks the terminal on the host and the other client sees it. Not verified with real devices.
 * Stabilised the flaky tests: CI had failed repeatedly on the Team Match end (`match ended on both machines`, `Victory`, reward) because the host's end snapshot did not arrive within a fixed 900 ms on the slower runner; the checks now poll (up to 8 s). `modes.test.js` Team Match checks no longer depend on a specific random bot (respawn, death point as `red0 + 1`, respawn wait, kill limit with an alive bot). Verified: multiplayer 3x, modes 5x in a row.
 * More flake fixes in `multiplayer.test.js` (found by repeating it 8-10 times): the co-op test heals players during long waits (`safeStep`) because random enemy fire sometimes killed everybody and ended the mission with a defeat (`You died` instead of `Mission complete`); the client's dummy target now stands straight ahead of the client (the old fixed x gave a random hit rate); the host's avatar HP is clamped at 0 like the client's; bot respawn is polled. 10 consecutive green runs.
+
+## 2026-10-18 (cont.) – step 4 of the lean plan: bosses and barrels, release 1.1
+* Integrated from the drafts: `makeBoss`, `markBossTank`, `bossDead`, `bossHpPct`, barrels (`barrelHit/Vis/Boom`), new missions *Commander of the Order* (end of campaign 1) and *Armata* (end of campaign 2). Written new: boss spawning in `doStart` and in the client manifest branch, armor in `dmg(e,v,head,ex)` (body shots x0.2, headshots and explosions full; `explode` passes `ex=true`), no flinch and no stun for bosses, tank boss second shell 0.6 s after each shell (`v.shell2`), barrels registered in `barrel()` with a bullet proxy (`userData.barrel`), chain reaction through `explode()`, barrel hits in `fire`, `hitscanFrom`, `heliFire`.
+* Replication: manifest boss flags, `s.ob[3]` boss percent, `s.br` barrel string. Documented in `docs/MULTIPLAYER.md`.
+* Version bumped to 1.1.0 (`package.json`, title, menu subtitle, CHANGELOG, this log). ROADMAP statuses updated.
+* Verified: `tests/extensions.test.js` 74 checks (barrels, chain, bullets, armor values, no flinch/stun, HUD percent, both boss missions complete, tank 3.5x HP and 1.25x size, two shells per volley), `tests/lobby.test.js` 49 checks (boss and barrels replicated in co-op). Not verified: difficulty and balance of the boss fights (numbers are from the drafts, as agreed) and the look of the boss models.
